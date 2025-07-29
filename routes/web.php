@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CouponManagementController;
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\TournamentController;
 use App\Http\Controllers\SportController;
 use App\Http\Controllers\Auth\RegisteredUserController;
@@ -10,8 +11,12 @@ use App\Http\Controllers\RoleController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RoutingController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\EmailPreviewController;
 
 require __DIR__ . '/auth.php';
+
+
+Route::get('/preview-email', [AuthController::class, 'previewVerifyEmail'])->name('preview.email');
 
 Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
     Route::get('', [RoutingController::class, 'index'])->name('root');

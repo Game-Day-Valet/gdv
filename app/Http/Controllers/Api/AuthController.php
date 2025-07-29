@@ -39,6 +39,9 @@ class AuthController extends Controller
             'address' => $request->input('address') ?? null,
         ]);
 
+        // 🔔 Send verification email
+        $user->sendEmailVerificationNotification();
+
         $user->assignRole(Role::USER->value);
 
         $referralCode = $request->input('referral_code');
@@ -51,7 +54,7 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'message' => 'Registration successful',
+            'message' => 'Registration successful. Please verify your email.',
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -84,6 +87,19 @@ class AuthController extends Controller
         return response()->json(['message' => 'Invalid referral code', 'is_valid' => false], 400);
     }
 
+    public function previewVerifyEmail()
+    {
+        // Create a dummy user for preview
+        $user = new User();
+        $user->name = 'John Doe';
+        $user->email = 'john@example.com';
+
+        // Create a dummy verification URL
+        $url = url('/verify-email?token=preview-token-123');
+
+        return view('emails.verify', compact('user', 'url'));
+    }
+
     public function login(LoginRequest $request)
     {
         $user = User::where('email', $request->input('email'))->first();
@@ -93,6 +109,16 @@ class AuthController extends Controller
                 'credentials' => ['Invalid email or password.'],
             ]);
         }
+
+        // // 🚫 Email not verified
+        // if (!$user->hasVerifiedEmail()) {
+        //     // 🔁 Send verification email again
+        //     $user->sendEmailVerificationNotification();
+
+        //     throw ValidationException::withMessages([
+        //         'email' => ['Your email address is not verified. A new verification email has been sent.'],
+        //     ]);
+        // }
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
