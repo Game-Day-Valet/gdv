@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RentalController;
 use App\Http\Controllers\Api\SportController;
 use App\Http\Controllers\Api\TournamentController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,7 +32,10 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/password/reset', [AuthController::class, 'passwordResetRequest']);
 Route::post('/password/reset/confirm', [AuthController::class, 'passwordResetConfirm']);
-
+Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill();
+    return response()->json(['message' => 'Email verified successfully!']);
+})->middleware(['signed'])->name('verification.verify');
 
 Route::post('/validate/referral-code', [AuthController::class, 'checkReferralCode']);
 
