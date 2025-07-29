@@ -141,6 +141,13 @@
                     </a>
                 </li>
 
+                <li>
+                    <a href="{{ route('coupon-management.index') }}">
+                        <i class="fas fa-layer-group"></i> {{-- layered bundle icon --}}
+                        <span>Coupon Management</span>
+                    </a>
+                </li>
+
 
                 @can('super_admin')
                 <li>

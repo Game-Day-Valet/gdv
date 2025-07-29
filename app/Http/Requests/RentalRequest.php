@@ -15,7 +15,7 @@ class RentalRequest extends FormRequest
     public function rules()
     {
         return [
-            'user_id' => 'required|exists:users,id',
+            // 'user_id' => 'required|exists:users,id',
             'tournament_id' => 'required|exists:tournaments,id',
             'team_name' => 'required|string|max:255',
             'coach_name' => 'required|string|max:255',

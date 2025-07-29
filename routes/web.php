@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CouponManagementController;
 use App\Http\Controllers\TournamentController;
 use App\Http\Controllers\SportController;
 use App\Http\Controllers\Auth\RegisteredUserController;
@@ -30,5 +31,6 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
         Route::resource('tournament-management', TournamentController::class);
         Route::resource('item-management', ItemController::class);
         Route::resource('bundle-management', BundleController::class);
+        Route::resource('coupon-management', CouponManagementController::class);
     });
 });

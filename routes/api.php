@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BundleController;
+use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\ProfileController;
@@ -71,6 +72,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/bundles/{id}', [BundleController::class, 'destroy']);
 
 
+    // Coupon Module
+    Route::get('/coupons', [CouponController::class, 'index']);
+    Route::post('/coupon/validate', [CouponController::class, 'validateCoupon']);
+
+
     // Rental Module
     Route::get('/rentals', [RentalController::class, 'index']);
     Route::get('/rentals/user', [RentalController::class, 'userRentals']);
@@ -90,7 +96,7 @@ Route::get('/auth/google/redirect', [AuthController::class, 'googleRedirect']);
 Route::get('/auth/google/callback', [AuthController::class, 'googleCallback']);
 Route::post('/auth/google/login', [AuthController::class, 'googleLogin']);
 
-// Sign in with Apple 
+// Sign in with Apple
 Route::get('/auth/apple/redirect', [AuthController::class, 'appleRedirect']);
 Route::get('/auth/apple/callback', [AuthController::class, 'appleCallback']);
 Route::post('/auth/apple/login', [AuthController::class, 'appleLogin']);

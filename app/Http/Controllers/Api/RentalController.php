@@ -44,10 +44,9 @@ class RentalController extends Controller
             if ($user && $user->hasRole(['user', 'super_admin'])) {
                 $data = $request->validated();
                 $data['user_id'] = $user->id;
-
                 // Apply discount if eligible
-                // $this->referralService->applyDiscount($user->id, $data);
-
+               $data = $this->referralService->applyDiscount($user->id, $data);
+// return $data;
                 $rental = $this->rentalRepository->create($data);
                 return new RentalResource($rental);
             }

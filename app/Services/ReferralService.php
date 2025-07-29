@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\Coupon;
 use App\Models\ReferralCode;
 use App\Models\ReferralTracking;
 use App\Models\UserCredit;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 
 class ReferralService
@@ -51,19 +53,57 @@ class ReferralService
     public function applyDiscount($userId, $rentalData)
     {
         $tracking = ReferralTracking::where('referred_user_id', $userId)->first();
-        if ($tracking && $rentalData['payment_status'] === 'paid' && !$this->hasPreviousPaidRental($userId)) {
+        $rentalData = $this->applyCoupon($userId, $rentalData);
+
+        if ($tracking && !$this->hasPreviousPaidRental($userId) && $rentalData['total_amount'] >= 10) {
             // Apply $5 discount (deduct from total_amount)
             $rentalData['total_amount'] = max(0, $rentalData['total_amount'] - 5.00);
-            return true;
+            return $rentalData;
+            // return true;
         }
-        return false;
+
+        return $rentalData;
     }
 
+    protected function applyCoupon($userId, $rentalData)
+    {
+        $isUsed = \App\Models\Rental::where('user_id', $userId)
+            ->where('promo_code', $rentalData['promo_code'])
+            ->where('payment_status', 'paid')
+            ->exists();
+
+        if ($isUsed) {
+            return $rentalData;
+        }
+
+        $coupon = Coupon::where(function ($query) {
+            $now = Carbon::now();
+            $query->whereNull('starts_at')->orWhere('starts_at', '<=', $now);
+        })
+            ->where(function ($query) {
+                $now = Carbon::now();
+                $query->whereNull('expires_at')->orWhere('expires_at', '>=', $now);
+            })
+            ->where(function ($query) {
+                $query->whereNull('max_uses')->orWhereColumn('used', '<', 'max_uses');
+            })
+            ->where('code', $rentalData['promo_code'])->first();
+        if ($coupon) {
+            if ($coupon->type == 'percent') {
+                $rentalData['total_amount'] = (float) ($rentalData['total_amount'] - ($rentalData['total_amount'] * ($coupon->value / 100)));
+            } else {
+                $rentalData['total_amount'] = (float) ($rentalData['total_amount'] - $coupon->value);
+            }
+
+            $coupon->increment('used');
+        }
+
+        return $rentalData;
+    }
     protected function hasPreviousPaidRental($userId)
     {
         return \App\Models\Rental::where('user_id', $userId)
             ->where('payment_status', 'paid')
-            ->where('id', '!=', request()->route('id') ?? null)
             ->exists();
     }
 }
