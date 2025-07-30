@@ -8,6 +8,7 @@ use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\PasswordResetRequest;
 use App\Http\Requests\PasswordResetConfirmRequest;
+use App\Mail\VerifyEmailOTP;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -18,6 +19,7 @@ use App\Models\PasswordResetToken;
 use App\Models\ReferralCode;
 use App\Services\ReferralService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
@@ -39,8 +41,19 @@ class AuthController extends Controller
             'address' => $request->input('address') ?? null,
         ]);
 
-        // 🔔 Send verification email
-        $user->sendEmailVerificationNotification();
+        $otp = rand(100000, 999999);
+
+        DB::table('email_verifications')->updateOrInsert(
+            ['user_id' => $user->id],
+            [
+                'otp_code' => $otp,
+                'expires_at' => now()->addMinutes(60),
+                'updated_at' => now(),
+            ]
+        );
+
+        // Send OTP email
+        Mail::to($user->email)->send(new VerifyEmailOTP($user, $otp));
 
         $user->assignRole(Role::USER->value);
 
@@ -90,14 +103,57 @@ class AuthController extends Controller
     public function previewVerifyEmail()
     {
         // Create a dummy user for preview
-        $user = new User();
+        $user = new \stdClass();
         $user->name = 'John Doe';
-        $user->email = 'john@example.com';
+        $otp = '123456';
 
-        // Create a dummy verification URL
-        $url = url('/verify-email?token=preview-token-123');
+        return view('emails.verify', [
+            'name' => $user->name,
+            'otp' => $otp,
+        ]);
+    }
 
-        return view('emails.verify', compact('user', 'url'));
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'otp' => 'required|digits:6',
+        ]);
+
+        $user = User::where('email', $request->input('email'))->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'User not found.'], 404);
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json(['message' => 'Email is already verified.'], 409);
+        }
+
+        $record = DB::table('email_verifications')
+            ->where('user_id', $user->id)
+            ->where('otp_code', $request->input('otp'))
+            ->where('expires_at', '>', now())
+            ->first();
+
+        if (!$record) {
+            return response()->json(['message' => 'Invalid or expired OTP.'], 422);
+        }
+
+        $user->markEmailAsVerified();
+        DB::table('email_verifications')->where('user_id', $user->id)->delete();
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Email verified successfully.',
+            'token' => $token,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ]
+        ]);
     }
 
     public function login(LoginRequest $request)
@@ -110,15 +166,25 @@ class AuthController extends Controller
             ]);
         }
 
-        // // 🚫 Email not verified
-        // if (!$user->hasVerifiedEmail()) {
-        //     // 🔁 Send verification email again
-        //     $user->sendEmailVerificationNotification();
+        // 🚫 Email not verified
+        if (!$user->hasVerifiedEmail()) {
+            $otp = rand(100000, 999999);
 
-        //     throw ValidationException::withMessages([
-        //         'email' => ['Your email address is not verified. A new verification email has been sent.'],
-        //     ]);
-        // }
+            DB::table('email_verifications')->updateOrInsert(
+                ['user_id' => $user->id],
+                [
+                    'otp_code' => $otp,
+                    'expires_at' => now()->addMinutes(60),
+                    'updated_at' => now(),
+                ]
+            );
+
+            Mail::to($user->email)->send(new VerifyEmailOTP($user, $otp));
+
+            throw ValidationException::withMessages([
+                'email' => ['Your email is not verified. A new OTP has been sent.'],
+            ]);
+        }
 
         $token = $user->createToken('auth_token')->plainTextToken;
 

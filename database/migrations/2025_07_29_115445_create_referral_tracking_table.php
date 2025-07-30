@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('referral_trackings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('referrer_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('referred_user_id')->constrained('users')->onDelete('cascade');
+            $table->unsignedBigInteger('referrer_id');
+            $table->unsignedBigInteger('referred_user_id');
             $table->string('referral_code');
             $table->boolean('credit_awarded')->default(false);
             $table->timestamps();

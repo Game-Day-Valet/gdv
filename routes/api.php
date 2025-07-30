@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BundleController;
+use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\ProfileController;
@@ -32,10 +33,14 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/password/reset', [AuthController::class, 'passwordResetRequest']);
 Route::post('/password/reset/confirm', [AuthController::class, 'passwordResetConfirm']);
+
 Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
     $request->fulfill();
     return response()->json(['message' => 'Email verified successfully!']);
 })->middleware(['signed'])->name('verification.verify');
+
+Route::post('/email/verify-otp', [AuthController::class, 'verifyOtp']);
+
 
 Route::post('/validate/referral-code', [AuthController::class, 'checkReferralCode']);
 
@@ -86,6 +91,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rental Module
     Route::get('/favorites', [FavoriteController::class, 'index']);
     Route::post('/favorites/toggle', [FavoriteController::class, 'toggle']);
+
+
+    // Chat Module
+    Route::post('/chat/send', [ChatController::class, 'sendMessage']);
+    Route::post('/chat/reply/{conversationId}', [ChatController::class, 'replyToMessage']);
+    Route::get('/chat/conversations', [ChatController::class, 'getConversations']);
 });
 
 

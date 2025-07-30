@@ -185,17 +185,17 @@
         <!-- Header Section -->
         <div class="email-header">
             <img src="{{ asset('images/logo.svg') }}" alt="Game Day Valet" class="logo">
-            <h1 class="header-title">Create New Account</h1>
+            <h1 class="header-title">Your account has been created successfully.</h1>
             <p class="header-subtitle">Please verify your email address to continue</p>
         </div>
 
         <!-- Content Section -->
         <div class="email-content">
-            <h2 class="welcome-text">Hello {{ $user->name }}!</h2>
+            <h2 class="welcome-text">Hello {{ $name }}!</h2>
 
             <p class="verification-text">
                 Thank you for registering with <span class="app-name">Game Day Valet</span>.
-                To complete your registration and access your account, please verify your email address by clicking the button below.
+                To complete your registration and access your account, please use the 6-digit verification code below:
             </p>
 
             <!-- Verification Image -->
@@ -203,24 +203,16 @@
                 <img src="{{ asset('images/svg/confirmation-email.svg') }}" alt="Email Verification">
             </div>
 
-            <!-- Verification Button -->
-            <div style="text-align: center;">
-                <a href="{{ $url }}" class="verification-button">
-                    Verify Email Address
-                </a>
+            <!-- OTP Code Display -->
+            <div style="text-align: center; margin: 30px 0;">
+                <div style="display: inline-block; background: #f5f5f5; padding: 20px 40px; font-size: 28px; font-weight: bold; letter-spacing: 6px; border-radius: 8px;">
+                    {{ $otp }}
+                </div>
             </div>
-
-            <p class="verification-text">
-                If the button above doesn't work, you can copy and paste the following link into your browser:
-            </p>
-
-            <p class="link-text">
-                {{ $url }}
-            </p>
 
             <!-- Security Note -->
             <div class="security-note">
-                <p><strong>Security Note:</strong> This verification link will expire in 60 minutes for your security. If you didn't create an account with us, you can safely ignore this email.</p>
+                <p><strong>Security Note:</strong> This code will expire in 60 minutes. If you did not create this account, you can safely ignore this email.</p>
             </div>
 
             <!-- Footer -->
