@@ -23,5 +23,6 @@ class VerifyEmailOTP extends Mailable
                 'name' => $this->user->name,
                 'otp' => $this->otp,
             ]);
+            
     }
 }

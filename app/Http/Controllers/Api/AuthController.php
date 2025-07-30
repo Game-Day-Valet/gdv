@@ -52,7 +52,6 @@ class AuthController extends Controller
             ]
         );
 
-        // Send OTP email
         Mail::to($user->email)->send(new VerifyEmailOTP($user, $otp));
 
         $user->assignRole(Role::USER->value);
