@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Repositories\BundleRepository;
 use App\Repositories\BundleRepositoryInterface;
+use App\Repositories\CouponRepository;
+use App\Repositories\CouponRepositoryInterface;
 use App\Repositories\FavoriteRepository;
 use App\Repositories\FavoriteRepositoryInterface;
 use App\Repositories\ItemRepository;
@@ -29,6 +31,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(SportRepositoryInterface::class, SportRepository::class);
         $this->app->bind(ItemRepositoryInterface::class, ItemRepository::class);
         $this->app->bind(BundleRepositoryInterface::class, BundleRepository::class);
+        $this->app->bind(CouponRepositoryInterface::class, CouponRepository::class);
         $this->app->bind(RentalRepositoryInterface::class, RentalRepository::class);
         $this->app->bind(FavoriteRepositoryInterface::class, FavoriteRepository::class);
     }
