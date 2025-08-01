@@ -14,13 +14,18 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 use App\Models\PasswordResetToken;
 use App\Models\ReferralCode;
 use App\Services\ReferralService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Laravel\Socialite\Facades\Socialite;
+
+use Firebase\JWT\JWK;
+use Firebase\JWT\JWT;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -271,84 +276,94 @@ class AuthController extends Controller
         ], 200);
     }
 
-    public function googleRedirect()
-    {
-        $url = Socialite::driver('google')->stateless()->redirect()->getTargetUrl();
-
-        return response()->json([
-            'url' => $url,
-        ], 200);
-    }
-
-    public function googleCallback(Request $request)
-    {
-        try {
-            $googleUser = Socialite::driver('google')->stateless()->user();
-
-            $user = User::updateOrCreate(
-                ['email' => $googleUser->email],
-                [
-                    'name' => $googleUser->name,
-                    'google_id' => $googleUser->id,
-                    'password' => Hash::make(Str::random(20)),
-                ]
-            );
-
-            $token = $user->createToken('auth_token')->plainTextToken;
-
-            return response()->json([
-                'message' => 'Google login successful',
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'referral_code' => $user->referral_code,
-                ],
-                'token' => $token,
-            ], 200);
-        } catch (\Exception $e) {
-            throw ValidationException::withMessages([
-                'google' => ['Google authentication failed.'],
-            ]);
-        }
-    }
-
     public function googleLogin(Request $request)
     {
-        try {
-            $googleUser = Socialite::driver('google')->stateless()->userFromToken($request->input('access_token'));
+        $request->validate([
+            'id_token' => 'required|string',
+        ]);
 
-            $user = User::updateOrCreate(
-                ['email' => $googleUser->email],
-                [
-                    'name' => $googleUser->name,
-                    'google_id' => $googleUser->id,
-                    'password' => Hash::make(Str::random(20)),
-                ]
-            );
+        $clientId = config('services.google.client_id');
+        $idToken = $request->input('id_token');
 
-            $user->referral_code = strtoupper('GDV' . Str::random(4));
+        $payload = $this->verifyGoogleIdToken($idToken, $clientId);
+
+        $email = $payload['email'];
+        $name = $payload['name'] ?? 'No Name';
+        $googleId = $payload['sub'];
+
+        $user = User::where('email', $email)->first();
+        $isNewUser = false;
+
+        if (!$user) {
+            $user = User::create([
+                'name' => $name,
+                'email' => $email,
+                'google_id' => $googleId,
+                'password' => Hash::make(Str::random(20)),
+                'email_verified_at' => now(),
+            ]);
+
+            $user->assignRole(Role::USER->value);
+
+            // ✅ Generate referral code for new user
+            $generatedCode = $this->referralService->generateCode($user->id);
             $user->save();
 
-            $token = $user->createToken('auth_token')->plainTextToken;
+            $isNewUser = true;
+        } else {
+            if (!$user->google_id) {
+                $user->google_id = $googleId;
+                $user->save();
+            }
+        }
 
-            return response()->json([
-                'message' => 'Google login successful',
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'referral_code' => $user->referral_code,
-                ],
-                'token' => $token,
-            ], 200);
-        } catch (\Exception $e) {
+        $token = $user->createToken('google')->plainTextToken;
+
+        return response()->json([
+            'message' => $isNewUser
+                ? 'Google login successful.'
+                : 'Google login successful.',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ],
+            'token' => $token,
+        ]);
+    }
+
+
+
+    public function verifyGoogleIdToken(string $idToken, string $clientId): array
+    {
+        // ✅ Cache raw JWK, not the parsed OpenSSL key
+        $jwk = cache()->remember('google_jwk_raw', now()->addHours(24), function () {
+            $jwkUrl = 'https://www.googleapis.com/oauth2/v3/certs';
+            return Http::get($jwkUrl)->json();
+        });
+
+        // 🔄 Parse keys fresh each time (lightweight)
+        $keys = JWK::parseKeySet($jwk);
+
+        try {
+            $decoded = JWT::decode($idToken, $keys);
+            $payload = (array) $decoded;
+
+            if ($payload['aud'] !== $clientId) {
+                throw new \Exception('Invalid audience');
+            }
+
+            if (!in_array($payload['iss'], ['https://accounts.google.com', 'accounts.google.com'])) {
+                throw new \Exception('Invalid issuer');
+            }
+
+            return $payload;
+        } catch (\Throwable $e) {
             throw ValidationException::withMessages([
-                'google' => ['Google authentication failed.'],
+                'google' => ['Google Verification Failed.'],
             ]);
         }
     }
-
 
     public function appleRedirect()
     {

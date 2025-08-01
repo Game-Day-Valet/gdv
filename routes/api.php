@@ -60,7 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/sports', [SportController::class, 'store']);
     Route::put('/sports/{id}', [SportController::class, 'update']);
     Route::delete('/sports/{id}', [SportController::class, 'destroy']);
-    Route::get('/sports/{id}/tournaments', [SportController::class, 'tournaments']);
+    Route::get('/sports/tournaments/{id}', [SportController::class, 'tournaments']);
 
 
     // Items Module
@@ -108,9 +108,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 // Sign in with Google
-Route::get('/auth/google/redirect', [AuthController::class, 'googleRedirect']);
-Route::get('/auth/google/callback', [AuthController::class, 'googleCallback']);
+// Route::get('/auth/google/redirect', [AuthController::class, 'googleRedirect']);
+// Route::get('/auth/google/callback', [AuthController::class, 'googleCallback']);
+// Route::post('/auth/google/login', [AuthController::class, 'googleLogin']);
 Route::post('/auth/google/login', [AuthController::class, 'googleLogin']);
+
 
 // Sign in with Apple
 Route::get('/auth/apple/redirect', [AuthController::class, 'appleRedirect']);
