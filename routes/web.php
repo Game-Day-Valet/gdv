@@ -8,13 +8,13 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\BundleController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\ChatManagementController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RoutingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EmailPreviewController;
 
 require __DIR__ . '/auth.php';
-
 
 Route::get('/preview-email', [AuthController::class, 'previewVerifyEmail'])->name('preview.email');
 
@@ -27,6 +27,15 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
     // Route::get('{first}/{second}/{third}', [RoutingController::class, 'thirdLevel'])->name('third');
     // Route::get('{first}/{second}', [RoutingController::class, 'secondLevel'])->name('second');
     // Route::get('{any}', [RoutingController::class, 'root'])->name('any');
+
+    // Chat Management Routes
+    Route::get('/chat-management', [ChatManagementController::class, 'index'])->name('chat-management.index');
+    Route::get('/chat-management/{id}', [ChatManagementController::class, 'show'])->name('chat-management.show');
+    Route::post('/chat-management/{id}/send', [ChatManagementController::class, 'sendMessage'])->name('chat-management.send');
+    Route::get('/chat-management/{id}/messages', [ChatManagementController::class, 'getMessages'])->name('chat-management.messages');
+    Route::post('/chat-management/{id}/mark-read', [ChatManagementController::class, 'markAsRead'])->name('chat-management.mark-read');
+    Route::post('/chat-management/{id}/close', [ChatManagementController::class, 'closeConversation'])->name('chat-management.close');
+    Route::get('/chat-management/unassigned/list', [ChatManagementController::class, 'getUnassignedConversations'])->name('chat-management.unassigned');
 
     // User Management
     Route::group(['middleware' => ['can:super_admin']], function () {

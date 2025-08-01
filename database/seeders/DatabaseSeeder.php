@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Role;
 use App\Models\User;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -18,12 +19,20 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Zafeer',
-            'email' => 'zafeer@devop360.com',
-            'email_verified_at' => now(),
-            'password' => Hash::make('devop360'),
-            'remember_token' => Str::random(10),
+        // User::factory()->create([
+        //     'name' => 'Zafeer',
+        //     'email' => 'zafeer@devop360.com',
+        //     'email_verified_at' => now(),
+        //     'password' => Hash::make('devop360'),
+        //     'remember_token' => Str::random(10),
+        // ]);
+
+        // Create and assign role to manager
+        $manager = User::create([
+            'name' => 'Test Manager',
+            'email' => 'manager@example.com',
+            'password' => Hash::make('password'),
         ]);
+        $manager->assignRole(Role::MANAGER->value);
     }
 }

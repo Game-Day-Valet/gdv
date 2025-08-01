@@ -19,9 +19,8 @@ export default defineConfig({
                 'node_modules/datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css',
                 'node_modules/datatables.net-select-bs5/css/select.bootstrap5.min.css',
                 'node_modules/jsvectormap/dist/jsvectormap.min.css',
-
-                // Javascript
                 'resources/js/app.js',
+                'resources/js/echo.js',
                 'resources/js/pages/analytics-dashboard.init.js',
                 'resources/js/pages/ecommerce-dashboard.init.js',
                 'resources/js/pages/widgets.init.js',
@@ -30,8 +29,6 @@ export default defineConfig({
                 'resources/js/pages/quilljs.init.js',
                 'resources/js/pages/datatable.init.js',
                 'resources/js/pages/coming-soon.init.js',
-
-                // Chart
                 'resources/js/pages/apexcharts-line.init.js',
                 'resources/js/pages/apexcharts-area.init.js', 
                 'resources/js/pages/apexcharts-column.init.js',
@@ -50,15 +47,9 @@ export default defineConfig({
                 'resources/js/pages/apexcharts-scatter.init.js',
                 'resources/js/pages/apexcharts-treemap.init.js',
                 'resources/js/pages/apexcharts-timeline.init.js',
-
-                // Google and Vector Map
                 'resources/js/pages/vector-maps.init.js',
                 'resources/js/pages/google-maps-init.js',
-
-                // Calendar
                 'resources/js/pages/demo.calendar.js',
-
-                // Vector Map js
                 'resources/js/pages/iraq-map.js',
                 'resources/js/pages/canada-map.js',
                 'resources/js/pages/russia-map.js',
@@ -71,4 +62,24 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    define: {
+        'import.meta.env.VITE_PUSHER_APP_KEY': JSON.stringify(process.env.PUSHER_APP_KEY || '018b37a23cdaa32a0f1c'),
+        'import.meta.env.VITE_PUSHER_APP_CLUSTER': JSON.stringify(process.env.PUSHER_APP_CLUSTER || 'ap2'),
+    },
+    build: {
+        outDir: 'public/build',
+        manifest: true,
+        rollupOptions: {
+            output: {
+                entryFileNames: ({ name }) => {
+                    if (name === 'echo') {
+                        return 'js/echo.js';
+                    }
+                    return 'assets/[name]-[hash].js';
+                },
+                chunkFileNames: 'assets/[name]-[hash].js',
+                assetFileNames: 'assets/[name]-[hash][extname]',
+            },
+        },
+    },
 });

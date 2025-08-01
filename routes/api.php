@@ -5,11 +5,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BundleController;
-<<<<<<< HEAD
 use App\Http\Controllers\Api\ChatController;
-=======
 use App\Http\Controllers\Api\CouponController;
->>>>>>> 6fc4366d4a16d0d6d43d6c9e601eaae1a5d4d3e6
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\ProfileController;
@@ -38,10 +35,6 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/password/reset', [AuthController::class, 'passwordResetRequest']);
 Route::post('/password/reset/confirm', [AuthController::class, 'passwordResetConfirm']);
 
-Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-    $request->fulfill();
-    return response()->json(['message' => 'Email verified successfully!']);
-})->middleware(['signed'])->name('verification.verify');
 
 Route::post('/email/verify-otp', [AuthController::class, 'verifyOtp']);
 
@@ -106,6 +99,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/chat/send', [ChatController::class, 'sendMessage']);
     Route::post('/chat/reply/{conversationId}', [ChatController::class, 'replyToMessage']);
     Route::get('/chat/conversations', [ChatController::class, 'getConversations']);
+    Route::get('/chat/conversations/{conversationId}/messages', [ChatController::class, 'getMessages']);
+    Route::post('/chat/conversations/{conversationId}/mark-read', [ChatController::class, 'markAsRead']);
+    Route::post('/chat/conversations/{conversationId}/close', [ChatController::class, 'closeConversation']);
+    Route::get('/chat/conversations/{conversationId}/details', [ChatController::class, 'getConversationDetails']);
+    Route::get('/chat/unassigned', [ChatController::class, 'getUnassignedConversations']);
 });
 
 

@@ -148,6 +148,13 @@
                     </a>
                 </li>
 
+                <li>
+                    <a href="{{ route('chat-management.index') }}">
+                        <i class="fas fa-comments"></i>
+                        <span>Chat Management</span>
+                    </a>
+                </li>
+
 
                 @can('super_admin')
                 <li>
