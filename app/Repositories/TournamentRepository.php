@@ -8,11 +8,38 @@ use App\Enums\TournamentStatus;
 
 class TournamentRepository implements TournamentRepositoryInterface
 {
-    public function getAllActive()
+    // public function getAllActive()
+    // {
+    //     return Tournament::where('status', TournamentStatus::ACTIVE->value)
+    //         ->with('sport')
+    //         ->get();
+    // }
+
+    public function getAllActive($search = null)
     {
-        return Tournament::where('status', TournamentStatus::ACTIVE->value)
-            ->with('sport')
-            ->get();
+        $query = Tournament::where('status', TournamentStatus::ACTIVE->value)
+            ->with('sport');
+
+        // If search parameter is provided
+        if ($search) {
+            $searchTerms = preg_split('/\s+/', trim($search)); // Split by whitespace
+
+            $query->where(function ($q) use ($searchTerms) {
+                foreach ($searchTerms as $term) {
+                    // Check if term looks like a date (YYYY-MM-DD format)
+                    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $term)) {
+                        $q->whereDate('start_date', '=', $term)
+                            ->orWhereDate('end_date', '=', $term);
+                    } else {
+                        // Treat as name or location
+                        $q->where('name', 'like', "%{$term}%")
+                            ->orWhere('location', 'like', "%{$term}%");
+                    }
+                }
+            });
+        }
+
+        return $query->get();
     }
 
     public function find($id)

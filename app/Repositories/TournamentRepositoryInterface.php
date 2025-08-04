@@ -4,7 +4,7 @@ namespace App\Repositories;
 
 interface TournamentRepositoryInterface
 {
-    public function getAllActive();
+    public function getAllActive($search = null);
     public function find($id);
     public function create(array $data);
     public function update($id, array $data);

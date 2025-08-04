@@ -56,6 +56,7 @@ class SportRepository implements SportRepositoryInterface
     {
         return Tournament::where('sport_id', $sportId)
             ->where('status', TournamentStatus::ACTIVE->value)
+            ->with('sport')
             ->get();
     }
 }

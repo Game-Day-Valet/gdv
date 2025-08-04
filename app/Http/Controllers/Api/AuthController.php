@@ -8,6 +8,9 @@ use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\PasswordResetRequest;
 use App\Http\Requests\PasswordResetConfirmRequest;
+use App\Http\Requests\ResetPasswordRequest;
+use App\Http\Requests\VerifyResetCodeRequest;
+use App\Mail\PasswordResetEmail;
 use App\Mail\VerifyEmailOTP;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -232,7 +235,7 @@ class AuthController extends Controller
     public function passwordResetRequest(PasswordResetRequest $request)
     {
         $user = User::where('email', $request->input('email'))->first();
-        $code = Str::random(6);
+        $code = rand(100000, 999999);
 
         PasswordResetToken::updateOrCreate(
             ['email' => $user->email],
@@ -242,17 +245,59 @@ class AuthController extends Controller
             ]
         );
 
-        Mail::raw("Your password reset code is: $code", function ($message) use ($user) {
-            $message->to($user->email)
-                ->subject('Password Reset Code');
-        });
+        Mail::to($user->email)->send(new PasswordResetEmail($user, $code));
 
         return response()->json([
             'message' => 'Password reset code sent to your email.',
         ], 200);
     }
 
-    public function passwordResetConfirm(PasswordResetConfirmRequest $request)
+    // public function passwordResetConfirm(PasswordResetConfirmRequest $request)
+    // {
+    //     $token = PasswordResetToken::where('email', $request->input('email'))
+    //         ->where('token', $request->input('code'))
+    //         ->where('created_at', '>=', now()->subMinutes(60))
+    //         ->first();
+
+    //     if (!$token) {
+    //         throw ValidationException::withMessages([
+    //             'code' => ['The reset code is invalid or has expired.'],
+    //         ]);
+    //     }
+
+    //     $user = User::where('email', $request->input('email'))->first();
+    //     $user->password = Hash::make($request->input('password'));
+    //     $user->save();
+
+    //     PasswordResetToken::where('email', $request->input('email'))->delete();
+
+    //     return response()->json([
+    //         'message' => 'Password reset successfully.',
+    //     ], 200);
+    // }
+
+    public function verifyResetCode(VerifyResetCodeRequest $request)
+    {
+        $token = PasswordResetToken::where('email', $request->input('email'))
+            ->where('token', $request->input('code'))
+            ->where('created_at', '>=', now()->subMinutes(60))
+            ->first();
+
+        if (!$token) {
+            throw ValidationException::withMessages([
+                'code' => ['The reset code is invalid or has expired.'],
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Reset code verified successfully.',
+        ], 200);
+    }
+
+    /**
+     * Reset the password after code verification
+     */
+    public function resetPassword(ResetPasswordRequest $request)
     {
         $token = PasswordResetToken::where('email', $request->input('email'))
             ->where('token', $request->input('code'))
@@ -266,6 +311,12 @@ class AuthController extends Controller
         }
 
         $user = User::where('email', $request->input('email'))->first();
+        if (!$user) {
+            throw ValidationException::withMessages([
+                'email' => ['User not found.'],
+            ]);
+        }
+
         $user->password = Hash::make($request->input('password'));
         $user->save();
 
@@ -305,7 +356,6 @@ class AuthController extends Controller
 
             $user->assignRole(Role::USER->value);
 
-            // ✅ Generate referral code for new user
             $generatedCode = $this->referralService->generateCode($user->id);
             $user->save();
 
@@ -336,13 +386,11 @@ class AuthController extends Controller
 
     public function verifyGoogleIdToken(string $idToken, string $clientId): array
     {
-        // ✅ Cache raw JWK, not the parsed OpenSSL key
         $jwk = cache()->remember('google_jwk_raw', now()->addHours(24), function () {
             $jwkUrl = 'https://www.googleapis.com/oauth2/v3/certs';
             return Http::get($jwkUrl)->json();
         });
 
-        // 🔄 Parse keys fresh each time (lightweight)
         $keys = JWK::parseKeySet($jwk);
 
         try {

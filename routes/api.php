@@ -34,6 +34,8 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/password/reset', [AuthController::class, 'passwordResetRequest']);
 Route::post('/password/reset/confirm', [AuthController::class, 'passwordResetConfirm']);
+Route::post('/verify-reset-code', [AuthController::class, 'verifyResetCode']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 
 Route::post('/email/verify-otp', [AuthController::class, 'verifyOtp']);

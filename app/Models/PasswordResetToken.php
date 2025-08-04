@@ -10,6 +10,6 @@ class PasswordResetToken extends Model
     protected $primaryKey = 'email';
     public $incrementing = false;
     protected $keyType = 'string';
-    protected $fillable = ['email', 'token', 'created_at'];
+    protected $fillable = ['email', 'token', 'expires_at', 'created_at'];
     public $timestamps = false;
 }

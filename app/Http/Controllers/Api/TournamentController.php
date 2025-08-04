@@ -21,9 +21,11 @@ class TournamentController extends Controller
         $this->tournamentRepository = $tournamentRepository;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $tournaments = $this->tournamentRepository->getAllActive();
+        $search = $request->query('search');
+
+        $tournaments = $this->tournamentRepository->getAllActive($search);
         return TournamentResource::collection($tournaments);
     }
 
