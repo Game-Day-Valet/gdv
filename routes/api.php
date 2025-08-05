@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BundleController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\CouponController;
+use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\ProfileController;
@@ -92,9 +93,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/rentals/{id}', [RentalController::class, 'destroy']);
 
 
-    // Rental Module
+    // Favorites Module
     Route::get('/favorites', [FavoriteController::class, 'index']);
     Route::post('/favorites/toggle', [FavoriteController::class, 'toggle']);
+
+
+    // FAQ Module
+    Route::get('/faqs', [FaqController::class, 'index']);
+    Route::post('/faqs', [FaqController::class, 'store']);
+    Route::put('/faqs/{id}', [FaqController::class, 'update']);
+    Route::delete('/faqs/{id}', [FaqController::class, 'destroy']);
 
 
     // Chat Module

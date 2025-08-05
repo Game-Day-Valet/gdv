@@ -6,6 +6,8 @@ use App\Repositories\BundleRepository;
 use App\Repositories\BundleRepositoryInterface;
 use App\Repositories\CouponRepository;
 use App\Repositories\CouponRepositoryInterface;
+use App\Repositories\FaqRepository;
+use App\Repositories\FaqRepositoryInterface;
 use App\Repositories\FavoriteRepository;
 use App\Repositories\FavoriteRepositoryInterface;
 use App\Repositories\ItemRepository;
@@ -34,6 +36,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(CouponRepositoryInterface::class, CouponRepository::class);
         $this->app->bind(RentalRepositoryInterface::class, RentalRepository::class);
         $this->app->bind(FavoriteRepositoryInterface::class, FavoriteRepository::class);
+        $this->app->bind(FaqRepositoryInterface::class, FaqRepository::class);
     }
 
     /**
