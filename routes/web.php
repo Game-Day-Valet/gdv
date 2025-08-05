@@ -9,6 +9,8 @@ use App\Http\Controllers\BundleController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ChatManagementController;
+use App\Http\Controllers\FaqManagementController;
+use App\Http\Controllers\PrivacyPolicyManagementController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RoutingController;
 use App\Http\Controllers\UserController;
@@ -46,5 +48,7 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
         Route::resource('item-management', ItemController::class);
         Route::resource('bundle-management', BundleController::class);
         Route::resource('coupon-management', CouponManagementController::class);
+        Route::resource('faq-management', FaqManagementController::class);
+        Route::resource('privacy-policy-management', PrivacyPolicyManagementController::class);
     });
 });

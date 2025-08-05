@@ -10,12 +10,12 @@ class FaqRepository implements FaqRepositoryInterface
 {
     public function getAll()
     {
-        return Faq::withTrashed()->get();
+        return Faq::where('type', 'faq')->get();
     }
 
     public function find($id)
     {
-        return Faq::withTrashed()->findOrFail($id);
+        return Faq::where('type', 'faq')->findOrFail($id);
     }
 
     public function create(array $data)
@@ -25,6 +25,7 @@ class FaqRepository implements FaqRepositoryInterface
                 'title' => $data['title'],
                 'description' => $data['description'],
                 'status' => $data['status'] ?? true,
+                'type' => 'faq',
             ]);
         });
     }
@@ -32,7 +33,7 @@ class FaqRepository implements FaqRepositoryInterface
     public function update($id, array $data)
     {
         return DB::transaction(function () use ($id, $data) {
-            $faq = Faq::withTrashed()->findOrFail($id);
+            $faq = Faq::where('type', 'faq')->findOrFail($id);
             $faq->update([
                 'title' => $data['title'] ?? $faq->title,
                 'description' => $data['description'] ?? $faq->description,
@@ -44,7 +45,7 @@ class FaqRepository implements FaqRepositoryInterface
 
     public function delete($id)
     {
-        $faq = Faq::withTrashed()->findOrFail($id);
+        $faq = Faq::where('type', 'faq')->findOrFail($id);
         $faq->delete();
     }
 }

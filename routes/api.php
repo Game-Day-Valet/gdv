@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\FavoriteController;
+use App\Http\Controllers\Api\PrivacyPolicyController;
 use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RentalController;
@@ -103,6 +104,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/faqs', [FaqController::class, 'store']);
     Route::put('/faqs/{id}', [FaqController::class, 'update']);
     Route::delete('/faqs/{id}', [FaqController::class, 'destroy']);
+
+    // Privacy Policy Module
+    Route::get('/privacy-policies', [PrivacyPolicyController::class, 'index']);
 
 
     // Chat Module

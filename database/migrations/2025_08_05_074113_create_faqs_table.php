@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('title');
             $table->text('description');
             $table->boolean('status')->default(true);
+            $table->enum('type', ['faq', 'privacy_policy'])->default('faq');
             $table->timestamps();
             $table->softDeletes();
         });

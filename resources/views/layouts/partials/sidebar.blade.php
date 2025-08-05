@@ -155,6 +155,19 @@
                     </a>
                 </li>
 
+                <li>
+                    <a href="{{ route('faq-management.index') }}">
+                        <i class="fas fa-question-circle"></i>
+                        <span>FAQ Management</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ route('privacy-policy-management.index') }}">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Privacy Policy</span>
+                    </a>
+                </li>
 
                 @can('super_admin')
                 <li>

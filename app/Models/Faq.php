@@ -14,6 +14,7 @@ class Faq extends Model
         'title',
         'description',
         'status',
+        'type',
     ];
 
     protected $casts = [
