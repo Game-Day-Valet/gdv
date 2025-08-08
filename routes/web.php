@@ -51,6 +51,8 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
         Route::resource('bundle-management', BundleController::class);
         Route::resource('rental-management', RentalManagementController::class)->except(['create', 'store', 'edit', 'update', 'destroy']);
         Route::resource('coupon-management', CouponManagementController::class);
+        Route::post('/coupon-management/{id}/send', [CouponManagementController::class, 'send'])->name('coupon-management.send');
+        Route::get('/coupon-management/{id}/preview', [CouponManagementController::class, 'preview'])->name('coupon-management.preview');
         Route::resource('faq-management', FaqManagementController::class);
         Route::resource('privacy-policy-management', PrivacyPolicyManagementController::class);
 

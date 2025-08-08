@@ -63,6 +63,11 @@
                                     <td>{{ date('d-M-Y', strtotime($coupon->expires_at)) }}</td>
                                     <td>
                                         <div class="d-flex gap-2">
+                                            <a href="{{ route('coupon-management.preview', $coupon->id) }}"
+                                                class="btn btn-sm btn-info" target="_blank">Preview</a>
+                                            <button type="button" class="btn btn-sm btn-success send-coupon-btn"
+                                                    data-coupon-id="{{ $coupon->id }}"
+                                                    data-coupon-code="{{ $coupon->code }}">Send</button>
                                             <a href="{{ route('coupon-management.edit', $coupon->id) }}"
                                                 class="btn btn-sm btn-primary">Edit</a>
                                             <form action="{{ route('coupon-management.destroy', $coupon->id) }}" method="POST"
@@ -89,7 +94,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-                document.querySelectorAll('.delete-coupon-btn').forEach(function (btn) {
+            // Delete coupon confirmation
+            document.querySelectorAll('.delete-coupon-btn').forEach(function (btn) {
                 btn.addEventListener('click', function (e) {
                     Swal.fire({
                         title: 'Are you sure?',
@@ -106,6 +112,81 @@
                     });
                 });
             });
+
+            // Send coupon confirmation with AJAX
+            document.querySelectorAll('.send-coupon-btn').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    const couponId = btn.getAttribute('data-coupon-id');
+                    const couponCode = btn.getAttribute('data-coupon-code');
+
+                    Swal.fire({
+                        title: 'Send Coupon to Customers?',
+                        text: `This will send the coupon "${couponCode}" to all eligible customers via email.`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#28a745',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Yes, send it!',
+                        showLoaderOnConfirm: true,
+                        preConfirm: () => {
+                            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                            console.log('Sending coupon request:', { couponId, csrfToken });
+
+                            return fetch(`/coupon-management/${couponId}/send`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': csrfToken
+                                }
+                            })
+                            .then(response => {
+                                console.log('Response status:', response.status, response.statusText);
+                                console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+                                if (!response.ok) {
+                                    if (response.status === 302) {
+                                        throw new Error('Authentication required. Please refresh the page and try again.');
+                                    }
+                                    return response.text().then(text => {
+                                        console.log('Error response text:', text);
+                                        try {
+                                            const err = JSON.parse(text);
+                                            throw new Error(err.message || `HTTP error! Status: ${response.status}`);
+                                        } catch (e) {
+                                            throw new Error(`HTTP error! Status: ${response.status} - ${text.substring(0, 100)}`);
+                                        }
+                                    });
+                                }
+                                return response.json();
+                            })
+                            .catch(error => {
+                                console.error('Fetch error:', error);
+                                Swal.showValidationMessage(`Request failed: ${error.message}`)
+                            })
+                        },
+                        allowOutsideClick: () => !Swal.isLoading()
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            if (result.value.success) {
+                                Swal.fire({
+                                    title: 'Success!',
+                                    text: result.value.message,
+                                    icon: 'success',
+                                    confirmButtonColor: '#28a745'
+                                });
+                            } else {
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: result.value.message,
+                                    icon: 'error',
+                                    confirmButtonColor: '#dc3545'
+                                });
+                            }
+                        }
+                    });
+                });
+            });
         });
     </script>
 @endsection
+
