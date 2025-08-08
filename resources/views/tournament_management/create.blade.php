@@ -20,7 +20,7 @@
                     <h5 class="card-title mb-0">Tournament Create</h5>
                 </div>
                 <div class="card-body">
-                    <form class="row g-3" action="{{ route('tournament-management.store') }}" method="POST">
+                    <form class="row g-3" action="{{ route('tournament-management.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @if ($errors->any())
                             <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -50,6 +50,14 @@
                             @error('name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label for="image" class="form-label">Tournament Image <span class="text-danger">*</span></label>
+                            <input type="file" name="image" class="form-control @error('image') is-invalid @enderror" id="image" accept="image/*" required>
+                            @error('image')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="form-text text-muted">Upload an image (JPEG, PNG, JPG, GIF) up to 2MB</small>
                         </div>
                         <div class="col-md-6">
                             <label for="start_date" class="form-label">Start Date</label>

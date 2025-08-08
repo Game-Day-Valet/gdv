@@ -21,6 +21,7 @@ class TournamentResource extends JsonResource
                 'status' => $this->sport->status,
             ]),
             'name' => $this->name,
+            'image' => $this->image ? asset('storage/' . $this->image) : null,
             'start_date' => $this->start_date,
             'end_date' => $this->end_date,
             'location' => $this->location,

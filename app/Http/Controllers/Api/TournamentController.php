@@ -4,7 +4,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\Permission;
-use App\Http\Requests\TournamentRequest;
+use App\Http\Requests\Api\TournamentRequest;
+use App\Http\Requests\Api\TournamentUpdateRequest;
 use App\Http\Resources\TournamentResource;
 use App\Repositories\TournamentRepositoryInterface;
 use Illuminate\Http\Request;
@@ -44,7 +45,7 @@ class TournamentController extends Controller
         }
     }
 
-    public function update(TournamentRequest $request, $id)
+    public function update(TournamentUpdateRequest $request, $id)
     {
         try {
             $user = $request->user();

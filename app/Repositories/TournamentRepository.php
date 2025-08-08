@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\Tournament;
 use Illuminate\Support\Facades\DB;
 use App\Enums\TournamentStatus;
+use Illuminate\Support\Facades\Storage;
 
 class TournamentRepository implements TournamentRepositoryInterface
 {
@@ -42,6 +43,24 @@ class TournamentRepository implements TournamentRepositoryInterface
         return $query->get();
     }
 
+    public function getTodaysTournaments()
+    {
+        $today = now()->toDateString();
+        return Tournament::where('status', TournamentStatus::ACTIVE->value)
+            ->where(function($query) use ($today) {
+                $query->where(function($q) use ($today) {
+                    $q->whereDate('start_date', '<=', $today)
+                      ->whereDate('end_date', '>=', $today);
+                })
+                ->orWhere(function($q) use ($today) {
+                    $q->whereDate('start_date', $today)
+                      ->whereNull('end_date');
+                });
+            })
+            ->with('sport')
+            ->get();
+    }
+
     public function find($id)
     {
         return Tournament::with('sport')->findOrFail($id);
@@ -50,9 +69,16 @@ class TournamentRepository implements TournamentRepositoryInterface
     public function create(array $data)
     {
         return DB::transaction(function () use ($data) {
+            $imagePath = null;
+            if (isset($data['image']) && $data['image']) {
+                // Store image in storage/app/public/tournaments
+                $imagePath = $data['image']->store('tournaments', 'public');
+            }
+
             return Tournament::create([
                 'sport_id' => $data['sport_id'],
                 'name' => $data['name'],
+                'image' => $imagePath, // Store relative path
                 'start_date' => $data['start_date'],
                 'end_date' => $data['end_date'] ?? null,
                 'location' => $data['location'],
@@ -82,9 +108,27 @@ class TournamentRepository implements TournamentRepositoryInterface
     {
         return DB::transaction(function () use ($id, $data) {
             $tournament = Tournament::findOrFail($id);
+
+            $imagePath = $tournament->image;
+            if (isset($data['image']) && $data['image']) {
+                // Delete old image if it exists
+                if ($imagePath) {
+                    Storage::disk('public')->delete($imagePath);
+                }
+                // Store new image
+                $imagePath = $data['image']->store('tournaments', 'public');
+            } elseif (array_key_exists('image', $data) && is_null($data['image'])) {
+                // If image is explicitly set to null, delete the existing image
+                if ($imagePath) {
+                    Storage::disk('public')->delete($imagePath);
+                }
+                $imagePath = null;
+            }
+
             $tournament->update([
                 'sport_id' => $data['sport_id'] ?? $tournament->sport_id,
                 'name' => $data['name'] ?? $tournament->name,
+                'image' => $imagePath,
                 'start_date' => $data['start_date'] ?? $tournament->start_date,
                 'end_date' => $data['end_date'] ?? $tournament->end_date,
                 'location' => $data['location'] ?? $tournament->location,
@@ -116,6 +160,10 @@ class TournamentRepository implements TournamentRepositoryInterface
     public function delete($id)
     {
         $tournament = Tournament::findOrFail($id);
+        // Delete image from storage if it exists
+        if ($tournament->image) {
+            Storage::disk('public')->delete($tournament->image);
+        }
         $tournament->delete();
 
         // Optional Airtable sync (commented out)

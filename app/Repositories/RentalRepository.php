@@ -4,6 +4,7 @@
 namespace App\Repositories;
 
 use App\Models\Rental;
+use App\Models\RentalStatusLog;
 use Illuminate\Support\Facades\DB;
 
 class RentalRepository implements RentalRepositoryInterface
@@ -13,9 +14,22 @@ class RentalRepository implements RentalRepositoryInterface
         return Rental::with('tournament')->get();
     }
 
+    public function getAllPaginated($perPage = 15)
+    {
+        return Rental::with(['user', 'tournament'])
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+    }
+
     public function find($id)
     {
         return Rental::with('tournament')->findOrFail($id);
+    }
+
+    public function findWithRelations($id)
+    {
+        return Rental::with(['user', 'tournament', 'photos', 'reviews', 'statusLogs.updatedBy'])
+            ->findOrFail($id);
     }
 
     public function create(array $data)
@@ -89,5 +103,49 @@ class RentalRepository implements RentalRepositoryInterface
     {
         $rental = Rental::findOrFail($id);
         $rental->delete();
+    }
+
+    public function updateStatus($id, $status, $notes = null, $updatedBy = null, $image = null)
+    {
+        return DB::transaction(function () use ($id, $status, $notes, $updatedBy, $image) {
+            $rental = Rental::findOrFail($id);
+
+            // Update rental status
+            $rental->update(['status' => $status]);
+
+            // Handle image upload
+            $imagePath = null;
+            if ($image && $image->isValid()) {
+                $imagePath = $image->store('rental-status-logs', 'public');
+            }
+
+            // Log the status change
+            RentalStatusLog::create([
+                'rental_id' => $rental->id,
+                'status' => $status,
+                'notes' => $notes,
+                'image_path' => $imagePath,
+                'updated_by' => $updatedBy,
+            ]);
+
+            return $rental;
+        });
+    }
+
+    public function updatePaymentStatus($id, $paymentStatus)
+    {
+        return DB::transaction(function () use ($id, $paymentStatus) {
+            $rental = Rental::findOrFail($id);
+            $rental->update(['payment_status' => $paymentStatus]);
+            return $rental;
+        });
+    }
+
+    public function getStatusLogs($rentalId)
+    {
+        return RentalStatusLog::where('rental_id', $rentalId)
+            ->with('updatedBy')
+            ->orderBy('created_at', 'desc')
+            ->get();
     }
 }

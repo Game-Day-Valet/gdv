@@ -27,7 +27,7 @@ class RoutingController extends BaseController
     public function index(Request $request)
     {
         if (Auth::user()) {
-            return redirect('index');
+            return redirect('');
         } else {
             return redirect('login');
         }

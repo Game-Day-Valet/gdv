@@ -56,9 +56,14 @@ class Rental extends Model
     {
         return $this->belongsTo(User::class);
     }
-    
+
     public function reviews()
     {
         return $this->hasMany(RentalReview::class);
+    }
+
+    public function statusLogs()
+    {
+        return $this->hasMany(RentalStatusLog::class)->orderBy('created_at', 'desc');
     }
 }

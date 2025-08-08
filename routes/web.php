@@ -11,6 +11,8 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ChatManagementController;
 use App\Http\Controllers\FaqManagementController;
 use App\Http\Controllers\PrivacyPolicyManagementController;
+use App\Http\Controllers\RentalManagementController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RoutingController;
 use App\Http\Controllers\UserController;
@@ -25,7 +27,7 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
     Route::get('/profile', [RegisteredUserController::class, 'profile'])->name('profile');
     Route::post('/profile/update', [RegisteredUserController::class, 'updateProfile'])->name('profile.update');
     Route::post('/change-password', [RegisteredUserController::class, 'changePassword'])->name('user.change-password');
-    Route::get('/home', fn() => view('index'))->name('home');
+    Route::get('/home', [DashboardController::class, 'index'])->name('home');
     // Route::get('{first}/{second}/{third}', [RoutingController::class, 'thirdLevel'])->name('third');
     // Route::get('{first}/{second}', [RoutingController::class, 'secondLevel'])->name('second');
     // Route::get('{any}', [RoutingController::class, 'root'])->name('any');
@@ -39,7 +41,7 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
     Route::post('/chat-management/{id}/close', [ChatManagementController::class, 'closeConversation'])->name('chat-management.close');
     Route::get('/chat-management/unassigned/list', [ChatManagementController::class, 'getUnassignedConversations'])->name('chat-management.unassigned');
 
-    // User Management
+        // User Management
     Route::group(['middleware' => ['can:super_admin']], function () {
         Route::resource('user-management', UserController::class);
         Route::resource('role-management', RoleController::class);
@@ -47,8 +49,13 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
         Route::resource('tournament-management', TournamentController::class);
         Route::resource('item-management', ItemController::class);
         Route::resource('bundle-management', BundleController::class);
+        Route::resource('rental-management', RentalManagementController::class)->except(['create', 'store', 'edit', 'update', 'destroy']);
         Route::resource('coupon-management', CouponManagementController::class);
         Route::resource('faq-management', FaqManagementController::class);
         Route::resource('privacy-policy-management', PrivacyPolicyManagementController::class);
+
+        // Additional rental management routes
+        Route::post('/rental-management/{id}/update-status', [RentalManagementController::class, 'updateStatus'])->name('rental-management.update-status');
+        Route::post('/rental-management/{id}/update-payment-status', [RentalManagementController::class, 'updatePaymentStatus'])->name('rental-management.update-payment-status');
     });
 });

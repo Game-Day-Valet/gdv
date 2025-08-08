@@ -41,6 +41,7 @@
                     <table id="datatable" class="table table-bordered dt-responsive table-responsive nowrap">
                         <thead>
                             <tr>
+                                <th>Image</th>
                                 <th>Sport</th>
                                 <th>Name</th>
                                 <th>Start Date</th>
@@ -53,6 +54,13 @@
                         <tbody>
                             @foreach ($tournaments as $tournament)
                                 <tr>
+                                    <td>
+                                        @if($tournament->image)
+                                            <img src="{{  asset('storage/'.$tournament->image) }}" alt="{{ $tournament->name }}" class="img-thumbnail" width="50px" height="50px">
+                                        @else
+                                            <span class="text-muted">No image</span>
+                                        @endif
+                                    </td>
                                     <td>{{ $tournament->sport->name ?? '-' }}</td>
                                     <td>{{ $tournament->name }}</td>
                                     <td>{{ \Carbon\Carbon::parse($tournament->start_date)->format('d M Y') }}</td>

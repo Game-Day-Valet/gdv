@@ -142,8 +142,15 @@
                 </li>
 
                 <li>
+                    <a href="{{ route('rental-management.index') }}">
+                        <i class="fas fa-handshake"></i> {{-- rental/agreement icon --}}
+                        <span>Rental Management</span>
+                    </a>
+                </li>
+
+                <li>
                     <a href="{{ route('coupon-management.index') }}">
-                        <i class="fas fa-layer-group"></i> {{-- layered bundle icon --}}
+                        <i class="fas fa-ticket-alt"></i> {{-- coupon icon --}}
                         <span>Coupon Management</span>
                     </a>
                 </li>

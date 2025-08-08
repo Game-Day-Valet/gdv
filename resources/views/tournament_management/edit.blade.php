@@ -20,7 +20,7 @@
                     <h5 class="card-title mb-0">Tournament Edit</h5>
                 </div>
                 <div class="card-body">
-                    <form class="row g-3" action="{{ route('tournament-management.update', $tournament->id) }}" method="POST">
+                    <form class="row g-3" action="{{ route('tournament-management.update', $tournament->id) }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
                         @if ($errors->any())
@@ -51,6 +51,20 @@
                             @error('name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label for="image" class="form-label">Tournament Image <span class="text-danger">*</span></label>
+                            <input type="file" name="image" class="form-control @error('image') is-invalid @enderror" id="image" accept="image/*" required>
+                            @error('image')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="form-text text-muted">Upload an image (JPEG, PNG, JPG, GIF) up to 2MB</small>
+                            @if($tournament->image)
+                                <div class="mt-2">
+                                    <img src="{{ asset('storage/'.$tournament->image) }}" alt="Current tournament image" class="img-thumbnail" style="max-width: 150px; max-height: 150px;">
+                                    <small class="d-block text-muted">Current image</small>
+                                </div>
+                            @endif
                         </div>
                         <div class="col-md-6">
                             <label for="start_date" class="form-label">Start Date</label>
