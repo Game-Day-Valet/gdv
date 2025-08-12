@@ -33,7 +33,7 @@ class NewMessage implements ShouldBroadcast
         $channelName = $conversation->responder_id ? 'conversation.' . $this->message->conversation_id : 'support';
         $channel = new Channel($channelName);
 
-        Log::info('Broadcasting NewMessage on channel', [
+        Log::info('Broadcasting NewMessage on public channel', [
             'channel' => $channel->name,
             'message_id' => $this->message->id,
             'conversation_id' => $this->message->conversation_id,

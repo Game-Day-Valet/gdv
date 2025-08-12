@@ -12,9 +12,36 @@
     }
     .conversation-list {
         height: 100%;
-        overflow-y: auto;
         border-right: 1px solid #e9ecef;
         background-color: #fff;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #conversations-list {
+        flex: 1;
+        overflow-y: auto;
+        max-height: calc(100vh - 280px);
+        scrollbar-width: thin;
+        scrollbar-color: #c1c1c1 #f1f1f1;
+    }
+
+    #conversations-list::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #conversations-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    #conversations-list::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+    }
+
+    #conversations-list::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
     }
     .conversation-item {
         padding: 15px;
@@ -299,9 +326,9 @@
 
     function initializeChat() {
         if (auth.isAdmin) {
-            window.Echo.private('support')
+            window.Echo.channel('support')
                 .listen('.new-message', (data) => {
-                    console.log('Received new-message on support channel:', data);
+                    console.log('Received new-message on public support channel:', data);
                     updateConversationList();
                     if (data.message && data.message.conversation_id == currentConversationId) {
                         console.log('Appending message from support channel:', data.message);
@@ -389,27 +416,9 @@
                             return;
                         }
 
-                        fetch('/broadcasting/auth', {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': csrfToken,
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                            },
-                            credentials: 'include',
-                            body: `socket_id=${socketId}&channel_name=private-${channelName}`
-                        })
-                            .then(response => {
-                                if (!response.ok) {
-                                    return response.json().then(err => {
-                                        throw new Error(`HTTP error! Status: ${response.status} ${response.statusText} - ${err.message || 'Unknown error'}`);
-                                    });
-                                }
-                                return response.json();
-                            })
-                            .then(authData => {
-                                console.log('Broadcast auth success:', authData);
-                                window.Echo.private(channelName)
+                        // Using public channels - no authentication needed
+                        console.log('Subscribing to public channel:', channelName);
+                        window.Echo.channel(channelName)
                                     .listen('.new-message', (data) => {
                                         console.log('Received new-message event on conversation channel:', data);
                                         const message = data.message; // Extract the message object
@@ -443,18 +452,8 @@
                                         }
                                     })
                                     .subscribed(() => {
-                                        console.log('Successfully subscribed to channel:', channelName);
+                                        console.log('Successfully subscribed to public channel:', channelName);
                                     });
-                            })
-                            .catch(err => {
-                                console.error('Broadcast auth error:', err);
-                                if (attempts > 1) {
-                                    console.log('Retrying auth...');
-                                    setTimeout(() => subscribeWithRetry(attempts - 1, delay), delay);
-                                } else {
-                                    Swal.fire('Error', 'Failed to authenticate channel: ' + err.message, 'error');
-                                }
-                            });
                     }
 
                     subscribeWithRetry();

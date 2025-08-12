@@ -26,7 +26,7 @@ class TournamentController extends Controller
     {
         $search = $request->query('search');
 
-        $tournaments = $this->tournamentRepository->getAllActive($search);
+        $tournaments = $this->tournamentRepository->getAllActive($search, true, $request->limit);
         return TournamentResource::collection($tournaments);
     }
 

@@ -30,12 +30,7 @@ try {
         cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
         encrypted: true,
         forceTLS: true,
-        authEndpoint: '/broadcasting/auth',
-        auth: {
-            headers: {
-                'X-CSRF-TOKEN': csrfToken
-            }
-        },
+        // authEndpoint removed - using public channels
     });
 
     console.log('Echo initialized:', window.Echo);

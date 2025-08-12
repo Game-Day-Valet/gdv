@@ -32,7 +32,7 @@ class RentalController extends Controller
     public function userRentals()
     {
         $user = auth()->user();
-        $rentals = Rental::where('user_id', $user->id)->with('tournament')->orderBy('created_at', 'desc')->get();
+        $rentals = Rental::where('user_id', $user->id)->with('tournament', 'statusLogs')->orderBy('created_at', 'desc')->get();
         return RentalResource::collection($rentals);
     }
 

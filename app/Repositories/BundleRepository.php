@@ -12,7 +12,7 @@ class BundleRepository implements BundleRepositoryInterface
     public function getAllAvailable()
     {
         return Bundle::where('status', ItemStatus::AVAILABLE->value)
-            ->with('items')
+            ->with('items', 'cart_items')
             ->get();
     }
 

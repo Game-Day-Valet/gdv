@@ -9,9 +9,16 @@ use Illuminate\Support\Facades\Storage;
 
 class ItemRepository implements ItemRepositoryInterface
 {
-    public function getAllAvailable()
+    public function getAllAvailable($search = '', $pagination = false, $limit = 10)
     {
-        return Item::where('status', ItemStatus::AVAILABLE->value)->get();
+        $query = Item::with('cart_items')->where('status', ItemStatus::AVAILABLE->value)
+        ->when($search, function ($query, $search) {
+            $query->where('name', 'like', "%$search%");
+        });
+        if ($pagination === true) {
+            return $query->paginate($limit);
+        }
+        return $query->get();
     }
 
     public function find($id)

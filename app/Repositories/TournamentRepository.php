@@ -16,7 +16,7 @@ class TournamentRepository implements TournamentRepositoryInterface
     //         ->get();
     // }
 
-    public function getAllActive($search = null)
+    public function getAllActive($search = null, $pagination = false, $limit = 10)
     {
         $query = Tournament::where('status', TournamentStatus::ACTIVE->value)
             ->with('sport');
@@ -40,7 +40,12 @@ class TournamentRepository implements TournamentRepositoryInterface
             });
         }
 
+
+        if ($pagination === true) {
+            return $query->paginate($limit);
+        }
         return $query->get();
+
     }
 
     public function getTodaysTournaments()

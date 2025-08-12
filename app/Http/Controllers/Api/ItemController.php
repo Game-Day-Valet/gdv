@@ -19,9 +19,9 @@ class ItemController extends Controller
         $this->itemRepository = $itemRepository;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $items = $this->itemRepository->getAllAvailable();
+        $items = $this->itemRepository->getAllAvailable($request->search, true, $request->limit);
         return ItemResource::collection($items);
     }
 

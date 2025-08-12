@@ -6,9 +6,21 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class BundleResource extends JsonResource
 {
+    protected $isCart;
+
+    public function __construct($resource, $isCart = false)
+    {
+        parent::__construct($resource);
+        $this->isCart = $isCart;
+    }
+
     public function toArray($request)
     {
-        return [
+        $totalItems = $this->items->map(function($item) {
+            return $item->pivot->quantity.' '.$item->name;
+        })->implode(', ');
+
+        $data = [
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
@@ -20,6 +32,13 @@ class BundleResource extends JsonResource
                 'quantity' => $item->pivot->quantity,
                 'price' => $item->price,
             ])),
+            'total_items' => $totalItems,
         ];
+
+        if ($this->isCart) {
+            $data['quantity'] = $this->cart_items->sum('quantity');
+        }
+
+        return $data;
     }
 }

@@ -45,6 +45,10 @@ return [
         'client_id' => env('GOOGLE_CLIENT_ID'),
     ],
 
+    'stripe' => [
+        'key' => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+    ],
 
     'apple' => [
         'client_id' => env('APPLE_CLIENT_ID'),

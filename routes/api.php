@@ -15,6 +15,8 @@ use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RentalController;
 use App\Http\Controllers\Api\SportController;
 use App\Http\Controllers\Api\TournamentController;
+use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\StripeController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 /*
@@ -99,6 +101,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/favorites/toggle', [FavoriteController::class, 'toggle']);
 
 
+    // Cart Module
+    Route::post('/cart', [CartController::class, 'store']);
+    Route::get('/cart', [CartController::class, 'index']);
+
+
     // FAQ Module
     Route::get('/faqs', [FaqController::class, 'index']);
     Route::post('/faqs', [FaqController::class, 'store']);
@@ -118,6 +125,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/chat/conversations/{conversationId}/close', [ChatController::class, 'closeConversation']);
     Route::get('/chat/conversations/{conversationId}/details', [ChatController::class, 'getConversationDetails']);
     Route::get('/chat/unassigned', [ChatController::class, 'getUnassignedConversations']);
+
+    Route::post('/create-payment-intent', [StripeController::class, 'createPaymentIntent']);
 });
 
 
