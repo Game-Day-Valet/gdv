@@ -52,7 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/referral-code', [AuthController::class, 'getReferralCode']);
 
 
-    Route::put('/profile', [ProfileController::class, 'update']);
+    Route::post('/profile', [ProfileController::class, 'update']);
 
     // Tournaments Module
     Route::get('/tournaments', [TournamentController::class, 'index']);
