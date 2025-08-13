@@ -308,6 +308,8 @@ class ChatManagementController extends Controller
         }
 
         $conversations = Conversation::with(['user', 'messages.sender'])
+        ->withCount('unreadMessages')
+
             ->whereNull('responder_id')
             ->where('status', 'open')
             ->orderBy('updated_at', 'desc')

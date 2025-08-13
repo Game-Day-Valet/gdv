@@ -220,14 +220,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'User details retrieved successfully',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'referral_code' => $user->referral_code,
-                'roles' => $user->getRoleNames(),
-                'permissions' => $user->getAllPermissions()->pluck('name'),
-            ],
+            'user' => $user,
             'token' => $request->bearerToken(),
         ], 200);
     }

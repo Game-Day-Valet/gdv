@@ -715,7 +715,7 @@
 
                 conversations.forEach(conversation => {
                     const isActive = conversation.id == currentConversationId ? 'active' : '';
-                    const isUnread = conversation.unread_count > 0 ? 'unread' : '';
+                    const isUnread = conversation.unread_messages_count > 0 ? 'unread' : '';
                     const lastMessage = conversation.messages && conversation.messages.length > 0 ? conversation.messages[conversation.messages.length - 1].content : 'No messages yet';
 
                     const item = `
