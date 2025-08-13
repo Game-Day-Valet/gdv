@@ -148,4 +148,12 @@ class RentalRepository implements RentalRepositoryInterface
             ->orderBy('created_at', 'desc')
             ->get();
     }
+
+    public function getByUser($userId)
+    {
+        return Rental::with('tournament')
+            ->where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
 }
