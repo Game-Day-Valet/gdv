@@ -14,4 +14,5 @@ interface RentalRepositoryInterface
     public function updateStatus($id, $status, $notes = null, $updatedBy = null, $image = null);
     public function updatePaymentStatus($id, $paymentStatus);
     public function getStatusLogs($rentalId);
+    public function getByUser($userId);
 }
