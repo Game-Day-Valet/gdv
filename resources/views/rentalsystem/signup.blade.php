@@ -140,10 +140,10 @@
 					</button>
 				</form>
 
-				<div class="sep">OR</div>
+				{{-- <div class="sep">OR</div>
 				<a href="{{ route('rentalsystem.google.redirect') }}" class="btn-google">
 					<img src="https://www.gstatic.com/images/branding/product/1x/gsa_64dp.png" width="20" height="20" alt=""> Sign up with Google
-				</a>
+				</a> --}}
 				<p class="small">Already have an account? <a class="link" href="{{ route('rentalsystem.signin') }}">Sign in</a></p>
 			</div>
 		</section>

@@ -23,11 +23,19 @@ use App\Http\Controllers\EmailPreviewController;
 
 require __DIR__ . '/auth.php';
 
+// Root route - redirect unauthenticated users to rentalsystem signin
+// Route::get('/', function () {
+//     if (!\Illuminate\Support\Facades\Auth::check()) {
+//         return redirect()->route('rentalsystem.signin');
+//     }
+//     return redirect()->route('rentalsystem.sports');
+// })->name('root');
+
 Route::get('/preview-email', [AuthController::class, 'previewVerifyEmail'])->name('preview.email');
 Route::get('/register-referal', [BaseController::class, 'registerReferal'])->name('register.referal');
 
 // Rental System Frontend Routes (Public)
-Route::prefix('rental-system')->name('rentalsystem.')->group(function () {
+Route::prefix('')->name('rentalsystem.')->group(function () {
 	Route::get('/signup', [RentalSystemController::class, 'showSignup'])->name('signup');
 	Route::post('/signup', [RentalSystemController::class, 'signup'])->name('signup.submit');
 	Route::get('/signin', [RentalSystemController::class, 'showSignin'])->name('signin');
@@ -41,8 +49,8 @@ Route::prefix('rental-system')->name('rentalsystem.')->group(function () {
 	Route::get('/auth/google/callback', [RentalSystemController::class, 'googleCallback'])->name('google.callback');
 
 	// Protected routes for authenticated users (web session)
-	Route::middleware('auth')->group(function () {
-		Route::get('/sports', [RentalSystemController::class, 'showSports'])->name('sports');
+	// Route::group(function () {
+		Route::get('', [RentalSystemController::class, 'showSports'])->name('sports');
 		Route::get('/sports/{sportId}/tournaments', [RentalSystemController::class, 'showTournaments'])->name('tournaments');
 		Route::get('/tournaments/{tournamentId}/rental', [RentalSystemController::class, 'showRentalBooking'])->name('rental-booking');
 		Route::post('/rentals', [RentalSystemController::class, 'createRental'])->name('rental.create');
@@ -51,10 +59,10 @@ Route::prefix('rental-system')->name('rentalsystem.')->group(function () {
 		Route::get('/profile', [RentalSystemController::class, 'showProfile'])->name('profile');
 		Route::post('/profile', [RentalSystemController::class, 'updateProfile'])->name('profile.update');
 		Route::get('/logout', [RentalSystemController::class, 'logout'])->name('logout');
-	});
+	// });
 });
 
-Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
+Route::group(['prefix' => 'admin', 'middleware' => 'auth'], function () {
 	// Route::get('', [RoutingController::class, 'index'])->name('root');
 	Route::get('/profile', [RegisteredUserController::class, 'profile'])->name('profile');
 	Route::post('/profile/update', [RegisteredUserController::class, 'updateProfile'])->name('profile.update');

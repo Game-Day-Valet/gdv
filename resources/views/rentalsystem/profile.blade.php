@@ -356,6 +356,48 @@
             color: var(--border-color);
         }
 
+        .profile-image-upload {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .current-profile-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .profile-image-placeholder {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--light-gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .profile-image-placeholder i {
+            color: var(--secondary-color);
+            font-size: 1.5rem;
+        }
+
+        .file-input-container {
+            flex: 1;
+        }
+
+        .file-input-container small {
+            display: block;
+            margin-top: 5px;
+        }
+
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
@@ -425,24 +467,30 @@
             <div class="profile-sidebar">
                 <div class="profile-avatar">
                     <div class="avatar-circle">
-                        <i class="fas fa-user"></i>
+                        @if($user->profile_image)
+                            <img src="{{ asset('images/profile_images/' . $user->profile_image) }}"
+                                 alt="Profile Image"
+                                 style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                        @else
+                            <i class="fas fa-user"></i>
+                        @endif
                     </div>
-                    <h3 class="profile-name">{{ $user['name'] ?? 'User Name' }}</h3>
-                    <p class="profile-email">{{ $user['email'] ?? 'user@example.com' }}</p>
+                    <h3 class="profile-name">{{ $user->name ?? 'User Name' }}</h3>
+                    <p class="profile-email">{{ $user->email ?? 'user@example.com' }}</p>
                 </div>
 
                 <div class="profile-stats">
                     <div class="stat-item">
                         <span class="stat-label">Total Rentals</span>
-                        <span class="stat-value">{{ count($rentals) }}</span>
+                        <span class="stat-value">{{ is_array($rentals) ? count($rentals) : 0 }}</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Active Rentals</span>
-                        <span class="stat-value">{{ count(array_filter($rentals, fn($r) => ($r['status'] ?? '') === 'active')) }}</span>
+                        <span class="stat-value">{{ count(array_filter($rentals, fn($r) => is_scalar($r['status'] ?? '') && ($r['status'] ?? '') === 'active')) }}</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Completed</span>
-                        <span class="stat-value">{{ count(array_filter($rentals, fn($r) => ($r['status'] ?? '') === 'completed')) }}</span>
+                        <span class="stat-value">{{ count(array_filter($rentals, fn($r) => is_scalar($r['status'] ?? '') && ($r['status'] ?? '') === 'completed')) }}</span>
                     </div>
                 </div>
             </div>
@@ -455,26 +503,46 @@
 
                 <div id="profile-tab" class="tab-content active">
                     <h3>Edit Profile</h3>
-                    <form action="{{ route('rentalsystem.profile.update') }}" method="POST">
+                    <form action="{{ route('rentalsystem.profile.update') }}" method="POST" enctype="multipart/form-data">
                         @csrf
-                        
+
+                        <div class="form-group">
+                            <label class="form-label">Profile Image</label>
+                            <div class="profile-image-upload">
+                                @if($user->profile_image)
+                                    <img src="{{ asset('images/profile_images/' . $user->profile_image) }}"
+                                         alt="Current Profile Image"
+                                         class="current-profile-image">
+                                @else
+                                    <div class="profile-image-placeholder">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                @endif
+                                <div class="file-input-container">
+                                    <input type="file" class="form-control" name="profile_image"
+                                           accept="image/*">
+                                    <small class="text-muted">Max size: 2MB. Supported formats: JPG, PNG, GIF</small>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="form-group">
                             <label class="form-label">Full Name</label>
-                            <input type="text" class="form-control" name="name" 
-                                   value="{{ $user['name'] ?? '' }}" required>
+                            <input type="text" class="form-control" name="name"
+                                   value="{{ $user->name ?? '' }}" required>
                         </div>
 
                         <div class="form-group">
                             <label class="form-label">Email</label>
-                            <input type="email" class="form-control" name="email" 
-                                   value="{{ $user['email'] ?? '' }}" readonly>
+                            <input type="email" class="form-control" name="email"
+                                   value="{{ $user->email ?? '' }}" readonly>
                             <small class="text-muted">Email cannot be changed</small>
                         </div>
 
-                        <div class="form-group">
+                                                <div class="form-group">
                             <label class="form-label">Phone Number</label>
-                            <input type="text" class="form-control" name="phone" 
-                                   value="{{ $user['phone'] ?? '' }}" required>
+                            <input type="text" class="form-control" name="contact_number"
+                                   value="{{ $user->contact_number ?? '' }}" required>
                         </div>
 
                         <button type="submit" class="btn-primary">Update Profile</button>
@@ -483,7 +551,7 @@
 
                 <div id="rentals-tab" class="tab-content">
                     <h3>Rental History</h3>
-                    
+
                     @if(empty($rentals))
                         <div class="no-rentals">
                             <i class="fas fa-box-open"></i>
@@ -498,36 +566,29 @@
                             <div class="rental-item">
                                 <div class="rental-header">
                                     <div>
-                                        <h4 class="rental-title">{{ $rental['tournament_name'] ?? 'Tournament' }}</h4>
+                                        <h4 class="rental-title">{{ is_scalar($rental['tournament_name']) ? $rental['tournament_name'] : 'Tournament' }}</h4>
                                     </div>
-                                    <span class="rental-status status-{{ strtolower($rental['status'] ?? 'pending') }}">
-                                        {{ $rental['status'] ?? 'Pending' }}
+                                    <span class="rental-status status-{{ is_scalar($rental['status']) ? strtolower($rental['status'] ?? 'pending') : 'pending' }}">
+                                        {{ is_scalar($rental['status']) ? $rental['status'] : 'Pending' }}
                                     </span>
                                 </div>
 
                                 <div class="rental-details">
-                                    @if(isset($rental['start_date']))
+                                    @if(isset($rental['rental_date']) && $rental['rental_date'])
                                         <div class="detail-item">
                                             <i class="fas fa-calendar-alt detail-icon"></i>
-                                            <span>Start: {{ \Carbon\Carbon::parse($rental['start_date'])->format('M d, Y') }}</span>
+                                            <span>Rental Date: {{ \Carbon\Carbon::parse($rental['rental_date'])->format('M d, Y') }}</span>
                                         </div>
                                     @endif
 
-                                    @if(isset($rental['end_date']))
-                                        <div class="detail-item">
-                                            <i class="fas fa-calendar-check detail-icon"></i>
-                                            <span>End: {{ \Carbon\Carbon::parse($rental['end_date'])->format('M d, Y') }}</span>
-                                        </div>
-                                    @endif
-
-                                    @if(isset($rental['total_amount']))
+                                    @if(isset($rental['total_amount']) && is_numeric($rental['total_amount']))
                                         <div class="detail-item">
                                             <i class="fas fa-dollar-sign detail-icon"></i>
                                             <span>Total: ${{ $rental['total_amount'] }}</span>
                                         </div>
                                     @endif
 
-                                    @if(isset($rental['created_at']))
+                                    @if(isset($rental['created_at']) && $rental['created_at'])
                                         <div class="detail-item">
                                             <i class="fas fa-clock detail-icon"></i>
                                             <span>Booked: {{ \Carbon\Carbon::parse($rental['created_at'])->format('M d, Y') }}</span>
@@ -535,14 +596,31 @@
                                     @endif
                                 </div>
 
-                                @if(isset($rental['items']) && !empty($rental['items']))
+                                @if(isset($rental['items']) && !empty($rental['items']) && is_array($rental['items']))
                                     <div class="rental-items">
                                         <div class="rental-items-title">Rented Items:</div>
                                         <div class="item-list">
                                             @foreach($rental['items'] as $item)
-                                                <span class="item-tag">
-                                                    {{ $item['name'] ?? 'Item' }} x{{ $item['quantity'] ?? 1 }}
-                                                </span>
+                                                @if(is_array($item) && isset($item['name']) && isset($item['quantity']))
+                                                    <span class="item-tag">
+                                                        {{ $item['name'] ?? 'Item' }} x{{ is_scalar($item['quantity']) ? $item['quantity'] : 1 }}
+                                                    </span>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+
+                                @if(isset($rental['bundles']) && !empty($rental['bundles']) && is_array($rental['bundles']))
+                                    <div class="rental-items">
+                                        <div class="rental-items-title">Rented Bundles:</div>
+                                        <div class="item-list">
+                                            @foreach($rental['bundles'] as $bundle)
+                                                @if(is_array($bundle) && isset($bundle['name']))
+                                                    <span class="item-tag">
+                                                        {{ $bundle['name'] ?? 'Bundle' }}
+                                                    </span>
+                                                @endif
                                             @endforeach
                                         </div>
                                     </div>
@@ -572,6 +650,35 @@
             // Add active class to clicked button
             event.target.classList.add('active');
         }
+
+        // Profile image preview functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const profileImageInput = document.querySelector('input[name="profile_image"]');
+            if (profileImageInput) {
+                profileImageInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const currentImage = document.querySelector('.current-profile-image');
+                            const placeholder = document.querySelector('.profile-image-placeholder');
+
+                            if (currentImage) {
+                                currentImage.src = e.target.result;
+                            } else if (placeholder) {
+                                // Replace placeholder with image
+                                const newImage = document.createElement('img');
+                                newImage.src = e.target.result;
+                                newImage.alt = 'Profile Image Preview';
+                                newImage.className = 'current-profile-image';
+                                placeholder.parentNode.replaceChild(newImage, placeholder);
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+        });
     </script>
 </body>
-</html> 
+</html>

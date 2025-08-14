@@ -316,7 +316,10 @@ class RentalSystemController extends Controller
 				if ($item) {
 					$price = (float) ($item->price ?? 0);
 					$itemsSubtotal += $price * $quantity;
-					$selectedItems[$itemId] = $quantity;
+					$selectedItems[] = [
+						'item_id' => (string) $itemId,
+						'quantity' => $quantity
+					];
 				}
 			}
 		}
@@ -327,7 +330,7 @@ class RentalSystemController extends Controller
 				if ($bundle) {
 					$price = (float) ($bundle->price ?? 0);
 					$bundlesSubtotal += $price * $quantity;
-					$selectedBundles[$bundleId] = $quantity;
+					$selectedBundles[] = (int) $bundleId;
 				}
 			}
 		}
@@ -426,30 +429,95 @@ class RentalSystemController extends Controller
 		$user = Auth::user();
 		$collection = $this->rentals->getByUser($user->id);
 		$rentals = [];
+        // return $collection;
 		foreach ($collection as $r) {
 			$itemsArray = [];
-			if (is_array($r->items)) {
-				foreach ($r->items as $itemId => $qty) {
-					$itemsArray[] = [ 'name' => 'Item #'.$itemId, 'quantity' => $qty ];
+			$bundlesArray = [];
+
+			// Process items
+			if ($r->items && is_array($r->items)) {
+				foreach ($r->items as $item) {
+					if (is_array($item) && isset($item['item_id']) && isset($item['quantity'])) {
+						// Get the actual item name from the database
+						$itemModel = $this->items->find($item['item_id']);
+						$itemName = $itemModel ? $itemModel->name : 'Item #' . $item['item_id'];
+						$itemsArray[] = [
+							'name' => $itemName,
+							'quantity' => (int) $item['quantity']
+						];
+					}
 				}
 			}
+
+			// Process bundles
+			if ($r->bundles && is_array($r->bundles)) {
+				foreach ($r->bundles as $bundleId) {
+					if (is_scalar($bundleId)) {
+						$bundleModel = $this->bundles->find($bundleId);
+						$bundleName = $bundleModel ? $bundleModel->name : 'Bundle #' . $bundleId;
+						$bundlesArray[] = [
+							'name' => $bundleName,
+							'id' => (int) $bundleId
+						];
+					}
+				}
+			}
+
 			$rentals[] = [
 				'tournament_name' => optional($r->tournament)->name ?? 'Tournament',
 				'status' => $r->status ?? 'pending',
+				'rental_date' => $r->rental_date ?? null,
 				'total_amount' => $r->total_amount ?? 0,
 				'created_at' => $r->created_at,
 				'items' => $itemsArray,
+				'bundles' => $bundlesArray,
 			];
+
 		}
+
 		return view('rentalsystem.profile', compact('user', 'rentals'));
 	}
 
 	public function updateProfile(Request $request)
 	{
 		if (!Auth::check()) { return redirect()->route('rentalsystem.signin'); }
-		$request->validate(['name' => 'nullable|string|max:255','contact_number'=>'nullable|string|max:20','address'=>'nullable|string|max:255']);
+
+		$request->validate([
+			'name' => 'nullable|string|max:255',
+			'contact_number' => 'nullable|string|max:20',
+			'address' => 'nullable|string|max:255',
+			'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+		]);
+
 		$user = Auth::user();
-		foreach (['name','contact_number','address'] as $f) { if ($request->filled($f)) { $user->{$f} = $request->{$f}; } }
+
+		// Handle profile image upload
+		if ($request->hasFile('profile_image')) {
+			// Create directory if it doesn't exist
+			$uploadPath = public_path('images/profile_images');
+			if (!file_exists($uploadPath)) {
+				mkdir($uploadPath, 0755, true);
+			}
+
+			// Delete old image if exists
+			if ($user->profile_image && file_exists(public_path('images/profile_images/' . $user->profile_image))) {
+				unlink(public_path('images/profile_images/' . $user->profile_image));
+			}
+
+			// Upload new image
+			$image = $request->file('profile_image');
+			$filename = uniqid() . '.' . $image->getClientOriginalExtension();
+			$image->move($uploadPath, $filename);
+			$user->profile_image = $filename;
+		}
+
+		// Update other fields
+		foreach (['name','contact_number','address'] as $fieldName) {
+			if ($request->filled($fieldName)) {
+				$user->$fieldName = $request->input($fieldName);
+			}
+		}
+
 		$user->save();
 		Session::flash('success','Profile updated successfully!');
 		return redirect()->route('rentalsystem.profile');
