@@ -72,9 +72,9 @@ class SportController extends Controller
         }
     }
 
-    public function tournaments($id)
+    public function tournaments(Request $request, $id)
     {
-        $tournaments = $this->sportRepository->getTournamentsBySport($id);
+        $tournaments = $this->sportRepository->getTournamentsBySport($id, true, $request->limit ?? 10);
         return TournamentResource::collection($tournaments);
     }
 }

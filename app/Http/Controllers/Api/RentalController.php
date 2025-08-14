@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Services\ReferralService;
 use App\Models\Rental;
+use App\Models\RentalStatusLog;
 use Exception;
 
 class RentalController extends Controller
@@ -36,6 +37,11 @@ class RentalController extends Controller
         return RentalResource::collection($rentals);
     }
 
+    public function getRentalStatus($id)
+    {
+        $rentalStatus = RentalStatusLog::where('rental_id', $id)->orderBy('created_at', 'desc')->get();
+        return response()->json(['status' => $rentalStatus]);
+    }
 
     public function store(RentalRequest $request)
     {

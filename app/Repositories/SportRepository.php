@@ -52,11 +52,14 @@ class SportRepository implements SportRepositoryInterface
         $sport->delete();
     }
 
-    public function getTournamentsBySport($sportId)
+    public function getTournamentsBySport($sportId, $pagination = false, $limit = 10)
     {
-        return Tournament::where('sport_id', $sportId)
+        $tournaments = Tournament::where('sport_id', $sportId)
             ->where('status', TournamentStatus::ACTIVE->value)
-            ->with('sport')
-            ->get();
+            ->with('sport');
+        if ($pagination) {
+            return $tournaments->paginate($limit);
+        }
+        return $tournaments->get();
     }
 }
