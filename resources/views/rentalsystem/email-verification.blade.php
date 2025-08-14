@@ -20,6 +20,7 @@
 		.hero h1 { font-size: 42px; line-height: 1.1; margin: 0 0 12px; font-weight: 900; letter-spacing: -0.6px; }
 		.hero p { color: var(--muted); font-size: 16px; max-width: 580px; }
 		.hero-illustration { margin-top: 24px; border: 1px dashed var(--border); border-radius: 16px; padding: 28px; color: var(--muted); }
+        .hero-illustration img { border-radius: 16px; height: 300px; object-fit: cover; }
 		.card { width: 100%; max-width: 520px; border: 1px solid var(--border); border-radius: 16px; background: #fff; box-shadow: 0 8px 32px rgba(2,8,23,.06); padding: 24px; }
 		.card h2 { margin: 0 0 6px; font-size: 24px; font-weight: 800; }
 		.card .sub { margin: 0 0 18px; color: var(--muted); }
@@ -45,7 +46,9 @@
 		<section class="hero">
 			<h1>Verify your email</h1>
 			<p>We sent a 6-digit code to your email. Enter it below to verify your account.</p>
-			<div class="hero-illustration">Website hero area — place marketing image/graphic here</div>
+			<div class="hero-illustration">
+                <img src="{{ asset('images/main-thumbnail1.jpg') }}" width="100%" alt="">
+            </div>
 		</section>
 
 		<section>

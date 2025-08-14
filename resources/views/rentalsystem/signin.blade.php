@@ -32,7 +32,7 @@
 		.hero h1 { font-size: 42px; line-height: 1.1; margin: 0 0 12px; font-weight: 900; letter-spacing: -0.6px; }
 		.hero p { color: var(--muted); font-size: 16px; max-width: 580px; }
 		.hero-illustration { margin-top: 24px; border: 1px dashed var(--border); border-radius: 16px; padding: 28px; color: var(--muted); }
-
+        .hero-illustration img { border-radius: 16px; height: 300px; object-fit: cover; }
 		/* Form card */
 		.card { width: 100%; max-width: 520px; border: 1px solid var(--border); border-radius: 16px; background: #fff; box-shadow: 0 8px 32px rgba(2,8,23,.06); padding: 24px; }
 		.card h2 { margin: 0 0 6px; font-size: 24px; font-weight: 800; }
@@ -46,7 +46,27 @@
 		.btn-primary { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 10px; border: 0; border-radius: 12px; padding: 14px; font-weight: 800; color: #fff; background: var(--primary); cursor: pointer; box-shadow: 0 14px 28px rgba(201,76,76,.18); }
 		.sep { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; color: #94a3b8; margin: 18px 0; }
 		.sep::before, .sep::after { content: ""; height: 1px; background: var(--border); }
-		.btn-google { width: 100%; border: 1.6px solid var(--border); border-radius: 12px; padding: 12px 14px; font-weight: 700; background: #fff; display: flex; gap: 10px; align-items: center; justify-content: center; cursor: pointer; }
+		.btn-google {
+			width: 100%;
+			border: 1.6px solid var(--border);
+			border-radius: 12px;
+			padding: 12px 14px;
+			font-weight: 700;
+			background: #fff;
+			display: flex;
+			gap: 10px;
+			align-items: center;
+			justify-content: center;
+			cursor: pointer;
+			text-decoration: none;
+			color: var(--ink);
+			transition: all 0.2s ease;
+		}
+		.btn-google:hover {
+			background: #f8fafc;
+			border-color: #cbd5e1;
+			transform: translateY(-1px);
+		}
 		.small { color: var(--muted); font-size: 13px; text-align: center; margin-top: 12px; }
 	</style>
 </head>
@@ -65,7 +85,9 @@
 		<section class="hero">
 			<h1>Sign in to continue</h1>
 			<p>Access your rentals, browse tournaments and manage your team from a fast, modern web dashboard.</p>
-			<div class="hero-illustration">Website hero area — place marketing image/graphic here</div>
+			<div class="hero-illustration">
+                <img src="{{ asset('images/main-thumbnail1.jpg') }}" width="100%" alt="">
+            </div>
 		</section>
 
 		<section>
@@ -104,10 +126,10 @@
 					</button>
 				</form>
 
-				<div class="sep">OR</div>
-				<button class="btn-google" onclick="alert('Google sign-in will be integrated');">
+				{{-- <div class="sep">OR</div>
+				<a href="{{ route('rentalsystem.google.redirect') }}" class="btn-google">
 					<img src="https://www.gstatic.com/images/branding/product/1x/gsa_64dp.png" width="20" height="20" alt=""> Continue with Google
-				</button>
+				</a> --}}
 				<p class="small">Don't have an account? <a class="link" href="{{ route('rentalsystem.signup') }}">Create account</a></p>
 			</div>
 		</section>
@@ -122,4 +144,4 @@
 		});
 	</script>
 </body>
-</html> 
+</html>

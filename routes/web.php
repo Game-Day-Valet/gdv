@@ -37,6 +37,8 @@ Route::prefix('rental-system')->name('rentalsystem.')->group(function () {
 	Route::get('/email-verification/resend', [RentalSystemController::class, 'resendVerificationCode'])->name('email-verification.resend');
 	Route::get('/forgot-password', [RentalSystemController::class, 'showForgotPassword'])->name('forgot-password');
 	Route::post('/forgot-password', [RentalSystemController::class, 'forgotPassword'])->name('forgot-password.submit');
+	Route::get('/auth/google/redirect', [RentalSystemController::class, 'googleRedirect'])->name('google.redirect');
+	Route::get('/auth/google/callback', [RentalSystemController::class, 'googleCallback'])->name('google.callback');
 
 	// Protected routes for authenticated users (web session)
 	Route::middleware('auth')->group(function () {
@@ -53,11 +55,11 @@ Route::prefix('rental-system')->name('rentalsystem.')->group(function () {
 });
 
 Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
-	Route::get('', [RoutingController::class, 'index'])->name('root');
+	// Route::get('', [RoutingController::class, 'index'])->name('root');
 	Route::get('/profile', [RegisteredUserController::class, 'profile'])->name('profile');
 	Route::post('/profile/update', [RegisteredUserController::class, 'updateProfile'])->name('profile.update');
 	Route::post('/change-password', [RegisteredUserController::class, 'changePassword'])->name('user.change-password');
-	Route::get('/home', [DashboardController::class, 'index'])->name('home');
+	Route::get('', [DashboardController::class, 'index'])->name('home');
 	// Route::get('{first}/{second}/{third}', [RoutingController::class, 'thirdLevel'])->name('third');
 	// Route::get('{first}/{second}', [RoutingController::class, 'secondLevel'])->name('second');
 	// Route::get('{any}', [RoutingController::class, 'root'])->name('any');

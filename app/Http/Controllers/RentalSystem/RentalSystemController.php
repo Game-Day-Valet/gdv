@@ -23,6 +23,12 @@ use App\Repositories\BundleRepositoryInterface;
 use App\Repositories\RentalRepositoryInterface;
 use Stripe\Stripe;
 use Stripe\Checkout\Session as StripeCheckoutSession;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Firebase\JWT\JWK;
+use Firebase\JWT\JWT;
+use Illuminate\Support\Facades\Http;
+use Laravel\Socialite\Facades\Socialite;
 
 class RentalSystemController extends Controller
 {
@@ -480,4 +486,121 @@ class RentalSystemController extends Controller
 		Session::put('pending_email', $user->email);
 		return redirect()->route('rentalsystem.email-verification')->with('info','A new verification code has been sent.');
 	}
-} 
+
+	public function googleLogin(Request $request)
+	{
+		$request->validate([
+			'id_token' => 'required|string',
+		]);
+
+		$clientId = config('services.google.client_id');
+		$idToken = $request->input('id_token');
+
+		try {
+			$payload = $this->verifyGoogleIdToken($idToken, $clientId);
+
+			$email = $payload['email'];
+			$name = $payload['name'] ?? 'No Name';
+			$googleId = $payload['sub'];
+
+			$user = User::where('email', $email)->first();
+			$isNewUser = false;
+
+			if (!$user) {
+				$user = User::create([
+					'name' => $name,
+					'email' => $email,
+					'google_id' => $googleId,
+					'password' => Hash::make(Str::random(20)),
+					'email_verified_at' => now(),
+				]);
+
+				$user->assignRole(Role::USER->value);
+				$this->referralService->generateCode($user->id);
+				$isNewUser = true;
+			} else {
+				if (!$user->google_id) {
+					$user->google_id = $googleId;
+					$user->save();
+				}
+			}
+
+			Auth::login($user);
+			Session::flash('success', $isNewUser ? 'Welcome! Your account has been created successfully.' : 'Welcome back!');
+			return redirect()->route('rentalsystem.sports');
+
+		} catch (\Exception $e) {
+			return back()->withErrors(['google' => 'Google authentication failed. Please try again.'])->withInput();
+		}
+	}
+
+	private function verifyGoogleIdToken(string $idToken, string $clientId): array
+	{
+		$jwk = cache()->remember('google_jwk_raw', now()->addHours(24), function () {
+			$jwkUrl = 'https://www.googleapis.com/oauth2/v3/certs';
+			return Http::get($jwkUrl)->json();
+		});
+
+		$keys = JWK::parseKeySet($jwk);
+
+		try {
+			$decoded = JWT::decode($idToken, $keys);
+			$payload = (array) $decoded;
+
+			if ($payload['aud'] !== $clientId) {
+				throw new \Exception('Invalid audience');
+			}
+
+			if (!in_array($payload['iss'], ['https://accounts.google.com', 'accounts.google.com'])) {
+				throw new \Exception('Invalid issuer');
+			}
+
+			return $payload;
+		} catch (\Throwable $e) {
+			throw ValidationException::withMessages([
+				'google' => ['Google Verification Failed.'],
+			]);
+		}
+	}
+
+	public function googleRedirect()
+	{
+		return Socialite::driver('google')->redirect();
+	}
+
+	public function googleCallback(Request $request)
+	{
+		try {
+			$googleUser = Socialite::driver('google')->user();
+
+			$user = User::where('email', $googleUser->email)->first();
+			$isNewUser = false;
+
+			if (!$user) {
+				$user = User::create([
+					'name' => $googleUser->name ?? 'Google User',
+					'email' => $googleUser->email,
+					'google_id' => $googleUser->id,
+					'password' => Hash::make(Str::random(20)),
+					'email_verified_at' => now(),
+				]);
+
+				$user->assignRole(Role::USER->value);
+				$this->referralService->generateCode($user->id);
+				$isNewUser = true;
+			} else {
+				if (!$user->google_id) {
+					$user->google_id = $googleUser->id;
+					$user->save();
+				}
+			}
+
+			Auth::login($user);
+			Session::flash('success', $isNewUser ? 'Welcome! Your account has been created successfully.' : 'Welcome back!');
+			return redirect()->route('rentalsystem.sports');
+
+		} catch (\Exception $e) {
+			return redirect()->route('rentalsystem.signin')->withErrors(['google' => 'Google authentication failed. Please try again.']);
+		}
+	}
+}
