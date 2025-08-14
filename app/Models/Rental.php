@@ -31,6 +31,8 @@ class Rental extends Model
         'total_amount',
         'status',
         'return_instruction',
+        'estimated_delivery_time',
+        'assigned_manager_id',
     ];
 
     protected $casts = [
@@ -40,6 +42,7 @@ class Rental extends Model
         'drop_off_time' => 'datetime',
         'damage_waiver' => 'boolean',
         'total_amount' => 'decimal:2',
+        'estimated_delivery_time' => 'datetime',
     ];
 
     public function tournament()
@@ -65,5 +68,10 @@ class Rental extends Model
     public function statusLogs()
     {
         return $this->hasMany(RentalStatusLog::class)->orderBy('created_at', 'desc');
+    }
+
+    public function assignedManager()
+    {
+        return $this->belongsTo(User::class, 'assigned_manager_id');
     }
 }

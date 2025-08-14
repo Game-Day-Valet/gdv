@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BaseController;
 use App\Http\Controllers\CouponManagementController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\TournamentController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\BundleController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ChatManagementController;
+use App\Http\Controllers\Controller;
 use App\Http\Controllers\FaqManagementController;
 use App\Http\Controllers\PrivacyPolicyManagementController;
 use App\Http\Controllers\RentalManagementController;
@@ -22,6 +24,7 @@ use App\Http\Controllers\EmailPreviewController;
 require __DIR__ . '/auth.php';
 
 Route::get('/preview-email', [AuthController::class, 'previewVerifyEmail'])->name('preview.email');
+Route::get('/register-referal', [BaseController::class, 'registerReferal'])->name('register.referal');
 
 // Rental System Frontend Routes (Public)
 Route::prefix('rental-system')->name('rentalsystem.')->group(function () {
@@ -34,7 +37,7 @@ Route::prefix('rental-system')->name('rentalsystem.')->group(function () {
 	Route::get('/email-verification/resend', [RentalSystemController::class, 'resendVerificationCode'])->name('email-verification.resend');
 	Route::get('/forgot-password', [RentalSystemController::class, 'showForgotPassword'])->name('forgot-password');
 	Route::post('/forgot-password', [RentalSystemController::class, 'forgotPassword'])->name('forgot-password.submit');
-	
+
 	// Protected routes for authenticated users (web session)
 	Route::middleware('auth')->group(function () {
 		Route::get('/sports', [RentalSystemController::class, 'showSports'])->name('sports');
@@ -86,5 +89,6 @@ Route::group(['prefix' => '/', 'middleware' => 'auth'], function () {
 		// Additional rental management routes
 		Route::post('/rental-management/{id}/update-status', [RentalManagementController::class, 'updateStatus'])->name('rental-management.update-status');
 		Route::post('/rental-management/{id}/update-payment-status', [RentalManagementController::class, 'updatePaymentStatus'])->name('rental-management.update-payment-status');
+		Route::get('/rental-management/{id}/available-statuses', [RentalManagementController::class, 'getAvailableStatuses'])->name('rental-management.available-statuses');
 	});
 });

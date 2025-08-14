@@ -175,7 +175,7 @@ class ChatManagementController extends Controller
         }
 
         try {
-            event(new \App\Events\NewMessage($message));
+            event(new \App\Events\NewMessage($message, $conversation->user_id));
             Log::info('NewMessage event dispatched', [
                 'message_id' => $message->id,
                 'conversation_id' => $conversation->id,

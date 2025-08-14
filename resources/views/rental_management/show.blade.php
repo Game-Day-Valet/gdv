@@ -64,6 +64,31 @@
             transform: scale(1.05);
         }
 
+        .status-images-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .status-image-item {
+            position: relative;
+            text-align: center;
+        }
+
+        .status-image-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .status-image-item img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
         /* Modal backdrop styling */
         .modal-backdrop {
             background-color: rgba(0, 0, 0, 0.5) !important;
@@ -221,19 +246,40 @@
                                             @php
                                                 $statusClass = match($rental->status) {
                                                     'delivered' => 'badge bg-success',
-                                                    'picked_up' => 'badge bg-info',
-                                                    'returned' => 'badge bg-primary',
+                                                    'confirmed' => 'badge bg-info',
+                                                    'out_for_delivery' => 'badge bg-primary',
+                                                    'cancelled' => 'badge bg-danger',
                                                     'pending' => 'badge bg-warning',
                                                     default => 'badge bg-secondary'
                                                 };
                                             @endphp
                                             <span class="status-badge {{ $statusClass }}">
-                                                {{ ucfirst($rental->status ?? 'pending') }}
+                                                {{ ucfirst(str_replace('_', ' ', $rental->status ?? 'pending')) }}
                                             </span>
                                         </div>
                                     </div>
                                     <div class="row mb-2">
-                                        <div class="col-4"><strong>Assigned To:</strong></div>
+                                        <div class="col-4"><strong>Estimated Delivery:</strong></div>
+                                        <div class="col-8">
+                                            @if($rental->estimated_delivery_time)
+                                                {{ \Carbon\Carbon::parse($rental->estimated_delivery_time)->format('d M Y H:i') }}
+                                            @else
+                                                <span class="text-muted">Not set</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-4"><strong>Assigned Manager:</strong></div>
+                                        <div class="col-8">
+                                            @if($rental->assignedManager)
+                                                {{ $rental->assignedManager->name }} ({{ $rental->assignedManager->email }})
+                                            @else
+                                                <span class="text-muted">Not assigned</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-4"><strong>Delivery Assigned To:</strong></div>
                                         <div class="col-8">{{ $rental->delivery_assigned_to ?? 'N/A' }}</div>
                                     </div>
                                     <div class="row mb-2">
@@ -359,13 +405,19 @@
                                                             @if($log->notes)
                                                                 <p class="text-muted mb-1">{{ $log->notes }}</p>
                                                             @endif
-                                                            @if($log->image_path)
+                                                            @if($log->image_paths && count($log->image_paths) > 0)
                                                                 <div class="mb-2">
-                                                                    <img src="{{ $log->image_url }}"
-                                                                         alt="Status Image"
-                                                                         class="img-thumbnail"
-                                                                         style="max-width: 200px; max-height: 150px; cursor: pointer;"
-                                                                         onclick="openImageModal('{{ $log->image_url }}', '{{ ucfirst(str_replace('_', ' ', $log->status)) }}')">
+                                                                    <h6 class="mb-2">Status Images:</h6>
+                                                                    <div class="status-images-grid">
+                                                                        @foreach($log->image_paths as $imagePath)
+                                                                            <div class="status-image-item">
+                                                                                <img src="{{ asset('storage/' . $imagePath) }}"
+                                                                                     alt="Status Image"
+                                                                                     style="cursor: pointer;"
+                                                                                     onclick="openImageModal('{{ asset('storage/' . $imagePath) }}', '{{ ucfirst(str_replace('_', ' ', $log->status)) }}')">
+                                                                            </div>
+                                                                        @endforeach
+                                                                    </div>
                                                                 </div>
                                                             @endif
                                                             <small class="text-muted">

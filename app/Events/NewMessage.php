@@ -15,22 +15,33 @@ class NewMessage implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $message;
+    private $userId;
 
-    public function __construct(Message $message)
+    public function __construct(Message $message, $userId = null)
     {
         $this->message = $message;
+        $this->userId = $userId;
         Log::debug('NewMessage event constructed', [
             'message_id' => $message->id,
             'conversation_id' => $message->conversation_id,
             'sender_id' => $message->sender_id,
             'responder_id' => $message->conversation->responder_id,
+            'user_id' => $userId,
         ]);
     }
 
     public function broadcastOn()
     {
         $conversation = $this->message->conversation;
-        $channelName = $conversation->responder_id ? 'conversation.' . $this->message->conversation_id : 'support';
+
+        // If userId is provided in constructor, use it for channel name
+        if ($this->userId) {
+            $channelName = 'conversation.' . $this->userId;
+        } else {
+            // Fall back to existing logic
+            $channelName = $conversation->responder_id ? 'conversation.' . $this->message->conversation_id : 'support';
+        }
+
         $channel = new Channel($channelName);
 
         Log::info('Broadcasting NewMessage on public channel', [
@@ -38,6 +49,7 @@ class NewMessage implements ShouldBroadcast
             'message_id' => $this->message->id,
             'conversation_id' => $this->message->conversation_id,
             'responder_id' => $conversation->responder_id,
+            'user_id' => $this->userId,
         ]);
 
         return $channel;

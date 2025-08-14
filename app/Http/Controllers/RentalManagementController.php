@@ -9,8 +9,12 @@ use App\Models\Tournament;
 use App\Models\Item;
 use App\Models\Bundle;
 use App\Repositories\RentalRepositoryInterface;
+use App\Events\RentalStatusUpdated;
+use App\Enums\RentalStatus;
+use App\Enums\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class RentalManagementController extends Controller
 {
@@ -26,9 +30,19 @@ class RentalManagementController extends Controller
      */
     public function index()
     {
-        $rentals = $this->rentalRepository->getAllPaginated(15);
+        $user = Auth::user();
 
-        return view('rental_management.index', compact('rentals'));
+        // If user is a manager, show only their assigned rentals
+        if ($user->hasRole(Role::MANAGER)) {
+            $rentals = $this->rentalRepository->getByManager($user->id, 15);
+        } else {
+            $rentals = $this->rentalRepository->getAllPaginated(15);
+        }
+
+        // Get all managers for the dropdown
+        $managers = User::role(Role::MANAGER)->get();
+
+        return view('rental_management.index', compact('rentals', 'managers'));
     }
 
     /**
@@ -37,6 +51,12 @@ class RentalManagementController extends Controller
     public function show($id)
     {
         $rental = $this->rentalRepository->findWithRelations($id);
+
+        // Check if current user can view this rental
+        $user = Auth::user();
+        if ($user->hasRole(Role::MANAGER) && $rental->assigned_manager_id !== $user->id) {
+            abort(403, 'You can only view rentals assigned to you.');
+        }
 
         // Load items data if items exist
         if ($rental->items) {
@@ -60,19 +80,66 @@ class RentalManagementController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:pending,delivered,picked_up,returned',
+            'status' => 'required|in:pending,confirmed,out_for_delivery,delivered,cancelled',
             'notes' => 'nullable|string|max:500',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048' // 2MB max
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max per image
+            'estimated_delivery_time' => 'nullable|date|after:now',
+            'assigned_manager_id' => 'nullable|exists:users,id',
         ]);
 
         try {
+            // Get the current rental to capture old status
+            $rental = $this->rentalRepository->find($id);
+            $oldStatus = $rental->status;
+
+            // Validate status progression
+            if (!$this->isValidStatusProgression($oldStatus, $request->status)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid status progression. You cannot go back to a previous status.'
+                ], 400);
+            }
+
+            // Additional validation for confirmed status
+            if ($request->status === 'confirmed') {
+                if (empty($request->estimated_delivery_time)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Estimated delivery time is required when confirming a rental.'
+                    ], 400);
+                }
+                if (empty($request->assigned_manager_id)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Manager assignment is required when confirming a rental.'
+                    ], 400);
+                }
+            }
+
+            // Check if user can update this rental
+            $user = Auth::user();
+            if ($user->hasRole(Role::MANAGER) && $rental->assigned_manager_id !== $user->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You can only update rentals assigned to you.'
+                ], 403);
+            }
+
             $this->rentalRepository->updateStatus(
                 $id,
                 $request->status,
                 $request->notes,
-                $request->user()->id,
-                $request->file('image')
+                $user->id,
+                $request->file('images'),
+                $request->estimated_delivery_time,
+                $request->assigned_manager_id
             );
+
+            // Refresh the rental model to get updated data
+            $rental->refresh();
+
+            // Dispatch the event for real-time updates
+            event(new RentalStatusUpdated($rental, $oldStatus, $request->status, $user->id));
 
             return response()->json([
                 'success' => true,
@@ -108,5 +175,53 @@ class RentalManagementController extends Controller
                 'message' => 'Failed to update payment status: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Get available statuses based on current status
+     */
+    public function getAvailableStatuses($id)
+    {
+        $rental = $this->rentalRepository->find($id);
+        $currentStatus = $rental->status;
+
+        $availableStatuses = $this->getNextAvailableStatuses($currentStatus);
+
+        return response()->json([
+            'success' => true,
+            'available_statuses' => $availableStatuses
+        ]);
+    }
+
+    /**
+     * Validate status progression
+     */
+    private function isValidStatusProgression($currentStatus, $newStatus)
+    {
+        $validProgressions = [
+            'pending' => ['confirmed', 'cancelled'],
+            'confirmed' => ['out_of_delivery', 'cancelled'],
+            'out_of_delivery' => ['delivered', 'cancelled'],
+            'delivered' => [], // Final status
+            'cancelled' => [], // Final status
+        ];
+
+        return in_array($newStatus, $validProgressions[$currentStatus] ?? []);
+    }
+
+    /**
+     * Get next available statuses
+     */
+    private function getNextAvailableStatuses($currentStatus)
+    {
+        $validProgressions = [
+            'pending' => ['confirmed', 'cancelled'],
+            'confirmed' => ['out_for_delivery'],
+            'out_for_delivery' => ['delivered'],
+            'delivered' => [],
+            'cancelled' => [],
+        ];
+
+        return $validProgressions[$currentStatus] ?? [];
     }
 }

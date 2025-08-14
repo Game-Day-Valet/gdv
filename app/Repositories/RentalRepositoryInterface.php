@@ -11,8 +11,9 @@ interface RentalRepositoryInterface
     public function create(array $data);
     public function update($id, array $data);
     public function delete($id);
-    public function updateStatus($id, $status, $notes = null, $updatedBy = null, $image = null);
+    public function updateStatus($id, $status, $notes = null, $updatedBy = null, $images = null, $estimatedDeliveryTime = null, $assignedManagerId = null);
     public function updatePaymentStatus($id, $paymentStatus);
     public function getStatusLogs($rentalId);
     public function getByUser($userId);
+    public function getByManager($managerId, $perPage = 15);
 }

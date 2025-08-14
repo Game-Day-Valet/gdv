@@ -88,7 +88,8 @@ class AuthController extends Controller
     {
         $user = $request->user();
         $code = ReferralCode::where('user_id', $user->id)->latest()->value('code');
-        return response()->json(['referral_code' => $code ?: $this->referralService->generateCode($user->id)]);
+        $code = $code ?: $this->referralService->generateCode($user->id);
+        return response()->json(['referral_code' => $code, 'link' => route('register.referal', ['referralCode' => $code])]);
     }
 
     public function checkReferralCode(Request $request)

@@ -22,3 +22,10 @@ use Illuminate\Support\Facades\Broadcast;
 // Broadcast::channel('support', function ($user) {
 //     return $user->hasRole([\App\Enums\Role::MANAGER, \App\Enums\Role::SUPER_ADMIN]);
 // });
+
+// Rental status update channel - public channel for mobile app consumption
+Broadcast::channel('rental.{id}', function ($user, $id) {
+    // Allow access to rental status updates for authenticated users
+    // This channel will be used for real-time status updates in mobile app
+    return true; // Public channel for now, can be restricted later if needed
+});

@@ -23,6 +23,17 @@
             opacity: 0.8;
         }
 
+        .status-badge-non-clickable {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .status-badge-non-clickable:hover::after {
+            content: " (Status cannot be changed)";
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+
         /* Modal backdrop styling */
         .modal-backdrop {
             background-color: rgba(0, 0, 0, 0.5) !important;
@@ -30,6 +41,42 @@
 
         .modal-backdrop.show {
             opacity: 1 !important;
+        }
+
+        .status-field {
+            display: none;
+        }
+
+        .status-field.show {
+            display: block;
+        }
+
+        .image-preview {
+            max-width: 100px;
+            max-height: 100px;
+            margin: 5px;
+            border-radius: 5px;
+        }
+
+        .remove-image {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: red;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            text-align: center;
+            line-height: 18px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .image-container {
+            position: relative;
+            display: inline-block;
+            margin: 5px;
         }
     </style>
 @endsection
@@ -67,7 +114,7 @@
                         </div>
                     @endif
                     <div class="table-responsive" style="overflow-x: auto;">
-                        <table id="datatable" class="table table-bordered dt-responsive nowrap" style="min-width: 1200px;">
+                        <table id="datatable" class="table table-bordered dt-responsive nowrap" style="min-width: 1400px;">
                             <thead>
                                 <tr>
                                       <th>User</th>
@@ -79,6 +126,8 @@
                                     <th>Total Amount</th>
                                     <th>Payment Status</th>
                                     <th>Status</th>
+                                    <th>Estimated Delivery</th>
+                                    <th>Assigned Manager</th>
                                     <th>Created At</th>
                                     <th>Action</th>
                                 </tr>
@@ -125,19 +174,42 @@
                                             @php
                                                 $statusClass = match($rental->status) {
                                                     'delivered' => 'badge bg-success',
-                                                    'picked_up' => 'badge bg-info',
-                                                    'returned' => 'badge bg-primary',
+                                                    'confirmed' => 'badge bg-info',
+                                                    'out_for_delivery' => 'badge bg-primary',
+                                                    'cancelled' => 'badge bg-danger',
                                                     'pending' => 'badge bg-warning',
                                                     default => 'badge bg-secondary'
                                                 };
+
+                                                $isClickable = !in_array($rental->status, ['delivered', 'cancelled']);
+                                                $cursorStyle = $isClickable ? 'cursor: pointer;' : 'cursor: default;';
+                                                $title = $isClickable ? 'Click to update rental status' : 'Status cannot be changed';
                                             @endphp
-                                            <span class="{{ $statusClass }} update-status-badge"
-                                                  style="cursor: pointer;"
+                                            <span class="{{ $statusClass }} {{ $isClickable ? 'update-status-badge' : 'status-badge-non-clickable' }}"
+                                                  style="{{ $cursorStyle }}"
                                                   data-rental-id="{{ $rental->id }}"
                                                   data-current-status="{{ $rental->status ?? 'pending' }}"
-                                                  title="Click to update rental status">
-                                                {{ ucfirst($rental->status ?? 'pending') }}
+                                                  data-clickable="{{ $isClickable ? 'true' : 'false' }}"
+                                                  title="{{ $title }}">
+                                                {{ ucfirst(str_replace('_', ' ', $rental->status ?? 'pending')) }}
                                             </span>
+                                        </td>
+                                        <td>
+                                            @if($rental->estimated_delivery_time)
+                                                {{ \Carbon\Carbon::parse($rental->estimated_delivery_time)->format('d M Y H:i') }}
+                                            @else
+                                                <span class="text-muted">Not set</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($rental->assignedManager)
+                                                <div>
+                                                    <strong>{{ $rental->assignedManager->name }}</strong><br>
+                                                    <small class="text-muted">{{ $rental->assignedManager->email }}</small>
+                                                </div>
+                                            @else
+                                                <span class="text-muted">Not assigned</span>
+                                            @endif
                                         </td>
                                         <td>{{ \Carbon\Carbon::parse($rental->created_at)->format('d M Y H:i') }}</td>
                                         <td>
@@ -157,7 +229,7 @@
 
     <!-- Status Update Modal -->
     <div class="modal fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="statusModalLabel">Update Rental Status</h5>
@@ -168,20 +240,53 @@
                         <div class="mb-3">
                             <label for="status" class="form-label">Status</label>
                             <select name="status" id="status" class="form-select" required>
-                                <option value="pending">Pending</option>
-                                <option value="delivered">Delivered</option>
-                                <option value="picked_up">Picked Up</option>
-                                <option value="returned">Returned</option>
+                                <option value="">Select Status</option>
                             </select>
                         </div>
-                        <div class="mb-3">
-                            <label for="notes" class="form-label">Notes (Optional)</label>
-                            <textarea name="notes" id="notes" class="form-control" rows="3" placeholder="Add any notes about this status change..."></textarea>
+
+                        <!-- Confirmed Status Fields -->
+                        <div id="confirmedFields" class="status-field">
+                            <div class="mb-3">
+                                <label for="estimated_delivery_time" class="form-label">Estimated Delivery Time <span class="text-danger">*</span></label>
+                                <input type="datetime-local" name="estimated_delivery_time" id="estimated_delivery_time" class="form-control" required>
+                                <small class="text-muted">Estimated delivery time is required when confirming a rental</small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="assigned_manager_id" class="form-label">Assign Manager <span class="text-danger">*</span></label>
+                                <select name="assigned_manager_id" id="assigned_manager_id" class="form-select" required>
+                                    <option value="">Select Manager</option>
+                                    @foreach($managers as $manager)
+                                        <option value="{{ $manager->id }}">{{ $manager->name }}</option>
+                                    @endforeach
+                                </select>
+                                <small class="text-muted">Manager assignment is required when confirming a rental</small>
+                            </div>
                         </div>
+
+                        <!-- Delivered Status Fields -->
+                        <div id="deliveredFields" class="status-field">
+                            <div class="mb-3">
+                                <label for="delivery_images" class="form-label">Delivery Images</label>
+                                <input type="file" name="delivery_images[]" id="delivery_images" class="form-control" accept="image/*" multiple>
+                                <small class="text-muted">Upload multiple images for delivery confirmation (JPEG, PNG, JPG, GIF - Max 2MB each)</small>
+                            </div>
+                            <div id="imagePreviewContainer" class="mb-3">
+                                <!-- Image previews will be shown here -->
+                            </div>
+                        </div>
+
+                        <!-- Cancelled Status Fields -->
+                        <div id="cancelledFields" class="status-field">
+                            <div class="mb-3">
+                                <label for="cancellation_notes" class="form-label">Cancellation Notes</label>
+                                <textarea name="cancellation_notes" id="cancellation_notes" class="form-control" rows="3" placeholder="Please provide a reason for cancellation..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- General Notes Field -->
                         <div class="mb-3">
-                            <label for="status_image" class="form-label">Image (Optional)</label>
-                            <input type="file" name="image" id="status_image" class="form-control" accept="image/*">
-                            <small class="text-muted">Upload an image related to this status change (JPEG, PNG, JPG, GIF - Max 2MB)</small>
+                            <label for="notes" class="form-label">General Notes (Optional)</label>
+                            <textarea name="notes" id="notes" class="form-control" rows="3" placeholder="Add any additional notes..."></textarea>
                         </div>
                     </form>
                 </div>
@@ -227,16 +332,31 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             let currentRentalId = null;
+            let selectedImages = [];
 
             // Status Update
             document.querySelectorAll('.update-status-badge').forEach(function(badge) {
                 badge.addEventListener('click', function() {
+                    // Check if status is clickable
+                    if (this.getAttribute('data-clickable') === 'false') {
+                        return;
+                    }
+
                     currentRentalId = this.getAttribute('data-rental-id');
                     const currentStatus = this.getAttribute('data-current-status');
 
-                    document.getElementById('status').value = currentStatus;
-                    document.getElementById('notes').value = ''; // Clear notes field
-                    document.getElementById('status_image').value = ''; // Clear image field
+                    // Clear form
+                    document.getElementById('statusForm').reset();
+                    hideAllStatusFields();
+                    clearImagePreviews();
+
+                    // Reset required attributes
+                    document.getElementById('estimated_delivery_time').required = false;
+                    document.getElementById('assigned_manager_id').required = false;
+                    document.getElementById('cancellation_notes').required = false;
+
+                    // Load available statuses
+                    loadAvailableStatuses(currentRentalId, currentStatus);
 
                     // Use Bootstrap modal properly
                     const modal = new bootstrap.Modal(document.getElementById('statusModal'));
@@ -258,18 +378,86 @@
                 });
             });
 
+                        // Status change handler
+            document.getElementById('status').addEventListener('change', function() {
+                const selectedStatus = this.value;
+                hideAllStatusFields();
+
+                // Reset required attributes
+                document.getElementById('estimated_delivery_time').required = false;
+                document.getElementById('assigned_manager_id').required = false;
+                document.getElementById('cancellation_notes').required = false;
+
+                if (selectedStatus === 'confirmed') {
+                    document.getElementById('confirmedFields').classList.add('show');
+                    document.getElementById('estimated_delivery_time').required = true;
+                    document.getElementById('assigned_manager_id').required = true;
+                } else if (selectedStatus === 'delivered') {
+                    document.getElementById('deliveredFields').classList.add('show');
+                } else if (selectedStatus === 'cancelled') {
+                    document.getElementById('cancelledFields').classList.add('show');
+                    document.getElementById('cancellation_notes').required = true;
+                }
+            });
+
+            // Image upload handler
+            document.getElementById('delivery_images').addEventListener('change', function(e) {
+                const files = Array.from(e.target.files);
+                selectedImages = files;
+                displayImagePreviews(files);
+            });
+
             // Save Status
             document.getElementById('saveStatusBtn').addEventListener('click', function() {
                 const status = document.getElementById('status').value;
                 const notes = document.getElementById('notes').value;
-                const imageFile = document.getElementById('status_image').files[0];
+                const estimatedDeliveryTime = document.getElementById('estimated_delivery_time').value;
+                const assignedManagerId = document.getElementById('assigned_manager_id').value;
+                const cancellationNotes = document.getElementById('cancellation_notes').value;
+                const deliveryImages = document.getElementById('delivery_images').files;
+
+                if (!status) {
+                    Swal.fire('Error!', 'Please select a status', 'error');
+                    return;
+                }
+
+                // Validate required fields based on status
+                if (status === 'confirmed' && !estimatedDeliveryTime) {
+                    Swal.fire('Error!', 'Please provide estimated delivery time', 'error');
+                    return;
+                }
+
+                if (status === 'confirmed' && !assignedManagerId) {
+                    Swal.fire('Error!', 'Please select a manager', 'error');
+                    return;
+                }
+
+                if (status === 'cancelled' && !cancellationNotes.trim()) {
+                    Swal.fire('Error!', 'Please provide cancellation notes', 'error');
+                    return;
+                }
 
                 const formData = new FormData();
                 formData.append('status', status);
                 formData.append('notes', notes);
-                if (imageFile) {
-                    formData.append('image', imageFile);
+
+                if (status === 'confirmed') {
+                    formData.append('estimated_delivery_time', estimatedDeliveryTime);
+                    if (assignedManagerId) {
+                        formData.append('assigned_manager_id', assignedManagerId);
+                    }
                 }
+
+                if (status === 'cancelled') {
+                    formData.append('notes', cancellationNotes);
+                }
+
+                if (status === 'delivered' && deliveryImages.length > 0) {
+                    for (let i = 0; i < deliveryImages.length; i++) {
+                        formData.append('images[]', deliveryImages[i]);
+                    }
+                }
+
                 formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
 
                 fetch(`/rental-management/${currentRentalId}/update-status`, {
@@ -329,6 +517,71 @@
                     }
                 });
             });
+
+            // Helper functions
+            function loadAvailableStatuses(rentalId, currentStatus) {
+                fetch(`/rental-management/${rentalId}/available-statuses`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const statusSelect = document.getElementById('status');
+                            statusSelect.innerHTML = '<option value="">Select Status</option>';
+
+                            data.available_statuses.forEach(status => {
+                                const option = document.createElement('option');
+                                option.value = status;
+                                option.textContent = status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                statusSelect.appendChild(option);
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to load available statuses:', error);
+                    });
+            }
+
+            function hideAllStatusFields() {
+                document.querySelectorAll('.status-field').forEach(field => {
+                    field.classList.remove('show');
+                });
+            }
+
+            function displayImagePreviews(files) {
+                const container = document.getElementById('imagePreviewContainer');
+                container.innerHTML = '';
+
+                files.forEach((file, index) => {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const imageContainer = document.createElement('div');
+                            imageContainer.className = 'image-container';
+                            imageContainer.innerHTML = `
+                                <img src="${e.target.result}" class="image-preview" alt="Preview">
+                                <span class="remove-image" onclick="removeImage(${index})">&times;</span>
+                            `;
+                            container.appendChild(imageContainer);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+
+            function clearImagePreviews() {
+                document.getElementById('imagePreviewContainer').innerHTML = '';
+                selectedImages = [];
+            }
+
+            // Global function for removing images
+            window.removeImage = function(index) {
+                selectedImages.splice(index, 1);
+                displayImagePreviews(selectedImages);
+
+                // Update the file input
+                const dt = new DataTransfer();
+                selectedImages.forEach(file => dt.items.add(file));
+                document.getElementById('delivery_images').files = dt.files;
+            };
 
             // Close modals
             document.querySelectorAll('.btn-close, .btn-secondary').forEach(function(btn) {

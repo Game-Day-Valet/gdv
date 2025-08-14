@@ -11,8 +11,8 @@ class RentalResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'user_id' => $this->user_id,
-            'tournament_id' => $this->tournament_id,
+            'user_id' => (int) $this->user_id,
+            'tournament_id' => (int) $this->tournament_id,
             'tournament_name' => $this->whenLoaded('tournament', fn() => $this->tournament->name),
             'team_name' => $this->team_name,
             'coach_name' => $this->coach_name,

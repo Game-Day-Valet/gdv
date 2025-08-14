@@ -105,26 +105,42 @@ class RentalRepository implements RentalRepositoryInterface
         $rental->delete();
     }
 
-    public function updateStatus($id, $status, $notes = null, $updatedBy = null, $image = null)
+    public function updateStatus($id, $status, $notes = null, $updatedBy = null, $images = null, $estimatedDeliveryTime = null, $assignedManagerId = null)
     {
-        return DB::transaction(function () use ($id, $status, $notes, $updatedBy, $image) {
+        return DB::transaction(function () use ($id, $status, $notes, $updatedBy, $images, $estimatedDeliveryTime, $assignedManagerId) {
             $rental = Rental::findOrFail($id);
 
-            // Update rental status
-            $rental->update(['status' => $status]);
+            // Prepare update data
+            $updateData = ['status' => $status];
 
-            // Handle image upload
-            $imagePath = null;
-            if ($image && $image->isValid()) {
-                $imagePath = $image->store('rental-status-logs', 'public');
+            if ($estimatedDeliveryTime) {
+                $updateData['estimated_delivery_time'] = $estimatedDeliveryTime;
             }
 
-            // Log the status change
+            if ($assignedManagerId) {
+                $updateData['assigned_manager_id'] = $assignedManagerId;
+            }
+
+            // Update rental status and other fields
+            $rental->update($updateData);
+
+            // Handle multiple image uploads
+            $imagePaths = [];
+            if ($images && is_array($images)) {
+                foreach ($images as $image) {
+                    if ($image && $image->isValid()) {
+                        $imagePath = $image->store('rental-status-logs', 'public');
+                        $imagePaths[] = $imagePath;
+                    }
+                }
+            }
+
+            // Log the status change (without estimated_delivery_time and assigned_manager_id)
             RentalStatusLog::create([
                 'rental_id' => $rental->id,
                 'status' => $status,
                 'notes' => $notes,
-                'image_path' => $imagePath,
+                'image_paths' => !empty($imagePaths) ? $imagePaths : null,
                 'updated_by' => $updatedBy,
             ]);
 
@@ -155,5 +171,13 @@ class RentalRepository implements RentalRepositoryInterface
             ->where('user_id', $userId)
             ->orderBy('created_at', 'desc')
             ->get();
+    }
+
+    public function getByManager($managerId, $perPage = 15)
+    {
+        return Rental::with(['user', 'tournament'])
+            ->where('assigned_manager_id', $managerId)
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
     }
 }
