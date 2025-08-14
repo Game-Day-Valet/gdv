@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Enums\Permission;
 use App\Http\Requests\RentalRequest;
 use App\Http\Resources\RentalResource;
+use App\Http\Resources\RentalStatusLogResource;
 use App\Repositories\RentalRepositoryInterface;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -40,7 +41,7 @@ class RentalController extends Controller
     public function getRentalStatus($id)
     {
         $rentalStatus = RentalStatusLog::where('rental_id', $id)->orderBy('created_at', 'desc')->get();
-        return response()->json(['status' => $rentalStatus]);
+        return response()->json(['status' => RentalStatusLogResource::collection($rentalStatus)]);
     }
 
     public function store(RentalRequest $request)

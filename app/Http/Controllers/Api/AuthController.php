@@ -23,6 +23,7 @@ use App\Services\ReferralService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Laravel\Socialite\Facades\Socialite;
+use App\Http\Resources\UserResource;
 
 use Firebase\JWT\JWK;
 use Firebase\JWT\JWT;
@@ -75,11 +76,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Registration successful. Please verify your email.',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-            ],
+            'user' => new UserResource($user),
             'token' => $token,
         ], 201);
     }
@@ -156,11 +153,7 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Email verified successfully.',
             'token' => $token,
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-            ]
+            'user' => new UserResource($user)
         ]);
     }
 
@@ -198,13 +191,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Login successful',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'referral_code' => $user->referral_code,
-                'address' => $user->address,
-            ],
+            'user' => new UserResource($user),
             'token' => $token,
         ], 200);
     }
@@ -221,7 +208,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'User details retrieved successfully',
-            'user' => $user,
+            'user' => new UserResource($user),
             'token' => $request->bearerToken(),
         ], 200);
     }

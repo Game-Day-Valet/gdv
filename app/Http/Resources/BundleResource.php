@@ -27,7 +27,7 @@ class BundleResource extends JsonResource
             'price' => $this->price,
             'status' => $this->status->value,
             'items' => $this->whenLoaded('items', fn() => $this->items->map(fn($item) => [
-                'id' => $item->id,
+                'id' => (int) $item->id,
                 'name' => $item->name,
                 'quantity' => $item->pivot->quantity,
                 'price' => $item->price,

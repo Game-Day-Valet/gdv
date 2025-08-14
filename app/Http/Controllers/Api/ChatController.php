@@ -7,6 +7,8 @@ use App\Events\NewMessage;
 use App\Jobs\AssignConversation;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Http\Resources\ConversationResource;
+use App\Http\Resources\MessageResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
@@ -88,8 +90,8 @@ class ChatController extends Controller
             }
 
             return response()->json([
-                'message' => $message->load('sender'),
-                'conversation' => $conversation->fresh(),
+                'message' => new MessageResource($message->load('sender')),
+                'conversation' => new ConversationResource($conversation->fresh()),
             ]);
         });
     }
@@ -153,7 +155,7 @@ class ChatController extends Controller
             'conversation_count' => $conversations->count(),
         ]);
 
-        return response()->json($conversations);
+        return response()->json(ConversationResource::collection($conversations));
     }
 
     public function getMessages($conversationId)
@@ -192,7 +194,7 @@ class ChatController extends Controller
             'message_count' => $messages->count(),
         ]);
 
-        return response()->json($messages);
+        return response()->json(MessageResource::collection($messages));
     }
 
     public function markAsRead($conversationId)
@@ -280,7 +282,7 @@ class ChatController extends Controller
             'conversation_count' => $conversations->count(),
         ]);
 
-        return response()->json($conversations);
+        return response()->json(ConversationResource::collection($conversations));
     }
 
     public function getConversationDetails($conversationId)
@@ -319,6 +321,6 @@ class ChatController extends Controller
             'user_id' => $user->id,
         ]);
 
-        return response()->json($conversation);
+        return response()->json(new ConversationResource($conversation));
     }
 }

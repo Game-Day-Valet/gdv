@@ -10,7 +10,7 @@ class FavoriteResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'user_id' => $this->user_id,
+            'user_id' => (int) $this->user_id,
             'tournament' => new TournamentResource($this->whenLoaded('tournament')),
             'created_at' => $this->created_at,
         ];

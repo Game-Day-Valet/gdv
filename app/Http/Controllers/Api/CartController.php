@@ -38,7 +38,7 @@ class CartController extends Controller
         );
           $data['items'] = $itemsWithCart;
         $data['bundles'] = $bundlesWithCart;
-        return $data;
+        return response()->json($data);
      }
 
     public function store(CartItemRequest $request)
