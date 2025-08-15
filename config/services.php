@@ -44,7 +44,7 @@ return [
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => env('GOOGLE_REDIRECT_URI', 'http://localhost/rental-system/auth/google/callback'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', 'https://gdv.devop360.com/rental-system/google/callback'),
     ],
 
     'stripe' => [

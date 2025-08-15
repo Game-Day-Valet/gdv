@@ -40,13 +40,12 @@ Route::prefix('')->name('rentalsystem.')->group(function () {
 	Route::post('/signup', [RentalSystemController::class, 'signup'])->name('signup.submit');
 	Route::get('/signin', [RentalSystemController::class, 'showSignin'])->name('signin');
 	Route::post('/signin', [RentalSystemController::class, 'signin'])->name('signin.submit');
+	Route::post('/google-login', [RentalSystemController::class, 'googleLogin'])->name('google.login');
 	Route::get('/email-verification', [RentalSystemController::class, 'showEmailVerification'])->name('email-verification');
 	Route::post('/email-verification', [RentalSystemController::class, 'verifyEmail'])->name('email-verification.submit');
 	Route::get('/email-verification/resend', [RentalSystemController::class, 'resendVerificationCode'])->name('email-verification.resend');
 	Route::get('/forgot-password', [RentalSystemController::class, 'showForgotPassword'])->name('forgot-password');
 	Route::post('/forgot-password', [RentalSystemController::class, 'forgotPassword'])->name('forgot-password.submit');
-	Route::get('/auth/google/redirect', [RentalSystemController::class, 'googleRedirect'])->name('google.redirect');
-	Route::get('/auth/google/callback', [RentalSystemController::class, 'googleCallback'])->name('google.callback');
 
 	// Protected routes for authenticated users (web session)
 	// Route::group(function () {

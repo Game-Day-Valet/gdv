@@ -140,15 +140,21 @@
 					</button>
 				</form>
 
-				{{-- <div class="sep">OR</div>
-				<a href="{{ route('rentalsystem.google.redirect') }}" class="btn-google">
-					<img src="https://www.gstatic.com/images/branding/product/1x/gsa_64dp.png" width="20" height="20" alt=""> Sign up with Google
-				</a> --}}
+				<div class="sep">OR</div>
+				<form method="POST" action="{{ route('rentalsystem.google.login') }}" id="googleSignupForm">
+					@csrf
+					<input type="hidden" name="id_token" id="googleIdToken">
+					<button type="button" id="googleSignupBtn" class="btn-google">
+						<img src="https://www.gstatic.com/images/branding/product/1x/gsa_64dp.png" width="20" height="20" alt=""> Sign up with Google
+					</button>
+				</form>
 				<p class="small">Already have an account? <a class="link" href="{{ route('rentalsystem.signin') }}">Sign in</a></p>
 			</div>
 		</section>
 	</main>
 
+	<!-- Google Sign-In Script -->
+	<script src="https://accounts.google.com/gsi/client" async defer></script>
 	<script>
 		document.getElementById('signupForm').addEventListener('submit', function(){
 			const btn = document.getElementById('signupBtn');
@@ -156,6 +162,30 @@
 			document.getElementById('btnSpinner').style.display='inline-block';
 			btn.disabled = true;
 		});
+
+		// Google Sign-In
+		document.getElementById('googleSignupBtn').addEventListener('click', function() {
+			google.accounts.id.initialize({
+				client_id: '{{ config("services.google.client_id") }}',
+				callback: handleCredentialResponse
+			});
+			
+			google.accounts.id.prompt((notification) => {
+				if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+					google.accounts.id.renderButton(
+						document.getElementById('googleSignupBtn'),
+						{ theme: 'outline', size: 'large' }
+					);
+				}
+			});
+		});
+
+		function handleCredentialResponse(response) {
+			if (response && response.credential) {
+				document.getElementById('googleIdToken').value = response.credential;
+				document.getElementById('googleSignupForm').submit();
+			}
+		}
 	</script>
 </body>
 </html>

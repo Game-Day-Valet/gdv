@@ -101,6 +101,9 @@
 				@if(session('error'))
 					<div style="background:#fef2f2;border:1px solid #ef444433;color:#991b1b;padding:10px 12px;border-radius:10px;margin-bottom:10px;">{{ session('error') }}</div>
 				@endif
+				@if($errors->has('google'))
+					<div style="background:#fef2f2;border:1px solid #ef444433;color:#991b1b;padding:10px 12px;border-radius:10px;margin-bottom:10px;">{{ $errors->first('google') }}</div>
+				@endif
 
 				<form id="signinForm" method="POST" action="{{ route('rentalsystem.signin.submit') }}">
 					@csrf
@@ -126,15 +129,21 @@
 					</button>
 				</form>
 
-				{{-- <div class="sep">OR</div>
-				<a href="{{ route('rentalsystem.google.redirect') }}" class="btn-google">
-					<img src="https://www.gstatic.com/images/branding/product/1x/gsa_64dp.png" width="20" height="20" alt=""> Continue with Google
-				</a> --}}
+				<div class="sep">OR</div>
+				<form method="POST" action="{{ route('rentalsystem.google.login') }}" id="googleLoginForm">
+					@csrf
+					<input type="hidden" name="id_token" id="googleIdToken">
+					<button type="button" id="googleSignInBtn" class="btn-google">
+						<img src="https://www.gstatic.com/images/branding/product/1x/gsa_64dp.png" width="20" height="20" alt=""> Continue with Google
+					</button>
+				</form>
 				<p class="small">Don't have an account? <a class="link" href="{{ route('rentalsystem.signup') }}">Create account</a></p>
 			</div>
 		</section>
 	</main>
 
+	<!-- Google Sign-In Script -->
+	<script src="https://accounts.google.com/gsi/client" async defer></script>
 	<script>
 		document.getElementById('signinForm').addEventListener('submit', function(){
 			const btn = document.getElementById('signinBtn');
@@ -142,6 +151,30 @@
 			document.getElementById('btnSpinner').style.display='inline-block';
 			btn.disabled = true;
 		});
+
+		// Google Sign-In
+		document.getElementById('googleSignInBtn').addEventListener('click', function() {
+			google.accounts.id.initialize({
+				client_id: '{{ config("services.google.client_id") }}',
+				callback: handleCredentialResponse
+			});
+			
+			google.accounts.id.prompt((notification) => {
+				if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+					google.accounts.id.renderButton(
+						document.getElementById('googleSignInBtn'),
+						{ theme: 'outline', size: 'large' }
+					);
+				}
+			});
+		});
+
+		function handleCredentialResponse(response) {
+			if (response && response.credential) {
+				document.getElementById('googleIdToken').value = response.credential;
+				document.getElementById('googleLoginForm').submit();
+			}
+		}
 	</script>
 </body>
 </html>
