@@ -72,7 +72,7 @@ class NewMessage implements ShouldBroadcast
             return [];
         }
 
-        $this->message->load(['sender', 'conversation.user', 'conversation.responder']);
+        $this->message->load(['sender', 'conversation']);
 
         $data = [
             'message' => [
@@ -80,21 +80,22 @@ class NewMessage implements ShouldBroadcast
                 'conversation_id' => $this->message->conversation_id,
                 'sender_id' => $this->message->sender_id,
                 'content' => $this->message->content,
+                'is_read' => $this->message->is_read,
                 'created_at' => $this->message->created_at->toISOString(),
+                'updated_at' => $this->message->updated_at->toISOString(),
                 'sender' => $this->message->sender ? [
                     'id' => $this->message->sender->id,
                     'name' => $this->message->sender->name,
+                    'email' => $this->message->sender->email,
                 ] : null,
-                'conversation' => [
-                    'user' => $this->message->conversation->user ? [
-                        'id' => $this->message->conversation->user->id,
-                        'name' => $this->message->conversation->user->name,
-                    ] : null,
-                    'responder' => $this->message->conversation->responder ? [
-                        'id' => $this->message->conversation->responder->id,
-                        'name' => $this->message->conversation->responder->name,
-                    ] : null,
-                ],
+            ],
+            'conversation' => [
+                'id' => $this->message->conversation->id,
+                'user_id' => $this->message->conversation->user_id,
+                'responder_id' => $this->message->conversation->responder_id,
+                'status' => $this->message->conversation->status,
+                'created_at' => $this->message->conversation->created_at->toISOString(),
+                'updated_at' => $this->message->conversation->updated_at->toISOString(),
             ],
         ];
 

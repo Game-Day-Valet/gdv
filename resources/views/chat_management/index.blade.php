@@ -386,7 +386,7 @@
         document.getElementById('messages-container').innerHTML = '<div class="text-center"><div class="spinner-border" role="status"></div></div>';
 
         if (window.Echo) {
-            fetch(`/chat-management/${conversationId}`, {
+            fetch(`/admin/chat-management/${conversationId}`, {
                 headers: {
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': csrfToken
@@ -469,7 +469,7 @@
     }
 
     function loadConversationDetails(conversationId) {
-        fetch(`/chat-management/${conversationId}`, {
+        fetch(`/admin/chat-management/${conversationId}`, {
             headers: {
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': csrfToken
@@ -507,7 +507,7 @@
     }
 
     function loadMessages(conversationId) {
-        fetch(`/chat-management/${conversationId}/messages`, {
+        fetch(`/admin/chat-management/${conversationId}/messages`, {
             headers: {
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': csrfToken
@@ -578,7 +578,7 @@
     }
 
     function markAsRead(conversationId) {
-        fetch(`/chat-management/${conversationId}/mark-read`, {
+        fetch(`/admin/chat-management/${conversationId}/mark-read`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -605,7 +605,7 @@
 
         console.log('Sending message:', { conversationId: currentConversationId, content });
 
-        fetch(`/chat-management/${currentConversationId}/send`, {
+        fetch(`/admin/chat-management/${currentConversationId}/send`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -663,7 +663,7 @@
         }).then((result) => {
             if (result.isConfirmed) {
                 console.log('Closing conversation:', currentConversationId);
-                fetch(`/chat-management/${currentConversationId}/close`, {
+                fetch(`/admin/chat-management/${currentConversationId}/close`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -694,7 +694,7 @@
     });
 
     function updateConversationList() {
-        fetch('/chat-management/unassigned/list', {
+        fetch('/admin/chat-management/unassigned/list', {
             headers: {
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': csrfToken
