@@ -34,6 +34,7 @@ class RentalResource extends JsonResource
             'status_logs' => $this->statusLogs,
             'photos' => $this->whenLoaded('photos', fn() => $this->photos->pluck('photo_path')),
             'reviews' => $this->whenLoaded('reviews', fn() => RentalReviewResource::collection($this->reviews)),
+            'estimated_delivery_time' => $this->estimated_delivery_time
         ];
     }
 }

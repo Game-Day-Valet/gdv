@@ -291,8 +291,8 @@ class RentalSystemController extends Controller
 
         $validator = Validator::make($request->all(), [
             'tournament_id' => 'required|integer',
-            'team_name' => 'required|string|max:255',
-            'coach_name' => 'required|string|max:255',
+            'team_name' => 'nullable|string|max:255',
+            'coach_name' => 'nullable|string|max:255',
             'field_number' => 'nullable|string|max:50',
             'drop_off_date' => 'required|date',
             'drop_off_time' => 'required',
@@ -302,8 +302,34 @@ class RentalSystemController extends Controller
             'damage_waiver' => 'nullable',
             'payment_method' => 'required|in:stripe',
         ]);
+
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
+        }
+
+        // Additional validation: At least one item or bundle must be selected
+        $itemsInput = (array) $request->input('items', []);
+        $bundlesInput = (array) $request->input('bundles', []);
+        
+        $hasItems = false;
+        $hasBundles = false;
+        
+        foreach ($itemsInput as $itemId => $qty) {
+            if ((int) $qty > 0) {
+                $hasItems = true;
+                break;
+            }
+        }
+        
+        foreach ($bundlesInput as $bundleId => $qty) {
+            if ((int) $qty > 0) {
+                $hasBundles = true;
+                break;
+            }
+        }
+        
+        if (!$hasItems && !$hasBundles) {
+            return back()->withErrors(['items' => 'Please select at least one item or bundle.'])->withInput();
         }
 
         $user = Auth::user();
@@ -316,6 +342,7 @@ class RentalSystemController extends Controller
         $itemsSubtotal = 0.0;
         $bundlesSubtotal = 0.0;
 
+        // Process items - store as [{"item_id":"1","quantity":3}]
         foreach ($itemsInput as $itemId => $qty) {
             $quantity = max(0, (int) $qty);
             if ($quantity > 0) {
@@ -323,10 +350,15 @@ class RentalSystemController extends Controller
                 if ($item) {
                     $price = (float) ($item->price ?? 0);
                     $itemsSubtotal += $price * $quantity;
-                    $selectedItems[$itemId] = $quantity;
+                    $selectedItems[] = [
+                        'item_id' => (string) $itemId,
+                        'quantity' => $quantity
+                    ];
                 }
             }
         }
+
+        // Process bundles - store as [10,4] (just IDs, no quantities)
         foreach ($bundlesInput as $bundleId => $qty) {
             $quantity = max(0, (int) $qty);
             if ($quantity > 0) {
@@ -334,7 +366,8 @@ class RentalSystemController extends Controller
                 if ($bundle) {
                     $price = (float) ($bundle->price ?? 0);
                     $bundlesSubtotal += $price * $quantity;
-                    $selectedBundles[$bundleId] = $quantity;
+                    // Store just the bundle ID, no quantity needed
+                    $selectedBundles[] = (int) $bundleId;
                 }
             }
         }
@@ -356,15 +389,15 @@ class RentalSystemController extends Controller
         $rental = $this->rentals->create([
             'user_id' => $user->id,
             'tournament_id' => (int) $request->input('tournament_id'),
-            'team_name' => $request->input('team_name'),
-            'coach_name' => $request->input('coach_name'),
-            'field_number' => $request->input('field_number'),
-            'items' => $selectedItems,
-            'bundles' => $selectedBundles,
+            'team_name' => $request->input('team_name') ?: null,
+            'coach_name' => $request->input('coach_name') ?: null,
+            'field_number' => $request->input('field_number') ?: null,
+            'items' => !empty($selectedItems) ? $selectedItems : null,
+            'bundles' => !empty($selectedBundles) ? $selectedBundles : null,
             'rental_date' => $dropOffDate,
             'drop_off_time' => $dropOffDateTime,
             'insurance_option' => $insurance === 'none' ? null : $insurance,
-            'damage_waiver' => $waiverAmount > 0,
+            'damage_waiver' => $request->has('damage_waiver') ? true : false,
             'payment_method' => 'stripe',
             'payment_status' => 'pending',
             'total_amount' => $total,
@@ -441,17 +474,45 @@ class RentalSystemController extends Controller
         $rentals = [];
         foreach ($collection as $r) {
             $itemsArray = [];
+            $bundlesArray = [];
+
+            // Process items - get actual item names from database
             if (is_array($r->items)) {
-                foreach ($r->items as $itemId => $qty) {
-                    $itemsArray[] = ['name' => 'Item #' . $itemId, 'quantity' => $qty];
+                foreach ($r->items as $item) {
+                    if (is_array($item) && isset($item['item_id']) && isset($item['quantity'])) {
+                        $itemModel = $this->items->find($item['item_id']);
+                        if ($itemModel) {
+                            $itemsArray[] = [
+                                'name' => $itemModel->name,
+                                'quantity' => (int) $item['quantity']
+                            ];
+                        }
+                    }
                 }
             }
+
+            // Process bundles - get actual bundle names from database
+            if (is_array($r->bundles)) {
+                foreach ($r->bundles as $bundleId) {
+                    if (is_numeric($bundleId)) {
+                        $bundle = $this->bundles->find($bundleId);
+                        if ($bundle) {
+                            $bundlesArray[] = [
+                                'name' => $bundle->name,
+                                'quantity' => 1 // Bundles don't have quantities
+                            ];
+                        }
+                    }
+                }
+            }
+
             $rentals[] = [
                 'tournament_name' => optional($r->tournament)->name ?? 'Tournament',
                 'status' => $r->status ?? 'pending',
                 'total_amount' => $r->total_amount ?? 0,
                 'created_at' => $r->created_at,
                 'items' => $itemsArray,
+                'bundles' => $bundlesArray,
             ];
         }
         return view('rentalsystem.profile', compact('user', 'rentals'));

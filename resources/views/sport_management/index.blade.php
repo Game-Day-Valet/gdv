@@ -56,11 +56,13 @@
                             <td>
                                 <div class="d-flex gap-2">
                                     <a href="{{ route('sport-management.edit', $sport->id) }}" class="btn btn-sm btn-primary">Edit</a>
+                                    @can('super_admin')
                                     <form action="{{ route('sport-management.destroy', $sport->id) }}" method="POST" class="delete-sport-form" style="display:inline;">
                                         @csrf
                                         @method('DELETE')
                                         <button type="button" class="btn btn-sm btn-danger delete-sport-btn">Delete</button>
                                     </form>
+                                    @endcan
                                 </div>
                             </td>
                         </tr>

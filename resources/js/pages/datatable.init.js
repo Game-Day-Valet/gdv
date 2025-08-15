@@ -16,7 +16,24 @@ import 'datatables.net-keytable-bs5/js/keyTable.bootstrap5';
 $(document).ready(function () {
 
     // Default Datatable
-    $('#datatable').DataTable();
+    $('#datatable').DataTable({
+        "order": [], // Disable automatic sorting
+        "pageLength": 15,
+        "responsive": true,
+        "language": {
+            "search": "Search:",
+            "lengthMenu": "Show _MENU_ entries per page",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "infoEmpty": "Showing 0 to 0 of 0 entries",
+            "infoFiltered": "(filtered from _MAX_ total entries)",
+            "paginate": {
+                "first": "First",
+                "last": "Last",
+                "next": "Next",
+                "previous": "Previous"
+            }
+        }
+    });
 
     //Buttons examples
     var table = $('#datatable-buttons').DataTable({

@@ -32,7 +32,7 @@ require __DIR__ . '/auth.php';
 // })->name('root');
 
 Route::get('/preview-email', [AuthController::class, 'previewVerifyEmail'])->name('preview.email');
-Route::get('/register-referal', [BaseController::class, 'registerReferal'])->name('register.referal');
+Route::get('/register-referral', [BaseController::class, 'registerReferal'])->name('register.referal');
 
 // Rental System Frontend Routes (Public)
 Route::prefix('')->name('rentalsystem.')->group(function () {
@@ -80,24 +80,26 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth'], function () {
 	Route::post('/chat-management/{id}/close', [ChatManagementController::class, 'closeConversation'])->name('chat-management.close');
 	Route::get('/chat-management/unassigned/list', [ChatManagementController::class, 'getUnassignedConversations'])->name('chat-management.unassigned');
 
-		// User Management
+	// Sports and Tournaments - Accessible to both manager and admin
+	Route::resource('sport-management', SportController::class);
+	Route::resource('tournament-management', TournamentController::class);
+
+	// Rental Management - Accessible to both manager and admin
+	Route::resource('rental-management', RentalManagementController::class)->except(['create', 'store', 'edit', 'update', 'destroy']);
+	Route::post('/rental-management/{id}/update-status', [RentalManagementController::class, 'updateStatus'])->name('rental-management.update-status');
+	Route::post('/rental-management/{id}/update-payment-status', [RentalManagementController::class, 'updatePaymentStatus'])->name('rental-management.update-payment-status');
+	Route::get('/rental-management/{id}/available-statuses', [RentalManagementController::class, 'getAvailableStatuses'])->name('rental-management.available-statuses');
+
+	// User Management - Admin only
 	Route::group(['middleware' => ['can:super_admin']], function () {
 		Route::resource('user-management', UserController::class);
 		Route::resource('role-management', RoleController::class);
-		Route::resource('sport-management', SportController::class);
-		Route::resource('tournament-management', TournamentController::class);
 		Route::resource('item-management', ItemController::class);
 		Route::resource('bundle-management', BundleController::class);
-		Route::resource('rental-management', RentalManagementController::class)->except(['create', 'store', 'edit', 'update', 'destroy']);
 		Route::resource('coupon-management', CouponManagementController::class);
 		Route::post('/coupon-management/{id}/send', [CouponManagementController::class, 'send'])->name('coupon-management.send');
 		Route::get('/coupon-management/{id}/preview', [CouponManagementController::class, 'preview'])->name('coupon-management.preview');
 		Route::resource('faq-management', FaqManagementController::class);
 		Route::resource('privacy-policy-management', PrivacyPolicyManagementController::class);
-
-		// Additional rental management routes
-		Route::post('/rental-management/{id}/update-status', [RentalManagementController::class, 'updateStatus'])->name('rental-management.update-status');
-		Route::post('/rental-management/{id}/update-payment-status', [RentalManagementController::class, 'updatePaymentStatus'])->name('rental-management.update-payment-status');
-		Route::get('/rental-management/{id}/available-statuses', [RentalManagementController::class, 'getAvailableStatuses'])->name('rental-management.available-statuses');
 	});
 });

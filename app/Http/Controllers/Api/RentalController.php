@@ -40,7 +40,9 @@ class RentalController extends Controller
 
     public function getRentalStatus($id)
     {
-        $rentalStatus = RentalStatusLog::where('rental_id', $id)->orderBy('created_at', 'desc')->get();
+        $rentalStatus = RentalStatusLog::where('rental_id', $id)
+            ->with(['updatedBy', 'rental'])
+            ->get();
         return response()->json(['status' => RentalStatusLogResource::collection($rentalStatus)]);
     }
 
@@ -53,7 +55,6 @@ class RentalController extends Controller
                 $data['user_id'] = $user->id;
                 // Apply discount if eligible
                $data = $this->referralService->applyDiscount($user->id, $data);
-// return $data;
                 $rental = $this->rentalRepository->create($data);
                 return new RentalResource($rental);
             }

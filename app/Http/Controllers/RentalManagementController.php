@@ -33,6 +33,14 @@ class RentalManagementController extends Controller
     {
         $user = Auth::user();
 
+        // Debug: Check raw database data first
+        $rawRentals = DB::table('rentals')
+            ->select('id', 'created_at', 'team_name')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+            
+
         // If user is a manager, show only their assigned rentals
         if ($user->hasRole(Role::MANAGER)) {
             $rentals = $this->rentalRepository->getByManager($user->id, 15);

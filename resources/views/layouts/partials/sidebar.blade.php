@@ -127,6 +127,7 @@
                     </a>
                 </li>
 
+                @can('super_admin')
                 <li>
                     <a href="{{ route('item-management.index') }}">
                         <i class="fas fa-cube"></i> {{-- single item --}}
@@ -140,6 +141,7 @@
                         <span>Bundles</span>
                     </a>
                 </li>
+                @endcan
 
                 <li>
                     <a href="{{ route('rental-management.index') }}">
@@ -148,12 +150,14 @@
                     </a>
                 </li>
 
+                @can('super_admin')
                 <li>
                     <a href="{{ route('coupon-management.index') }}">
                         <i class="fas fa-ticket-alt"></i> {{-- coupon icon --}}
                         <span>Coupon Management</span>
                     </a>
                 </li>
+                @endcan
 
                 <li>
                     <a href="{{ route('chat-management.index') }}">
@@ -162,6 +166,7 @@
                     </a>
                 </li>
 
+                @can('super_admin')
                 <li>
                     <a href="{{ route('faq-management.index') }}">
                         <i class="fas fa-question-circle"></i>
@@ -175,6 +180,7 @@
                         <span>Privacy Policy</span>
                     </a>
                 </li>
+                @endcan
 
                 @can('super_admin')
                 <li>

@@ -49,6 +49,11 @@ class SportController extends Controller
 
     public function destroy($id)
     {
+        // Only super_admin can delete sports
+        if (!auth()->user()->can('super_admin')) {
+            abort(403, 'This action is unauthorized.');
+        }
+
         try {
             $this->sportRepository->delete($id);
             return redirect()->route('sport-management.index')->with('success', 'Sport deleted successfully.');

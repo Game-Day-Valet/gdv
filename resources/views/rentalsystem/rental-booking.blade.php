@@ -87,25 +87,25 @@
                     <div class="card">
                         <div class="row-two">
                             <div>
-                                <label class="label">TEAM NAME</label>
+                                <label class="label">TEAM NAME <span class="text-danger">*</span></label>
                                 <input class="input" type="text" name="team_name" placeholder="Team name" required>
                             </div>
                             <div>
-                                <label class="label">COACH NAME</label>
+                                <label class="label">COACH NAME <span class="text-danger">*</span></label>
                                 <input class="input" type="text" name="coach_name" placeholder="Coach name" required>
                             </div>
                         </div>
                         <div class="row-two">
                             <div>
-                                <label class="label">FIELD NUMBER</label>
-                                <input class="input" type="text" name="field_number" placeholder="Field number">
+                                <label class="label">FIELD NUMBER <span class="text-danger">*</span></label>
+                                <input class="input" type="text" name="field_number" placeholder="Field number" required>
                             </div>
                             <div></div>
                         </div>
                     </div>
 
                     <div class="card" style="margin-top:18px;">
-                        <div class="section-title">ITEMS</div>
+                        <div class="section-title">ITEMS <span class="text-danger">*</span></div>
                         <div class="items-grid">
                             @forelse(($availableItems ?? []) as $it)
                                 <div class="item-row" data-type="item" data-id="{{ $it->id }}" data-price="{{ (float)($it->price ?? 0) }}">
@@ -117,17 +117,18 @@
                                         <button type="button" class="qty-dec">-</button>
                                         <span class="qty-val">0</span>
                                         <button type="button" class="qty-inc">+</button>
-                                        <input type="hidden" name="items[{{ $it->id }}]" value="0">
+                                        <input type="hidden" name="items[{{ $it->id }}]" value="0" class="item-input">
                                     </div>
                                 </div>
                             @empty
                                 <div class="meta">No items available</div>
                             @endforelse
                         </div>
+                        <div class="text-danger small mt-2" id="items-error" style="display: none;">Please select at least one item or bundle</div>
                     </div>
 
                     <div class="card" style="margin-top:18px;">
-                        <div class="section-title">BUNDLES</div>
+                        <div class="section-title">BUNDLES <span class="text-danger">*</span></div>
                         <div class="items-grid">
                             @forelse(($availableBundles ?? []) as $bd)
                                 <div class="item-row" data-type="bundle" data-id="{{ $bd->id }}" data-price="{{ (float)($bd->price ?? 0) }}">
@@ -136,16 +137,17 @@
                                         <div class="item-price">${{ number_format((float)($bd->price ?? 0), 2) }}</div>
                                     </div>
                                     <div class="qty">
-                                        <button type="button" class="qty-dec">-</button>
-                                        <span class="qty-val">0</span>
-                                        <button type="button" class="qty-inc">+</button>
-                                        <input type="hidden" name="bundles[{{ $bd->id }}]" value="0">
+                                        <label style="display:flex;gap:10px;align-items:center;margin:0;">
+                                            <input type="checkbox" name="bundles[{{ $bd->id }}]" value="1" class="bundle-input">
+                                            <span>Select</span>
+                                        </label>
                                     </div>
                                 </div>
                             @empty
                                 <div class="meta">No bundles available</div>
                             @endforelse
                         </div>
+                        <div class="text-danger small mt-2" id="bundles-error" style="display: none;">Please select at least one item or bundle</div>
                     </div>
 
                     <div class="card" style="margin-top:18px;">
@@ -211,16 +213,34 @@
 
         function recalc(){
             let itemsSubtotal = 0, bundlesSubtotal = 0;
-            document.querySelectorAll('.item-row').forEach(row => {
+            
+            // Calculate items subtotal
+            document.querySelectorAll('.item-row[data-type="item"]').forEach(row => {
                 const price = parseFloat(row.getAttribute('data-price')) || 0;
                 const qty = parseInt(row.querySelector('.qty-val').textContent) || 0;
-                const type = row.getAttribute('data-type');
                 const line = price * qty;
-                if (type === 'item') itemsSubtotal += line; else bundlesSubtotal += line;
+                itemsSubtotal += line;
             });
-            const insuranceVal = parseFloat(document.querySelector('input[name="insurance_option"]:checked')?.value || 0);
+            
+            // Calculate bundles subtotal (checkboxes)
+            document.querySelectorAll('.item-row[data-type="bundle"]').forEach(row => {
+                const price = parseFloat(row.getAttribute('data-price')) || 0;
+                const checkbox = row.querySelector('input[type="checkbox"]');
+                if (checkbox && checkbox.checked) {
+                    bundlesSubtotal += price;
+                }
+            });
+            
+            // Fix insurance calculation - handle "none" value properly
+            const insuranceInput = document.querySelector('input[name="insurance_option"]:checked');
+            let insuranceVal = 0;
+            if (insuranceInput && insuranceInput.value !== 'none') {
+                insuranceVal = parseFloat(insuranceInput.value) || 0;
+            }
+            
             const waiverVal = document.querySelector('input[name="damage_waiver"]:checked') ? 20 : 0;
             const total = itemsSubtotal + bundlesSubtotal + insuranceVal + waiverVal;
+            
             document.getElementById('itemsSubtotal').textContent = formatUSD(itemsSubtotal);
             document.getElementById('bundlesSubtotal').textContent = formatUSD(bundlesSubtotal);
             document.getElementById('insuranceAmount').textContent = formatUSD(insuranceVal);
@@ -228,20 +248,85 @@
             document.getElementById('totalAmount').textContent = formatUSD(total);
         }
 
-        document.querySelectorAll('.item-row').forEach(row => {
+        // Event listeners for items (quantity buttons)
+        document.querySelectorAll('.item-row[data-type="item"]').forEach(row => {
             const dec = row.querySelector('.qty-dec');
             const inc = row.querySelector('.qty-inc');
             const val = row.querySelector('.qty-val');
             const input = row.querySelector('input[type="hidden"]');
-            dec.addEventListener('click', () => { let q = Math.max(0, (parseInt(val.textContent)||0) - 1); val.textContent = q; input.value = q; recalc(); });
-            inc.addEventListener('click', () => { let q = (parseInt(val.textContent)||0) + 1; val.textContent = q; input.value = q; recalc(); });
+            dec.addEventListener('click', () => { 
+                let q = Math.max(0, (parseInt(val.textContent)||0) - 1); 
+                val.textContent = q; 
+                input.value = q; 
+                recalc(); 
+                validateForm();
+            });
+            inc.addEventListener('click', () => { 
+                let q = (parseInt(val.textContent)||0) + 1; 
+                val.textContent = q; 
+                input.value = q; 
+                recalc(); 
+                validateForm();
+            });
         });
 
+        // Event listeners for bundles (checkboxes)
+        document.querySelectorAll('.item-row[data-type="bundle"] input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                recalc();
+                validateForm();
+            });
+        });
+
+        // Event listeners for insurance and waiver
         document.querySelectorAll('input[name="insurance_option"]').forEach(r => r.addEventListener('change', recalc));
         const waiver = document.querySelector('input[name="damage_waiver"]');
         if (waiver) waiver.addEventListener('change', recalc);
 
+        // Form validation
+        function validateForm() {
+            let hasItems = false;
+            let hasBundles = false;
+            let isValid = true;
+
+            // Check if any items are selected with quantity > 0
+            document.querySelectorAll('.item-row[data-type="item"]').forEach(row => {
+                const qty = parseInt(row.querySelector('.qty-val').textContent) || 0;
+                if (qty > 0) hasItems = true;
+            });
+
+            // Check if any bundles are selected
+            document.querySelectorAll('.item-row[data-type="bundle"] input[type="checkbox"]').forEach(checkbox => {
+                if (checkbox.checked) hasBundles = true;
+            });
+
+            // Show/hide error messages
+            const itemsError = document.getElementById('items-error');
+            const bundlesError = document.getElementById('bundles-error');
+            
+            if (!hasItems && !hasBundles) {
+                itemsError.style.display = 'block';
+                bundlesError.style.display = 'block';
+                isValid = false;
+            } else {
+                itemsError.style.display = 'none';
+                bundlesError.style.display = 'none';
+            }
+
+            return isValid;
+        }
+
+        // Form submission validation
+        document.getElementById('bookingForm').addEventListener('submit', function(e) {
+            if (!validateForm()) {
+                e.preventDefault();
+                alert('Please select at least one item or bundle before proceeding.');
+                return false;
+            }
+        });
+
         recalc();
+        validateForm();
     </script>
 </body>
 </html> 

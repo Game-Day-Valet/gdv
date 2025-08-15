@@ -70,11 +70,13 @@
                                     <td>
                                         <div class="d-flex gap-2">
                                             <a href="{{ route('tournament-management.edit', $tournament->id) }}" class="btn btn-sm btn-primary">Edit</a>
+                                            @can('super_admin')
                                             <form action="{{ route('tournament-management.destroy', $tournament->id) }}" method="POST" class="delete-tournament-form" style="display:inline;">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="button" class="btn btn-sm btn-danger delete-tournament-btn">Delete</button>
                                             </form>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>

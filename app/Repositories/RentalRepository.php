@@ -16,9 +16,11 @@ class RentalRepository implements RentalRepositoryInterface
 
     public function getAllPaginated($perPage = 15)
     {
-        return Rental::with(['user', 'tournament'])
-            ->orderBy('created_at', 'desc')
-            ->paginate($perPage);
+        $query = Rental::with(['user', 'tournament'])
+            ->orderBy('created_at', 'desc');
+        $result = $query->paginate($perPage);
+        
+        return $result;
     }
 
     public function find($id)
@@ -184,9 +186,12 @@ class RentalRepository implements RentalRepositoryInterface
 
     public function getByManager($managerId, $perPage = 15)
     {
-        return Rental::with(['user', 'tournament'])
+        $query = Rental::with(['user', 'tournament'])
             ->where('assigned_manager_id', $managerId)
-            ->orderBy('created_at', 'desc')
-            ->paginate($perPage);
+            ->orderBy('created_at', 'desc');
+ 
+        $result = $query->paginate($perPage);
+        
+        return $result;
     }
 }

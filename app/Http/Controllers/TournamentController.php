@@ -52,6 +52,11 @@ class TournamentController extends Controller
 
     public function destroy($id)
     {
+        // Only super_admin can delete tournaments
+        if (!auth()->user()->can('super_admin')) {
+            abort(403, 'This action is unauthorized.');
+        }
+
         try {
             $this->tournamentRepository->delete($id);
             return redirect()->route('tournament-management.index')->with('success', 'Tournament deleted successfully.');

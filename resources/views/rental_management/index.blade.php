@@ -4,20 +4,17 @@
     @vite(['node_modules/datatables.net-bs5/css/dataTables.bootstrap5.min.css', 'node_modules/datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css', 'node_modules/datatables.net-keytable-bs5/css/keyTable.bootstrap5.min.css', 'node_modules/datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css', 'node_modules/datatables.net-select-bs5/css/select.bootstrap5.min.css'])
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
-        .update-status-badge,
-        .update-payment-badge {
+        .update-status-badge {
             cursor: pointer;
             transition: all 0.3s ease;
         }
 
-        .update-status-badge:hover,
-        .update-payment-badge:hover {
+        .update-status-badge:hover {
             transform: scale(1.1);
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
-        .update-status-badge:hover::after,
-        .update-payment-badge:hover::after {
+        .update-status-badge:hover::after {
             content: " (Click to update)";
             font-size: 0.8em;
             opacity: 0.8;
@@ -91,7 +88,6 @@
                 <li class="breadcrumb-item"><a href="javascript: void(0);">Rental Management</a></li>
                 <li class="breadcrumb-item active">List</li>
             </ol>
-            <button type="button" class="btn btn-primary btn-sm" onclick="testModal()">Test Modal</button>
         </div>
     </div>
 
@@ -100,6 +96,9 @@
             <div class="card">
                 <div class="card-header">
                     <h5 class="card-title mb-0">Rental List</h5>
+                    @if(auth()->user()->hasRole('manager'))
+                        <small class="text-muted">Showing only rentals assigned to you</small>
+                    @endif
                 </div>
                 <div class="card-body">
                     @if (session('success'))
@@ -111,6 +110,14 @@
                     @if (session('error'))
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
                             {{ session('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+                    
+                    @if(auth()->user()->hasRole('manager'))
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Manager Access:</strong> You can only view and manage rentals that have been assigned to you by the admin.
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
@@ -163,11 +170,7 @@
                                                     default => 'badge bg-secondary'
                                                 };
                                             @endphp
-                                            <span class="{{ $paymentStatusClass }} update-payment-badge"
-                                                  style="cursor: pointer;"
-                                                  data-rental-id="{{ $rental->id }}"
-                                                  data-current-payment="{{ $rental->payment_status ?? 'pending' }}"
-                                                  title="Click to update payment status">
+                                            <span class="{{ $paymentStatusClass }}">
                                                 {{ ucfirst($rental->payment_status ?? 'pending') }}
                                             </span>
                                         </td>
@@ -299,32 +302,6 @@
         </div>
     </div>
 
-    <!-- Payment Update Modal -->
-    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="paymentModalLabel">Update Payment Status</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="paymentForm">
-                        <div class="mb-3">
-                            <label for="payment_status" class="form-label">Payment Status</label>
-                            <select name="payment_status" id="payment_status" class="form-select" required>
-                                <option value="pending">Pending</option>
-                                <option value="completed">Completed</option>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="savePaymentBtn">Update Payment</button>
-                </div>
-            </div>
-        </div>
-    </div>
 @endsection
 
 @section('script')
@@ -384,20 +361,6 @@
                         console.log('Status select options count:', statusSelect.options.length);
                         console.log('Status select innerHTML:', statusSelect.innerHTML);
                     });
-                });
-            });
-
-            // Payment Update
-            document.querySelectorAll('.update-payment-badge').forEach(function(badge) {
-                badge.addEventListener('click', function() {
-                    currentRentalId = this.getAttribute('data-rental-id');
-                    const currentPayment = this.getAttribute('data-current-payment');
-
-                    document.getElementById('payment_status').value = currentPayment;
-
-                    // Use Bootstrap modal properly
-                    const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
-                    modal.show();
                 });
             });
 
@@ -513,39 +476,6 @@
                 })
                 .finally(() => {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('statusModal'));
-                    if (modal) {
-                        modal.hide();
-                    }
-                });
-            });
-
-            // Save Payment
-            document.getElementById('savePaymentBtn').addEventListener('click', function() {
-                const paymentStatus = document.getElementById('payment_status').value;
-
-                fetch(`/admin/rental-management/${currentRentalId}/update-payment-status`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify({ payment_status: paymentStatus })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire('Success!', data.message, 'success').then(() => {
-                            location.reload();
-                        });
-                    } else {
-                        Swal.fire('Error!', data.message, 'error');
-                    }
-                })
-                .catch(error => {
-                    Swal.fire('Error!', 'Failed to update payment status', 'error');
-                })
-                .finally(() => {
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'));
                     if (modal) {
                         modal.hide();
                     }
