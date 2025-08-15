@@ -15,6 +15,7 @@ use App\Enums\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class RentalManagementController extends Controller
 {
@@ -182,15 +183,38 @@ class RentalManagementController extends Controller
      */
     public function getAvailableStatuses($id)
     {
-        $rental = $this->rentalRepository->find($id);
-        $currentStatus = $rental->status;
+        try {
+            $rental = $this->rentalRepository->find($id);
 
-        $availableStatuses = $this->getNextAvailableStatuses($currentStatus);
+            if (!$rental) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Rental not found'
+                ], 404);
+            }
 
-        return response()->json([
-            'success' => true,
-            'available_statuses' => $availableStatuses
-        ]);
+            $currentStatus = $rental->status;
+            $availableStatuses = $this->getNextAvailableStatuses($currentStatus);
+
+            Log::info('Available statuses for rental ' . $id . ' with current status ' . $currentStatus . ': ' . json_encode($availableStatuses));
+
+            return response()->json([
+                'success' => true,
+                'available_statuses' => $availableStatuses,
+                'current_status' => $currentStatus,
+                'debug' => [
+                    'rental_id' => $id,
+                    'current_status' => $currentStatus,
+                    'available_statuses' => $availableStatuses
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting available statuses: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error getting available statuses: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -200,8 +224,8 @@ class RentalManagementController extends Controller
     {
         $validProgressions = [
             'pending' => ['confirmed', 'cancelled'],
-            'confirmed' => ['out_of_delivery', 'cancelled'],
-            'out_of_delivery' => ['delivered', 'cancelled'],
+            'confirmed' => ['out_for_delivery', 'cancelled'],
+            'out_for_delivery' => ['delivered', 'cancelled'],
             'delivered' => [], // Final status
             'cancelled' => [], // Final status
         ];
@@ -216,8 +240,8 @@ class RentalManagementController extends Controller
     {
         $validProgressions = [
             'pending' => ['confirmed', 'cancelled'],
-            'confirmed' => ['out_for_delivery'],
-            'out_for_delivery' => ['delivered'],
+            'confirmed' => ['out_for_delivery', 'cancelled'],
+            'out_for_delivery' => ['delivered', 'cancelled'],
             'delivered' => [],
             'cancelled' => [],
         ];

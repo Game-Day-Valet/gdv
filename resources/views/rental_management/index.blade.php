@@ -91,6 +91,7 @@
                 <li class="breadcrumb-item"><a href="javascript: void(0);">Rental Management</a></li>
                 <li class="breadcrumb-item active">List</li>
             </ol>
+            <button type="button" class="btn btn-primary btn-sm" onclick="testModal()">Test Modal</button>
         </div>
     </div>
 
@@ -331,14 +332,27 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            console.log('DOM loaded, initializing rental management...');
             let currentRentalId = null;
             let selectedImages = [];
 
             // Status Update
-            document.querySelectorAll('.update-status-badge').forEach(function(badge) {
+            const statusBadges = document.querySelectorAll('.update-status-badge');
+            console.log('Found', statusBadges.length, 'status badges');
+
+            statusBadges.forEach(function(badge) {
+                console.log('Adding click listener to status badge:', badge);
                 badge.addEventListener('click', function() {
+                    console.log('Status badge clicked!');
+                    console.log('Data attributes:', {
+                        rentalId: this.getAttribute('data-rental-id'),
+                        currentStatus: this.getAttribute('data-current-status'),
+                        clickable: this.getAttribute('data-clickable')
+                    });
+
                     // Check if status is clickable
                     if (this.getAttribute('data-clickable') === 'false') {
+                        console.log('Status is not clickable, returning');
                         return;
                     }
 
@@ -360,7 +374,16 @@
 
                     // Use Bootstrap modal properly
                     const modal = new bootstrap.Modal(document.getElementById('statusModal'));
+                    console.log('Showing status modal for rental:', currentRentalId);
                     modal.show();
+
+                    // Add event listener for when modal is shown
+                    document.getElementById('statusModal').addEventListener('shown.bs.modal', function () {
+                        console.log('Status modal shown, checking if statuses were loaded');
+                        const statusSelect = document.getElementById('status');
+                        console.log('Status select options count:', statusSelect.options.length);
+                        console.log('Status select innerHTML:', statusSelect.innerHTML);
+                    });
                 });
             });
 
@@ -378,9 +401,11 @@
                 });
             });
 
-                        // Status change handler
+            // Status change handler
             document.getElementById('status').addEventListener('change', function() {
                 const selectedStatus = this.value;
+                console.log('Status changed to:', selectedStatus);
+
                 hideAllStatusFields();
 
                 // Reset required attributes
@@ -389,15 +414,24 @@
                 document.getElementById('cancellation_notes').required = false;
 
                 if (selectedStatus === 'confirmed') {
+                    console.log('Showing confirmed fields');
                     document.getElementById('confirmedFields').classList.add('show');
                     document.getElementById('estimated_delivery_time').required = true;
                     document.getElementById('assigned_manager_id').required = true;
                 } else if (selectedStatus === 'delivered') {
+                    console.log('Showing delivered fields');
                     document.getElementById('deliveredFields').classList.add('show');
                 } else if (selectedStatus === 'cancelled') {
+                    console.log('Showing cancelled fields');
                     document.getElementById('cancelledFields').classList.add('show');
                     document.getElementById('cancellation_notes').required = true;
                 }
+
+                console.log('Status fields after change:', {
+                    confirmed: document.getElementById('confirmedFields').classList.contains('show'),
+                    delivered: document.getElementById('deliveredFields').classList.contains('show'),
+                    cancelled: document.getElementById('cancelledFields').classList.contains('show')
+                });
             });
 
             // Image upload handler
@@ -460,7 +494,7 @@
 
                 formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
 
-                fetch(`/rental-management/${currentRentalId}/update-status`, {
+                fetch(`/admin/rental-management/${currentRentalId}/update-status`, {
                     method: 'POST',
                     body: formData
                 })
@@ -489,7 +523,7 @@
             document.getElementById('savePaymentBtn').addEventListener('click', function() {
                 const paymentStatus = document.getElementById('payment_status').value;
 
-                fetch(`/rental-management/${currentRentalId}/update-payment-status`, {
+                fetch(`/admin/rental-management/${currentRentalId}/update-payment-status`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -520,29 +554,53 @@
 
             // Helper functions
             function loadAvailableStatuses(rentalId, currentStatus) {
-                fetch(`/rental-management/${rentalId}/available-statuses`)
-                    .then(response => response.json())
+                console.log('Loading available statuses for rental:', rentalId, 'current status:', currentStatus);
+
+                const url = `/admin/rental-management/${rentalId}/available-statuses`;
+                console.log('Fetching from URL:', url);
+
+                fetch(url)
+                    .then(response => {
+                        console.log('Response status:', response.status);
+                        return response.json();
+                    })
                     .then(data => {
+                        console.log('Available statuses data:', data);
+
                         if (data.success) {
                             const statusSelect = document.getElementById('status');
                             statusSelect.innerHTML = '<option value="">Select Status</option>';
 
-                            data.available_statuses.forEach(status => {
-                                const option = document.createElement('option');
-                                option.value = status;
-                                option.textContent = status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-                                statusSelect.appendChild(option);
-                            });
+                            if (data.available_statuses && data.available_statuses.length > 0) {
+                                data.available_statuses.forEach(status => {
+                                    const option = document.createElement('option');
+                                    option.value = status;
+                                    option.textContent = status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                    statusSelect.appendChild(option);
+                                });
+                                console.log('Loaded', data.available_statuses.length, 'status options');
+                            } else {
+                                console.log('No available statuses returned');
+                                statusSelect.innerHTML = '<option value="">No statuses available</option>';
+                            }
+                        } else {
+                            console.error('API returned error:', data.message);
+                            const statusSelect = document.getElementById('status');
+                            statusSelect.innerHTML = '<option value="">Error loading statuses</option>';
                         }
                     })
                     .catch(error => {
                         console.error('Failed to load available statuses:', error);
+                        const statusSelect = document.getElementById('status');
+                        statusSelect.innerHTML = '<option value="">Error loading statuses</option>';
                     });
             }
 
             function hideAllStatusFields() {
+                console.log('Hiding all status fields');
                 document.querySelectorAll('.status-field').forEach(field => {
                     field.classList.remove('show');
+                    console.log('Hidden field:', field.id);
                 });
             }
 
@@ -596,6 +654,31 @@
                     }
                 });
             });
+
+                        // Test modal functionality
+            console.log('Bootstrap available:', typeof bootstrap !== 'undefined');
+            if (typeof bootstrap !== 'undefined') {
+                console.log('Bootstrap Modal available:', typeof bootstrap.Modal !== 'undefined');
+            }
+
+            // Test if we can find the modal element
+            const statusModal = document.getElementById('statusModal');
+            console.log('Status modal element found:', !!statusModal);
+            if (statusModal) {
+                console.log('Status modal classes:', statusModal.className);
+            }
+
+            // Test function for manual modal testing
+            window.testModal = function() {
+                console.log('Testing modal manually...');
+                const modal = new bootstrap.Modal(document.getElementById('statusModal'));
+                modal.show();
+
+                // Simulate loading statuses
+                setTimeout(() => {
+                    loadAvailableStatuses(1, 'pending');
+                }, 1000);
+            };
         });
     </script>
 @endsection

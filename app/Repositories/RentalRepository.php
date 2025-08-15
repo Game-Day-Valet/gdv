@@ -46,7 +46,7 @@ class RentalRepository implements RentalRepositoryInterface
             $data['payment_status'] = 'completed'; // Update after successful payment
             */
 
-            return Rental::create([
+            $rental = Rental::create([
                 'user_id' => $data['user_id'],
                 'tournament_id' => $data['tournament_id'],
                 'team_name' => $data['team_name'],
@@ -67,6 +67,15 @@ class RentalRepository implements RentalRepositoryInterface
                 'status' => $data['status'] ?? 'pending',
                 'return_instruction' => $data['return_instruction'] ?? null,
             ]);
+
+            RentalStatusLog::create([
+                'rental_id' => $rental->id,
+                'status' => $rental->status,
+                'notes' => null,
+                'image_paths' =>  null,
+                'updated_by' => null,
+            ]);
+            return $rental;
         });
     }
 
