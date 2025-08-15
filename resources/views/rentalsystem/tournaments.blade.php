@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tournaments - Game Day Valet</title>
+    <title>Available Tournaments - Rental System</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root {
             --primary-color: #dc3545; /* match sports page */
@@ -85,6 +86,25 @@
             .main-container { padding: 20px 15px; }
             .list { grid-template-columns: 1fr; gap: 20px; }
         }
+
+        /* Modal Styling */
+        .modal-content {
+            border-radius: 18px;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .modal-header {
+            border-radius: 18px 18px 0 0;
+        }
+
+        .modal-body {
+            border-radius: 0 0 18px 18px;
+        }
+
+        .btn-close-white {
+            filter: brightness(0) invert(1);
+        }
     </style>
 </head>
 <body>
@@ -94,9 +114,14 @@
                 <i class="fas fa-trophy"></i> Rental System
             </div>
             <div class="user-menu">
-                <span class="user-name">{{ session('user.name', 'User') }}</span>
-                <a href="{{ route('rentalsystem.profile') }}" class="nav-btn"><i class="fas fa-user"></i> Profile</a>
-                <a href="{{ route('rentalsystem.logout') }}" class="nav-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                @if(Auth::check())
+                    <span class="user-name">{{ Auth::user()->name }}</span>
+                    <a href="{{ route('rentalsystem.profile') }}" class="nav-btn"><i class="fas fa-user"></i> Profile</a>
+                    <a href="{{ route('rentalsystem.logout') }}" class="nav-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                @else
+                    <a href="{{ route('rentalsystem.signin') }}" class="nav-btn"><i class="fas fa-sign-in-alt"></i> Sign In</a>
+                    <a href="{{ route('rentalsystem.signup') }}" class="nav-btn"><i class="fas fa-user-plus"></i> Sign Up</a>
+                @endif
             </div>
         </div>
     </header>
@@ -128,7 +153,7 @@
                 <div class="card">
                     <div class="media">
                         <img src="{{ $imageUrl }}" alt="tournament">
-                        <a class="book" href="{{ route('rentalsystem.rental-booking', $id) }}">Book Now</a>
+                        <button class="book" onclick="handleBooking({{ $id }})">Book Now</button>
                     </div>
                     <div class="body">
                         <div class="title-row">
@@ -142,5 +167,69 @@
             @endforelse
         </div>
     </div>
+
+    <!-- Login Required Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header" style="border-bottom: 2px solid var(--primary-color); background: var(--primary-color); color: white;">
+                    <h5 class="modal-title" id="loginModalLabel" style="font-weight: 800; font-size: 1.2rem;">
+                        <i class="fas fa-lock"></i> Login Required
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center" style="padding: 30px 20px;">
+                    <div style="margin-bottom: 25px;">
+                        <i class="fas fa-user-lock" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 15px;"></i>
+                        <h6 style="font-weight: 700; color: var(--dark-color); margin-bottom: 10px;">Access Required</h6>
+                        <p style="color: var(--secondary-color); margin: 0; line-height: 1.5;">
+                            You need to login or create an account to book this tournament.
+                        </p>
+                    </div>
+                    <div class="d-flex flex-column gap-3" style="max-width: 250px; margin: 0 auto;">
+                        <a href="{{ route('rentalsystem.signin') }}" class="btn btn-primary" style="
+                            background: var(--primary-color); 
+                            border: none; 
+                            padding: 12px 24px; 
+                            border-radius: 12px; 
+                            font-weight: 700; 
+                            font-size: 1rem;
+                            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.25);
+                        ">
+                            <i class="fas fa-sign-in-alt"></i> Sign In
+                        </a>
+                        <a href="{{ route('rentalsystem.signup') }}" class="btn btn-outline-primary" style="
+                            border: 2px solid var(--primary-color); 
+                            color: var(--primary-color); 
+                            background: transparent; 
+                            padding: 12px 24px; 
+                            border-radius: 12px; 
+                            font-weight: 700; 
+                            font-size: 1rem;
+                            transition: all 0.3s ease;
+                        " onmouseover="this.style.background='var(--primary-color)'; this.style.color='white';" 
+                           onmouseout="this.style.background='transparent'; this.style.color='var(--primary-color)';">
+                            <i class="fas fa-user-plus"></i> Sign Up
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function handleBooking(tournamentId) {
+            // Check if user is logged in
+            @if(Auth::check())
+                // User is logged in, redirect to booking page
+                window.location.href = "{{ route('rentalsystem.rental-booking', ':id') }}".replace(':id', tournamentId);
+            @else
+                // User is not logged in, show login modal
+                const modal = new bootstrap.Modal(document.getElementById('loginModal'));
+                modal.show();
+            @endif
+        }
+    </script>
 </body>
 </html> 

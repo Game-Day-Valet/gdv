@@ -36,6 +36,11 @@ Route::get('/register-referral', [BaseController::class, 'registerReferal'])->na
 
 // Rental System Frontend Routes (Public)
 Route::prefix('')->name('rentalsystem.')->group(function () {
+	// Public routes - no authentication required
+	Route::get('', [RentalSystemController::class, 'showSports'])->name('sports');
+	Route::get('/sports/{sportId}/tournaments', [RentalSystemController::class, 'showTournaments'])->name('tournaments');
+	
+	// Authentication routes
 	Route::get('/signup', [RentalSystemController::class, 'showSignup'])->name('signup');
 	Route::post('/signup', [RentalSystemController::class, 'signup'])->name('signup.submit');
 	Route::get('/signin', [RentalSystemController::class, 'showSignin'])->name('signin');
@@ -47,10 +52,8 @@ Route::prefix('')->name('rentalsystem.')->group(function () {
 	Route::get('/forgot-password', [RentalSystemController::class, 'showForgotPassword'])->name('forgot-password');
 	Route::post('/forgot-password', [RentalSystemController::class, 'forgotPassword'])->name('forgot-password.submit');
 
-	// Protected routes for authenticated users (web session)
-	// Route::group(function () {
-		Route::get('', [RentalSystemController::class, 'showSports'])->name('sports');
-		Route::get('/sports/{sportId}/tournaments', [RentalSystemController::class, 'showTournaments'])->name('tournaments');
+	// Protected routes for authenticated users only
+	Route::middleware('auth')->group(function () {
 		Route::get('/tournaments/{tournamentId}/rental', [RentalSystemController::class, 'showRentalBooking'])->name('rental-booking');
 		Route::post('/rentals', [RentalSystemController::class, 'createRental'])->name('rental.create');
 		Route::get('/checkout/success', [RentalSystemController::class, 'checkoutSuccess'])->name('checkout.success');
@@ -58,7 +61,7 @@ Route::prefix('')->name('rentalsystem.')->group(function () {
 		Route::get('/profile', [RentalSystemController::class, 'showProfile'])->name('profile');
 		Route::post('/profile', [RentalSystemController::class, 'updateProfile'])->name('profile.update');
 		Route::get('/logout', [RentalSystemController::class, 'logout'])->name('logout');
-	// });
+	});
 });
 
 Route::group(['prefix' => 'admin', 'middleware' => 'auth'], function () {

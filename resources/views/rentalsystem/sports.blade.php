@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Select Sport - Rental System</title>
+    <title>Sports - Rental System</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -111,6 +111,7 @@
             cursor: pointer;
             text-decoration: none;
             color: inherit;
+            display: block;
         }
 
         .sport-card:hover {
@@ -210,6 +211,25 @@
                 padding: 20px;
             }
         }
+
+        /* Modal Styling */
+        .modal-content {
+            border-radius: 18px;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .modal-header {
+            border-radius: 18px 18px 0 0;
+        }
+
+        .modal-body {
+            border-radius: 0 0 18px 18px;
+        }
+
+        .btn-close-white {
+            filter: brightness(0) invert(1);
+        }
     </style>
 </head>
 <body>
@@ -219,66 +239,122 @@
                 <i class="fas fa-trophy"></i> Rental System
             </div>
             <div class="user-menu">
-                <span class="user-name">{{ session('user.name', 'User') }}</span>
-                <a href="{{ route('rentalsystem.profile') }}" class="logout-btn">
-                    <i class="fas fa-user"></i> Profile
-                </a>
-                <a href="{{ route('rentalsystem.logout') }}" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
+                @if(Auth::check())
+                    <span class="user-name">{{ Auth::user()->name }}</span>
+                    <a href="{{ route('rentalsystem.profile') }}" class="logout-btn">
+                        <i class="fas fa-user"></i> Profile
+                    </a>
+                    <a href="{{ route('rentalsystem.logout') }}" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                @else
+                    <a href="{{ route('rentalsystem.signin') }}" class="logout-btn">
+                        <i class="fas fa-sign-in-alt"></i> Sign In
+                    </a>
+                    <a href="{{ route('rentalsystem.signup') }}" class="logout-btn">
+                        <i class="fas fa-user-plus"></i> Sign Up
+                    </a>
+                @endif
             </div>
         </div>
     </header>
 
     <div class="main-container">
         <div class="page-title">
-            <h1>Choose Your Sport</h1>
-            <p>Select a sport to view available tournaments and book rentals</p>
+            <h1>Sports</h1>
+            <p>Choose a sport to view available tournaments</p>
         </div>
 
-        @if(empty($sports))
-            <div class="no-sports">
-                <i class="fas fa-sports"></i>
-                <h3>No Sports Available</h3>
-                <p>There are currently no sports available. Please check back later.</p>
-            </div>
-        @else
-            <div class="sports-grid">
-                @foreach($sports as $sport)
-                    <a href="{{ route('rentalsystem.tournaments', $sport['id']) }}" class="sport-card">
-                        <div class="sport-icon">
-                            @php($name = strtolower($sport['name'] ?? (is_object($sport) ? $sport->name : '')))
-                            @switch($name)
-                                @case('cricket')
-                                    <i class="fa-solid fa-baseball-bat-ball"></i>
-                                    @break
-                                @case('football')
-                                    <i class="fa-regular fa-futbol"></i>
-                                    @break
-                                @case('golf')
-                                    <i class="fa-solid fa-golf-ball-tee"></i>
-                                    @break
-                                @case('hockey')
-                                    <i class="fa-solid fa-hockey-puck"></i>
-                                    @break
-                                @case('baseball')
-                                    <i class="fa-solid fa-baseball"></i>
-                                    @break
-                                @default
-                                    <i class="fa-solid fa-medal"></i>
-                            @endswitch
-                        </div>
-                        <h3 class="sport-name">{{ is_array($sport) ? $sport['name'] : $sport->name }}</h3>
-                        <p class="sport-description">
-                            {{ (is_array($sport) ? ($sport['description'] ?? null) : ($sport->description ?? null)) ?? 'Explore tournaments and book equipment for ' . strtolower(is_array($sport)?$sport['name']:$sport->name) }}
+        <div class="sports-grid">
+            @forelse($sports as $sport)
+                <a href="{{ route('rentalsystem.tournaments', $sport->id) }}" class="sport-card">
+                    <div class="sport-icon">
+                        @php($name = strtolower($sport->name ?? ''))
+                        @switch($name)
+                            @case('cricket')
+                                <i class="fa-solid fa-baseball-bat-ball"></i>
+                                @break
+                            @case('football')
+                                <i class="fa-regular fa-futbol"></i>
+                                @break
+                            @case('golf')
+                                <i class="fa-solid fa-golf-ball-tee"></i>
+                                @break
+                            @case('hockey')
+                                <i class="fa-solid fa-hockey-puck"></i>
+                                @break
+                            @case('baseball')
+                                <i class="fa-solid fa-baseball"></i>
+                                @break
+                            @default
+                                <i class="fa-solid fa-medal"></i>
+                        @endswitch
+                    </div>
+                    <h3 class="sport-name">{{ $sport->name }}</h3>
+                    <p class="sport-description">
+                        {{ $sport->description ?? 'Explore tournaments and book equipment for ' . strtolower($sport->name) }}
+                    </p>
+                    <div class="tournament-count">
+                        {{ $sport->tournaments_count ?? 0 }} Tournaments
+                    </div>
+                </a>
+            @empty
+                <div class="no-sports">
+                    <i class="fas fa-sports"></i>
+                    <h3>No Sports Available</h3>
+                    <p>There are currently no sports available. Please check back later.</p>
+                </div>
+            @endforelse
+        </div>
+    </div>
+
+    <!-- Login Required Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header" style="border-bottom: 2px solid var(--primary-color); background: var(--primary-color); color: white;">
+                    <h5 class="modal-title" id="loginModalLabel" style="font-weight: 800; font-size: 1.2rem;">
+                        <i class="fas fa-lock"></i> Login Required
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center" style="padding: 30px 20px;">
+                    <div style="margin-bottom: 25px;">
+                        <i class="fas fa-user-lock" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 15px;"></i>
+                        <h6 style="font-weight: 700; color: var(--dark-color); margin-bottom: 10px;">Access Required</h6>
+                        <p style="color: var(--secondary-color); margin: 0; line-height: 1.5;">
+                            You need to login or create an account to access this feature.
                         </p>
-                        <div class="tournament-count">
-                            {{ is_array($sport) ? ($sport['tournaments_count'] ?? $sport['tournament_count'] ?? 0) : ($sport->tournaments_count ?? $sport->tournament_count ?? 0) }} Tournaments
-                        </div>
-                    </a>
-                @endforeach
+                    </div>
+                    <div class="d-flex flex-column gap-3" style="max-width: 250px; margin: 0 auto;">
+                        <a href="{{ route('rentalsystem.signin') }}" class="btn btn-primary" style="
+                            background: var(--primary-color); 
+                            border: none; 
+                            padding: 12px 24px; 
+                            border-radius: 12px; 
+                            font-weight: 700; 
+                            font-size: 1rem;
+                            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.25);
+                        ">
+                            <i class="fas fa-sign-in-alt"></i> Sign In
+                        </a>
+                        <a href="{{ route('rentalsystem.signup') }}" class="btn btn-outline-primary" style="
+                            border: 2px solid var(--primary-color); 
+                            color: var(--primary-color); 
+                            background: transparent; 
+                            padding: 12px 24px; 
+                            border-radius: 12px; 
+                            font-weight: 700; 
+                            font-size: 1rem;
+                            transition: all 0.3s ease;
+                        " onmouseover="this.style.background='var(--primary-color)'; this.style.color='white';" 
+                           onmouseout="this.style.background='transparent'; this.style.color='var(--primary-color)';">
+                            <i class="fas fa-user-plus"></i> Sign Up
+                        </a>
+                    </div>
+                </div>
             </div>
-        @endif
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

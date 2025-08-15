@@ -232,9 +232,6 @@ class RentalSystemController extends Controller
 
     public function showSports()
     {
-        if (!Auth::check()) {
-            return redirect()->route('rentalsystem.signin');
-        }
         $sports = $this->sports->getAllActive();
         // attach tournaments_count attribute for display
         if ($sports) {
@@ -251,9 +248,6 @@ class RentalSystemController extends Controller
 
     public function showTournaments($sportId)
     {
-        if (!Auth::check()) {
-            return redirect()->route('rentalsystem.signin');
-        }
         $search = request()->query('search');
         // if repository exposes sport tournaments only, we filter after; otherwise use sport->getTournamentsBySport
         $tournaments = $this->sports->getTournamentsBySport($sportId);
