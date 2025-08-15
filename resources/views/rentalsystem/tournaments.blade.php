@@ -71,7 +71,6 @@
         .media { position:relative; aspect-ratio: 16/9; background:#f3f4f6; }
         .media img { width:100%; height:100%; object-fit:cover; display:block; }
         .book {
-            position:absolute; left:50%; bottom:14px; transform:translateX(-50%);
             padding:10px 18px; border-radius:10px; border:none; color:#fff; font-weight:800;
             background: var(--primary-color); box-shadow: 0 6px 16px rgba(220, 53, 69, 0.25);
         }
@@ -153,7 +152,50 @@
                 <div class="card">
                     <div class="media">
                         <img src="{{ $imageUrl }}" alt="tournament">
-                        <button class="book" onclick="handleBooking({{ $id }})">Book Now</button>
+                        <div class="button-group" style="
+                            position: absolute; 
+                            bottom: 14px; 
+                            left: 10px; 
+                            right: 10px; 
+                            display: flex; 
+                            justify-content: space-between; 
+                            align-items: center; 
+                            width: auto; 
+                            padding: 0 10px;
+                        ">
+                            <a href="{{ route('rentalsystem.tournament.details', $id) }}" class="btn btn-outline-light" style="
+                                padding: 8px 16px; 
+                                border-radius: 8px; 
+                                border: 2px solid white; 
+                                color: white; 
+                                font-weight: 700; 
+                                font-size: 0.9rem; 
+                                text-decoration: none; 
+                                background: rgba(0,0,0,0.4); 
+                                backdrop-filter: blur(10px); 
+                                transition: all 0.3s ease; 
+                                white-space: nowrap; 
+                                min-width: 80px; 
+                                text-align: center;
+                            " onmouseover="this.style.background='rgba(255,255,255,0.2)'; this.style.borderColor='rgba(255,255,255,0.8)';" 
+                               onmouseout="this.style.background='rgba(0,0,0,0.4)'; this.style.borderColor='white';">
+                                <i class="fas fa-info-circle"></i> Details
+                            </a>
+                            <button class="book" onclick="handleBooking({{ $id }})" style="
+                                padding: 8px 16px; 
+                                border-radius: 8px; 
+                                border: none; 
+                                color: #fff; 
+                                font-weight: 700; 
+                                font-size: 0.9rem; 
+                                background: var(--primary-color); 
+                                box-shadow: 0 4px 12px rgba(220, 53, 69, 0.25); 
+                                white-space: nowrap; 
+                                min-width: 80px; 
+                                text-align: center; 
+                                cursor: pointer;
+                            ">Book Now</button>
+                        </div>
                     </div>
                     <div class="body">
                         <div class="title-row">
@@ -232,4 +274,4 @@
         }
     </script>
 </body>
-</html> 
+</html>

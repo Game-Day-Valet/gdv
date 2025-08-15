@@ -262,6 +262,21 @@ class RentalSystemController extends Controller
         return view('rentalsystem.tournaments', compact('tournaments', 'sportId', 'search'));
     }
 
+    public function showTournamentDetails($tournamentId)
+    {
+        // Get tournament details
+        $tournament = $this->tournaments->find($tournamentId);
+        
+        if (!$tournament) {
+            abort(404, 'Tournament not found');
+        }
+
+        // Get sport information
+        $sport = $this->sports->find($tournament->sport_id ?? 1);
+        
+        return view('rentalsystem.tournament-details', compact('tournament', 'sport'));
+    }
+
     public function showRentalBooking($tournamentId)
     {
         if (!Auth::check()) {

@@ -39,6 +39,7 @@ Route::prefix('')->name('rentalsystem.')->group(function () {
 	// Public routes - no authentication required
 	Route::get('', [RentalSystemController::class, 'showSports'])->name('sports');
 	Route::get('/sports/{sportId}/tournaments', [RentalSystemController::class, 'showTournaments'])->name('tournaments');
+	Route::get('/tournaments/{tournamentId}/details', [RentalSystemController::class, 'showTournamentDetails'])->name('tournament.details');
 	
 	// Authentication routes
 	Route::get('/signup', [RentalSystemController::class, 'showSignup'])->name('signup');
