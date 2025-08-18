@@ -53,7 +53,7 @@ class ReferralService
     public function applyDiscount($userId, $rentalData)
     {
         $tracking = ReferralTracking::where('referred_user_id', $userId)->first();
-        $rentalData = $this->applyCoupon($userId, $rentalData);
+        // $rentalData = $this->applyCoupon($userId, $rentalData);
 
         if ($tracking && !$this->hasPreviousPaidRental($userId) && $rentalData['total_amount'] >= 10) {
             // Apply $5 discount (deduct from total_amount)

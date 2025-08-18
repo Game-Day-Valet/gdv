@@ -47,6 +47,9 @@ Route::post('/email/verify-otp', [AuthController::class, 'verifyOtp']);
 
 Route::post('/validate/referral-code', [AuthController::class, 'checkReferralCode']);
 
+// Public coupon validate endpoint (used by website)
+Route::post('/coupon/validate', [CouponController::class, 'validateCoupon']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::get('/user/referral-code', [AuthController::class, 'getReferralCode']);
@@ -85,7 +88,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Coupon Module
     Route::get('/coupons', [CouponController::class, 'index']);
-    Route::post('/coupon/validate', [CouponController::class, 'validateCoupon']);
+    // Removed validate from protected group (now public)
 
 
     // Rental Module

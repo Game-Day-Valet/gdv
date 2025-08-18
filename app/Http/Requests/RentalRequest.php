@@ -22,7 +22,9 @@ class RentalRequest extends FormRequest
             'coach_name' => 'nullable|string|max:255',
             'field_number' => 'nullable|string|max:50',
             'items' => 'nullable|array',
-            'items.*' => 'nullable|integer|exists:items,id',
+            // Accept format: [{"item_id": 1, "quantity": 3}]
+            'items.*.item_id' => 'required_with:items|integer|exists:items,id',
+            'items.*.quantity' => 'required_with:items|integer|min:1',
             'bundles' => 'nullable|array',
             'bundles.*' => 'nullable|integer|exists:bundles,id',
             'instructions' => 'nullable|string',

@@ -53,8 +53,64 @@ class RentalController extends Controller
             if ($user && $user->hasRole(['user', 'super_admin'])) {
                 $data = $request->validated();
                 $data['user_id'] = $user->id;
+
+                // Normalize items: support both [{item_id, quantity}] and {id: qty}
+                $normalizedItems = [];
+                if (!empty($data['items']) && is_array($data['items'])) {
+                    foreach ($data['items'] as $key => $value) {
+                        if (is_array($value) && isset($value['item_id'], $value['quantity'])) {
+                            $qty = max(0, (int) $value['quantity']);
+                            if ($qty > 0) {
+                                $normalizedItems[] = [
+                                    'item_id' => (string) $value['item_id'],
+                                    'quantity' => $qty,
+                                ];
+                            }
+                        } elseif (is_numeric($key)) {
+                            // already normalized object array but missing fields -> skip
+                            continue;
+                        } else {
+                            // legacy form: items: {"1": 2, "3": 1}
+                            $qty = max(0, (int) $value);
+                            if ($qty > 0) {
+                                $normalizedItems[] = [
+                                    'item_id' => (string) $key,
+                                    'quantity' => $qty,
+                                ];
+                            }
+                        }
+                    }
+                }
+                $data['items'] = !empty($normalizedItems) ? $normalizedItems : null;
+
+                // Normalize bundles: accept [10,4] or {"10":1, "4":1}
+                $normalizedBundles = [];
+                if (!empty($data['bundles']) && is_array($data['bundles'])) {
+                    foreach ($data['bundles'] as $key => $value) {
+                        if (is_numeric($value)) {
+                            // array of ids
+                            $normalizedBundles[] = (int) $value;
+                        } elseif (is_numeric($key) && (int)$value > 0) {
+                            // legacy object map where value is qty
+                            $normalizedBundles[] = (int) $key;
+                        }
+                    }
+                }
+                $data['bundles'] = !empty($normalizedBundles) ? array_values(array_unique($normalizedBundles)) : null;
+
+                // Standardize damage_waiver to boolean
+                if (array_key_exists('damage_waiver', $data)) {
+                    $data['damage_waiver'] = (bool) $data['damage_waiver'];
+                }
+
+                // Ensure insurance_option is numeric or 'none'
+                if (isset($data['insurance_option']) && $data['insurance_option'] === 'none') {
+                    // keep as 'none' or set null per storage convention if needed
+                }
+
                 // Apply discount if eligible
-               $data = $this->referralService->applyDiscount($user->id, $data);
+                $data = $this->referralService->applyDiscount($user->id, $data);
+                
                 $rental = $this->rentalRepository->create($data);
                 return new RentalResource($rental);
             }

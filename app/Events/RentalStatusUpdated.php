@@ -9,6 +9,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use App\Models\User;
 
 class RentalStatusUpdated implements ShouldBroadcast
 {
@@ -55,13 +56,73 @@ class RentalStatusUpdated implements ShouldBroadcast
 
     public function broadcastWith()
     {
+        // Prepare optional fields safely
+        $status = $this->newStatus;
+        $statusLabel = $status ? ucfirst(str_replace('_', ' ', $status)) : null;
+
+        $statusLogId = null;
+        $statusNotes = null;
+        $imagePaths = null;
+        $imageUrls = null;
+        $firstImageUrl = null;
+        $estimatedDeliveryTime = $this->rental->estimated_delivery_time ?? null;
+        $formattedEstimatedDeliveryTime = $estimatedDeliveryTime ? \Carbon\Carbon::parse($estimatedDeliveryTime)->format('d M Y H:i') : null;
+
+        // If latest status log is available, enrich payload
+        $latestUpdatedByName = null;
+        try {
+            $latestLog = $this->rental->statusLogs()->latest()->first();
+            if ($latestLog) {
+                $statusLogId = $latestLog->id;
+                $statusNotes = $latestLog->notes;
+                $imagePaths = $latestLog->image_paths ?: null;
+                if (is_array($imagePaths)) {
+                    $imageUrls = array_map(function ($p) { return $p ? asset('storage/' . ltrim($p, '/')) : null; }, $imagePaths);
+                    $firstImageUrl = $imageUrls ? ($imageUrls[0] ?? null) : null;
+                }
+                $latestUpdatedByName = optional($latestLog->updatedBy)->name;
+            }
+        } catch (\Throwable $e) {
+            // ignore enrichment errors; send nulls
+        }
+
+        // Resolve updated_by name from provided value or fallback to latest log
+        $updatedByName = null;
+        try {
+            if (is_object($this->updatedBy)) {
+                $updatedByName = $this->updatedBy->name ?? null;
+            } elseif (is_array($this->updatedBy)) {
+                $updatedByName = $this->updatedBy['name'] ?? null;
+            } elseif (is_numeric($this->updatedBy)) {
+                $user = User::find($this->updatedBy);
+                $updatedByName = $user ? $user->name : null;
+            } elseif (is_string($this->updatedBy)) {
+                // If a plain string is passed, assume it's already a name
+                $updatedByName = $this->updatedBy;
+            }
+        } catch (\Throwable $e) {
+            $updatedByName = null;
+        }
+        if (!$updatedByName) {
+            $updatedByName = $latestUpdatedByName;
+        }
+
         $data = [
-            'rental_id' => $this->rental->id,
-            'status' => $this->newStatus,
-            'old_status' => $this->oldStatus,
-            'updated_at' => now()->toISOString(),
-            'updated_by' => $this->updatedBy,
-            'timestamp' => now()->toISOString(),
+            'id' => (int) ($statusLogId ?? 0),
+            'rental_id' => (int) ($this->rental->id ?? 0),
+            'status' => $status,
+            'status_label' => $statusLabel,
+            'notes' => $statusNotes,
+            'image_paths' => $imagePaths,
+            'image_urls' => $imageUrls,
+            'first_image_url' => $firstImageUrl,
+            'updated_by' => $updatedByName,
+            'estimated_delivery_time' => $estimatedDeliveryTime,
+            'formatted_estimated_delivery_time' => $formattedEstimatedDeliveryTime,
+            'created_at' => $this->rental->created_at ?? null,
+            'updated_at' => $this->rental->updated_at ?? null,
+            'formatted_created_at' => ($this->rental->created_at ?? null) ? $this->rental->created_at->format('d M Y H:i') : null,
+            'formatted_updated_at' => ($this->rental->updated_at ?? null) ? $this->rental->updated_at->format('d M Y H:i') : null,
         ];
 
         Log::info('RentalStatusUpdated broadcastWith data', [

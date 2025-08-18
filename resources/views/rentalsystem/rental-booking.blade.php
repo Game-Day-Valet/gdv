@@ -6,6 +6,9 @@
     <title>Rental Booking - Game Day Valet</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    
+<!-- App favicon -->
+<link rel="shortcut icon" href="/images/logo-sm.png">
     <style>
         :root {
             --primary-color: #dc3545;
@@ -150,6 +153,20 @@
                         <div class="text-danger small mt-2" id="bundles-error" style="display: none;">Please select at least one item or bundle</div>
                     </div>
 
+                    <!-- Promo Code - moved here between Bundles and Drop-Off -->
+                    <div class="card" style="margin-top:18px;">
+                        <div class="section-title">PROMO CODE</div>
+                        <div class="row-two">
+                            <div>
+                                <label class="label">ENTER CODE</label>
+                                <input type="text" class="input" id="promo_code" name="promo_code" placeholder="Enter code">
+                            </div>
+                            <div style="display:flex; align-items:flex-end;">
+                                <button type="button" id="validateCouponBtn" class="btn-primary" style="width:auto; padding:12px 18px;">Apply</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="card" style="margin-top:18px;">
                         <div class="section-title">DROP-OFF</div>
                         <div class="row-two">
@@ -199,6 +216,10 @@
                         <div class="sum-row"><span>Bundles Subtotal</span><span id="bundlesSubtotal">$0.00</span></div>
                         <div class="sum-row"><span>Insurance</span><span id="insuranceAmount">$0.00</span></div>
                         <div class="sum-row"><span>Damage Waiver</span><span id="waiverAmount">$0.00</span></div>
+                        <input type="hidden" name="total_amount" id="total_amount_input" value="0">
+                        <div class="sum-row" id="discountRow" style="display:none; color: var(--primary-color); font-weight:700;">
+                            <span>Discount</span><span id="discountAmount">-$0.00</span>
+                        </div>
                         <div class="sum-total sum-row"><span>Total</span><span id="totalAmount">$0.00</span></div>
                         <div style="height:10px"></div>
                         <button type="submit" class="btn-primary">Confirm Booking</button>
@@ -239,13 +260,35 @@
             }
             
             const waiverVal = document.querySelector('input[name="damage_waiver"]:checked') ? 20 : 0;
-            const total = itemsSubtotal + bundlesSubtotal + insuranceVal + waiverVal;
+            let total = itemsSubtotal + bundlesSubtotal + insuranceVal + waiverVal;
+
+            // Apply promo discount if available
+            const discountValue = parseFloat(window.__appliedDiscount || 0) || 0;
+            const discountType = window.__appliedDiscountType || null; // 'fixed' or 'percent'
+            let discountApplied = 0;
+            if (discountType === 'percent') {
+                discountApplied = Math.min(total, (total * (discountValue / 100)));
+            } else if (discountType === 'fixed') {
+                discountApplied = Math.min(total, discountValue);
+            }
+            total = total - discountApplied;
             
             document.getElementById('itemsSubtotal').textContent = formatUSD(itemsSubtotal);
             document.getElementById('bundlesSubtotal').textContent = formatUSD(bundlesSubtotal);
             document.getElementById('insuranceAmount').textContent = formatUSD(insuranceVal);
             document.getElementById('waiverAmount').textContent = formatUSD(waiverVal);
+            const discountRow = document.getElementById('discountRow');
+            const discountAmount = document.getElementById('discountAmount');
+            if (discountApplied > 0) {
+                discountRow.style.display = 'flex';
+                discountAmount.textContent = `-${formatUSD(discountApplied).replace('$','')}`;
+            } else {
+                discountRow.style.display = 'none';
+            }
             document.getElementById('totalAmount').textContent = formatUSD(total);
+            // write final total to hidden input for server/stripe
+            const totalInput = document.getElementById('total_amount_input');
+            if (totalInput) totalInput.value = total.toFixed(2);
         }
 
         // Event listeners for items (quantity buttons)
@@ -320,11 +363,86 @@
         document.getElementById('bookingForm').addEventListener('submit', function(e) {
             if (!validateForm()) {
                 e.preventDefault();
-                alert('Please select at least one item or bundle before proceeding.');
+                showModal('Please select at least one item or bundle before proceeding.');
                 return false;
+            }
+            // ensure promo_code input remains set
+        });
+
+        // Validate coupon via API and apply discount on frontend only
+        document.getElementById('validateCouponBtn').addEventListener('click', async function() {
+            // Require at least one item or bundle selected before validating
+            let hasItems = false, hasBundles = false;
+            document.querySelectorAll('.item-row[data-type="item"]').forEach(row => {
+                const qty = parseInt(row.querySelector('.qty-val').textContent) || 0;
+                if (qty > 0) hasItems = true;
+            });
+            document.querySelectorAll('.item-row[data-type="bundle"] input[type="checkbox"]').forEach(chk => {
+                if (chk.checked) hasBundles = true;
+            });
+            if (!hasItems && !hasBundles) {
+                // show existing errors
+                document.getElementById('items-error').style.display = 'block';
+                document.getElementById('bundles-error').style.display = 'block';
+                showModal('Please select at least one item or bundle before validating a promo code.');
+                return;
+            }
+            const code = (document.getElementById('promo_code').value || '').trim();
+            if (!code) { showModal('Please enter a promo code.'); return; }
+            try {
+                const resp = await fetch('/api/coupon/validate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ promo_code: code, user_id: {{ auth()->check() ? auth()->id() : 'null' }} })
+                });
+                const data = await resp.json();
+                if (resp.ok && data && data.success) {
+                    // discount type: fixed/percent; value: number
+                    const type = data.data?.discount_type;
+                    const value = parseFloat(data.data?.discount_value || 0);
+                    if ((type === 'fixed' || type === 'percent') && value > 0) {
+                        window.__appliedDiscountType = type;
+                        window.__appliedDiscount = value;
+                        showModal('Coupon applied successfully.');
+                        recalc();
+                    } else {
+                        showModal('Invalid discount returned.');
+                    }
+                } else {
+                    window.__appliedDiscountType = null;
+                    window.__appliedDiscount = 0;
+                    const msg = data?.errors?.promo_code?.[0] || data?.message || 'Coupon validation failed';
+                    showModal(msg);
+                    recalc();
+                }
+            } catch (err) {
+                showModal('Unable to validate coupon. Please try again.');
             }
         });
 
+        // Simple custom modal
+        const modalEl = document.createElement('div');
+        modalEl.id = 'appModal';
+        modalEl.style.cssText = 'position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:9999;';
+        modalEl.innerHTML = `
+            <div style="background:#fff;border-radius:14px;min-width:280px;max-width:420px;padding:18px;border:1px solid var(--border-color);box-shadow:0 20px 40px rgba(0,0,0,.18);">
+                <div style="font-weight:800;font-size:16px;margin-bottom:8px;color:var(--dark-color);">Notice</div>
+                <div id="appModalBody" style="color:var(--secondary-color);line-height:1.5;"></div>
+                <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+                    <button id="appModalOk" class="btn-primary" style="width:auto;padding:10px 16px;">OK</button>
+                </div>
+            </div>`;
+        document.body.appendChild(modalEl);
+        function showModal(message){
+            document.getElementById('appModalBody').textContent = message;
+            modalEl.style.display = 'flex';
+        }
+        document.getElementById('appModalOk').addEventListener('click', ()=>{ modalEl.style.display='none'; });
+        modalEl.addEventListener('click', (e)=>{ if(e.target === modalEl){ modalEl.style.display='none'; } });
+ 
         recalc();
         validateForm();
     </script>

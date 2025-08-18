@@ -17,11 +17,6 @@ class RentalStatusLogResource extends JsonResource
             'image_paths' => $this->image_paths,
             'image_urls' => $this->image_urls,
             'first_image_url' => $this->first_image_url,
-            // 'updated_by' => $this->when($this->updatedBy, [
-            //     'id' => (int) $this->updatedBy->id,
-            //     'name' => $this->updatedBy->name,
-            //     'email' => $this->updatedBy->email,
-            // ]),
             'updated_by' => $this->updatedBy->name ?? null,
             'estimated_delivery_time' => $this->rental->estimated_delivery_time ?? null,
             'formatted_estimated_delivery_time' => $this->rental->estimated_delivery_time ? \Carbon\Carbon::parse($this->rental->estimated_delivery_time)->format('d M Y H:i') : null,
