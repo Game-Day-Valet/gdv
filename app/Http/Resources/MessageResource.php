@@ -13,7 +13,7 @@ class MessageResource extends JsonResource
             'conversation_id' => (int) $this->conversation_id,
             'sender_id' => (int) $this->sender_id,
             'content' => $this->content,
-            'is_read' => $this->is_read,
+            'is_read' => (int) $this->is_read,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'sender' => $this->whenLoaded('sender', fn() => [
