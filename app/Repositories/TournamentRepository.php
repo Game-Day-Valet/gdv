@@ -48,6 +48,17 @@ class TournamentRepository implements TournamentRepositoryInterface
 
     }
 
+    public function updateSortOrders(array $orders)
+    {
+        // $orders is array of ['id' => int, 'sort_order' => int]
+        DB::transaction(function () use ($orders) {
+            foreach ($orders as $o) {
+                if (!isset($o['id']) || !isset($o['sort_order'])) continue;
+                Tournament::where('id', $o['id'])->update(['sort_order' => (int)$o['sort_order']]);
+            }
+        });
+    }
+
     public function getTodaysTournaments()
     {
         $today = now()->toDateString();

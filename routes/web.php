@@ -87,6 +87,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth'], function () {
 	// Sports and Tournaments - Accessible to both manager and admin
 	Route::resource('sport-management', SportController::class);
 	Route::resource('tournament-management', TournamentController::class);
+	Route::post('tournament-management/reorder', [TournamentController::class, 'reorder'])->middleware('can:super_admin')->name('tournament-management.reorder');
 
 	// Rental Management - Accessible to both manager and admin
 	Route::resource('rental-management', RentalManagementController::class)->except(['create', 'store', 'edit', 'update', 'destroy']);

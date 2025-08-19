@@ -19,6 +19,7 @@ class Tournament extends Model
         'end_date',
         'location',
         'status',
+        'sort_order',
     ];
 
     protected $casts = [
@@ -26,6 +27,13 @@ class Tournament extends Model
         'start_date' => 'date',
         'end_date' => 'date',
     ];
+
+    protected static function booted()
+    {
+        static::addGlobalScope('sort_order', function ($query) {
+            $query->orderByRaw('COALESCE(sort_order, 999999) ASC')->orderByDesc('created_at');
+        });
+    }
 
     public function sport()
     {

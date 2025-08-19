@@ -41,6 +41,9 @@
                     <table id="datatable" class="table table-bordered dt-responsive table-responsive nowrap">
                         <thead>
                             <tr>
+                                @can('super_admin')
+                                <th style="width:32px;"></th>
+                                @endcan
                                 <th>Image</th>
                                 <th>Sport</th>
                                 <th>Name</th>
@@ -51,9 +54,12 @@
                                 <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="tournamentsTbody">
                             @foreach ($tournaments as $tournament)
-                                <tr>
+                                <tr data-id="{{ $tournament->id }}">
+                                    @can('super_admin')
+                                    <td class="drag-handle" style="cursor:move; text-align:center;">⇅</td>
+                                    @endcan
                                     <td>
                                         @if($tournament->image)
                                             <img src="{{  asset('storage/'.$tournament->image) }}" alt="{{ $tournament->name }}" class="img-thumbnail" width="50px" height="50px">
@@ -92,6 +98,7 @@
 @section('script')
     @vite(['resources/js/pages/datatable.init.js'])
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             document.querySelectorAll('.delete-tournament-btn').forEach(function(btn) {
@@ -111,6 +118,35 @@
                     });
                 });
             });
+
+            @can('super_admin')
+            // Enable drag-and-drop reorder
+            const tbody = document.getElementById('tournamentsTbody');
+            const sortable = new Sortable(tbody, {
+                handle: '.drag-handle',
+                animation: 150,
+                onEnd: async function() {
+                    // build orders
+                    const rows = Array.from(tbody.querySelectorAll('tr[data-id]'));
+                    const orders = rows.map((row, idx) => ({ id: parseInt(row.getAttribute('data-id')), sort_order: idx }));
+                    try {
+                        const resp = await fetch('{{ route('tournament-management.reorder') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({ orders })
+                        });
+                        if (!resp.ok) {
+                            throw new Error('Failed to save order');
+                        }
+                    } catch (e) {
+                        Swal.fire('Error', 'Failed to save order. Please try again.', 'error');
+                    }
+                }
+            });
+            @endcan
         });
     </script>
 @endsection

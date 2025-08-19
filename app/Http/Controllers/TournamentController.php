@@ -23,6 +23,20 @@ class TournamentController extends Controller
         return view('tournament_management.index', compact('tournaments'));
     }
 
+    public function reorder(Request $request)
+    {
+        if (!auth()->user()->can('super_admin')) {
+            abort(403, 'This action is unauthorized.');
+        }
+        $data = $request->validate([
+            'orders' => 'required|array',
+            'orders.*.id' => 'required|integer|exists:tournaments,id',
+            'orders.*.sort_order' => 'required|integer|min:0',
+        ]);
+        $this->tournamentRepository->updateSortOrders($data['orders']);
+        return response()->json(['success' => true]);
+    }
+
     public function create()
     {
         $statuses = TournamentStatus::cases();

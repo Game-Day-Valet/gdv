@@ -17,14 +17,14 @@ class RentalRequest extends FormRequest
     {
         return [
             // 'user_id' => 'required|exists:users,id',
-            'tournament_id' => 'required|exists:tournaments,id',
+            'tournament_id' => 'nullable|exists:tournaments,id',
             'team_name' => 'nullable|string|max:255',
             'coach_name' => 'nullable|string|max:255',
             'field_number' => 'nullable|string|max:50',
             'items' => 'nullable|array',
             // Accept format: [{"item_id": 1, "quantity": 3}]
-            'items.*.item_id' => 'required_with:items|integer|exists:items,id',
-            'items.*.quantity' => 'required_with:items|integer|min:1',
+            'items.*.item_id' => 'nullable:items|integer|exists:items,id',
+            'items.*.quantity' => 'nullable:items|integer|min:1',
             'bundles' => 'nullable|array',
             'bundles.*' => 'nullable|integer|exists:bundles,id',
             'instructions' => 'nullable|string',
