@@ -220,6 +220,24 @@
             color: var(--primary-color);
         }
 
+        /* Right-side Image Card */
+        .image-card {
+            background: #fff;
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .side-image {
+            width: 100%;
+            height: 400px;
+            object-fit: fill;
+            background-color: #f3f4f6;
+            border-radius: 12px;
+            display: block;
+        }
+
         /* Breadcrumb */
         .breadcrumb-nav {
             margin-bottom: 30px;
@@ -281,22 +299,7 @@
             <span>{{ $tournament->name }}</span>
         </div>
 
-        <!-- Hero Section -->
-        <div class="hero-section">
-            <img src="{{ $tournament->image ? asset('storage/' . $tournament->image) : 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=1200&auto=format&fit=crop' }}" 
-                 alt="{{ $tournament->name }}" class="hero-image">
-            <div class="hero-overlay">
-                <h1 class="hero-title">{{ $tournament->name }}</h1>
-                <p class="hero-subtitle">
-                    <i class="fas fa-map-marker-alt"></i> {{ $tournament->location ?? 'Location TBA' }}
-                    @if($tournament->start_date)
-                        <span style="margin-left: 20px;">
-                            <i class="fas fa-calendar"></i> {{ \Carbon\Carbon::parse($tournament->start_date)->format('d M Y') }}
-                        </span>
-                    @endif
-                </p>
-            </div>
-        </div>
+        <!-- Hero removed; image moved to right column -->
 
         <div class="content-grid">
             <!-- Left Column - Tournament Information -->
@@ -440,6 +443,11 @@
 
             <!-- Right Column - Action Card -->
             <div class="right-column">
+                <div class="image-card">
+                    <img src="{{ $tournament->image ? asset('storage/' . $tournament->image) : 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=1200&auto=format&fit=crop' }}" 
+                         data-img="{{ $tournament->image ? asset('storage/' . $tournament->image) : 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=1200&auto=format&fit=crop' }}"
+                         alt="{{ $tournament->name }}" class="side-image" style="cursor:pointer" onclick="openImageModal(this.dataset.img)">
+                </div>
                 <div class="action-card">
                     <h3><i class="fas fa-rocket"></i> Ready to Book?</h3>
                     <p>Get your equipment ready for this exciting tournament. Book now and secure your rental items!</p>
@@ -463,6 +471,29 @@
         </div>
     </div>
 
+    <!-- Image View Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="background:#000;">
+                <div class="modal-header" style="border:0;">
+                    <h5 class="modal-title text-white" id="imageModalLabel">{{ $tournament->name }}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0" style="background:#000;">
+                    <img id="modalImage" src="" alt="Preview" style="width:100%;height:auto;display:block;">
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function openImageModal(url){
+            var img = document.getElementById('modalImage');
+            img.src = url;
+            var modal = new bootstrap.Modal(document.getElementById('imageModal'));
+            modal.show();
+        }
+    </script>
 </body>
 </html> 

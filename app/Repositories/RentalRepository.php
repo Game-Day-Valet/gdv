@@ -61,7 +61,7 @@ class RentalRepository implements RentalRepositoryInterface
                 'promo_code' => $data['promo_code'] ?? null,
                 'insurance_option' => $data['insurance_option'] ?? null,
                 'damage_waiver' => $data['damage_waiver'] ?? null,
-                'rental_date' => $data['rental_date'],
+                'rental_date' => $data['rental_date'] ?? null,
                 'delivery_assigned_to' => $data['delivery_assigned_to'] ?? null,
                 'payment_method' => $data['payment_method'] ?? null,
                 'payment_status' => $data['payment_status'] ?? 'pending',
