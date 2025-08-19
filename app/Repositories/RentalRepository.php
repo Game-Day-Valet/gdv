@@ -53,7 +53,7 @@ class RentalRepository implements RentalRepositoryInterface
                 'tournament_id' => $data['tournament_id'],
                 'team_name' => $data['team_name'],
                 'coach_name' => $data['coach_name'],
-                'field_number' => $data['field_number'],
+                'field_number' => $data['field_number'] ?? null,
                 'items' => $data['items'] ?? null,
                 'bundles' => $data['bundles'] ?? null,
                 'instructions' => $data['instructions'] ?? null,

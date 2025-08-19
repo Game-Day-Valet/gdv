@@ -302,9 +302,8 @@ class RentalSystemController extends Controller
             'tournament_id' => 'required|integer',
             'team_name' => 'nullable|string|max:255',
             'coach_name' => 'nullable|string|max:255',
-            'field_number' => 'nullable|string|max:50',
-            'drop_off_date' => 'required|date',
-            'drop_off_time' => 'required',
+            // 'field_number' removed
+            // drop_off_date/time removed
             'items' => 'nullable|array',
             'bundles' => 'nullable|array',
             'insurance_option' => 'nullable',
@@ -386,13 +385,15 @@ class RentalSystemController extends Controller
         if (is_numeric($insurance)) {
             $insuranceAmount = (float) $insurance;
         }
-        $waiverAmount = $request->has('damage_waiver') ? 20.0 : 0.0;
+        // Sum multiple waiver options if provided as damage_waiver_options[] values
+        $waiverAmount = 0.0;
+        foreach ((array) $request->input('damage_waiver_options', []) as $waiverVal) {
+            $waiverAmount += (float) $waiverVal;
+        }
 
         $total = $itemsSubtotal + $bundlesSubtotal + $insuranceAmount + $waiverAmount;
 
-        $dropOffDate = $request->input('drop_off_date');
-        $dropOffTime = $request->input('drop_off_time');
-        $dropOffDateTime = date('Y-m-d H:i:s', strtotime($dropOffDate . ' ' . $dropOffTime));
+        $dropOffDateTime = null;
 
         // Create rental record with pending payment
         $rental = $this->rentals->create([
@@ -400,13 +401,11 @@ class RentalSystemController extends Controller
             'tournament_id' => (int) $request->input('tournament_id'),
             'team_name' => $request->input('team_name') ?: null,
             'coach_name' => $request->input('coach_name') ?: null,
-            'field_number' => $request->input('field_number') ?: null,
             'items' => !empty($selectedItems) ? $selectedItems : null,
             'bundles' => !empty($selectedBundles) ? $selectedBundles : null,
-            'rental_date' => $dropOffDate,
             'drop_off_time' => $dropOffDateTime,
-            'insurance_option' => $insurance === 'none' ? null : $insurance,
-            'damage_waiver' => $request->has('damage_waiver') ? true : false,
+            'insurance_option' => $insuranceAmount > 0 ? $insuranceAmount : null,
+            'damage_waiver' => $waiverAmount > 0 ? $waiverAmount : null,
             'payment_method' => 'stripe',
             'payment_status' => 'pending',
             'total_amount' => $total,

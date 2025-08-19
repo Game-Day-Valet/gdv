@@ -202,6 +202,15 @@
                 </li>
                 @endcan
 
+                @can('super_admin')
+                <li>
+                    <a href="{{ route('booking-settings.index') }}">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+                @endcan
+
 
                 <!-- <li>
                     <a href="#sidebarExpages" data-bs-toggle="collapse">

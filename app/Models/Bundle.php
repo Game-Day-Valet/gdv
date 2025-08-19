@@ -16,6 +16,7 @@ class Bundle extends Model
     protected $fillable = [
         'name',
         'description',
+        'image',
         'price',
         'status',
     ];
@@ -38,5 +39,10 @@ class Bundle extends Model
         return $this->hasMany(CartItem::class, 'item_id')
             ->where('is_bundle', true)
             ->where('user_id', $userId);
+    }
+
+    public function getImageUrlAttribute()
+    {
+        return $this->image ? asset('storage/' . $this->image) : null;
     }
 }

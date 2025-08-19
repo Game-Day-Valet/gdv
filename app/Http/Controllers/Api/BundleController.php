@@ -31,10 +31,9 @@ class BundleController extends Controller
             $user = $request->user();
             if ($user && ($user->hasPermissionTo(Permission::SUPER_ADMIN->value) ||
                 $user->hasPermissionTo(Permission::MANAGER->value))) {
-                $bundle = $this->bundleRepository->create(
-                    $request->only(['name', 'description', 'price', 'status']),
-                    $request->input('items', [])
-                );
+                $data = $request->only(['name', 'description', 'price', 'status']);
+                if ($request->hasFile('image')) { $data['image'] = $request->file('image'); }
+                $bundle = $this->bundleRepository->create($data, $request->input('items', []));
                 return new BundleResource($bundle->load('items'));
             }
             throw new Exception('Unauthorized');
@@ -49,11 +48,9 @@ class BundleController extends Controller
             $user = $request->user();
             if ($user && ($user->hasPermissionTo(Permission::SUPER_ADMIN->value) ||
                 $user->hasPermissionTo(Permission::MANAGER->value))) {
-                $bundle = $this->bundleRepository->update(
-                    $id,
-                    $request->only(['name', 'description', 'price', 'status']),
-                    $request->input('items', [])
-                );
+                $data = $request->only(['name', 'description', 'price', 'status']);
+                if ($request->hasFile('image')) { $data['image'] = $request->file('image'); }
+                $bundle = $this->bundleRepository->update($id, $data, $request->input('items', []));
                 return new BundleResource($bundle->load('items'));
             }
             throw new Exception('Unauthorized');

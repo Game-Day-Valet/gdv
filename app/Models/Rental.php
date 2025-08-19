@@ -40,7 +40,8 @@ class Rental extends Model
         'bundles' => 'array',
         'rental_date' => 'date',
         'drop_off_time' => 'datetime',
-        'damage_waiver' => 'boolean',
+        'insurance_option' => 'decimal:2',
+        'damage_waiver' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'estimated_delivery_time' => 'datetime',
     ];

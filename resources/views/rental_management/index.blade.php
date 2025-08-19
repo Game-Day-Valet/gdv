@@ -129,8 +129,7 @@
                                     <th>Tournament</th>
                                     <th>Team Name</th>
                                     <th>Coach</th>
-                                    <th>Field</th>
-                                    <th>Rental Date</th>
+                                    
                                     <th>Total Amount</th>
                                     <th>Payment Status</th>
                                     <th>Status</th>
@@ -152,8 +151,7 @@
                                         <td>{{ $rental->tournament->name ?? 'N/A' }}</td>
                                         <td>{{ $rental->team_name }}</td>
                                         <td>{{ $rental->coach_name }}</td>
-                                        <td>{{ $rental->field_number }}</td>
-                                        <td>{{ $rental->rental_date ? \Carbon\Carbon::parse($rental->rental_date)->format('d M Y') : 'N/A' }}</td>
+                                        
                                         <td>
                                             @if($rental->total_amount)
                                                 ${{ number_format($rental->total_amount, 2) }}

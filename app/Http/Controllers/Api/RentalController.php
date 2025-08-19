@@ -98,15 +98,21 @@ class RentalController extends Controller
                 }
                 $data['bundles'] = !empty($normalizedBundles) ? array_values(array_unique($normalizedBundles)) : null;
 
-                // Standardize damage_waiver to boolean
-                if (array_key_exists('damage_waiver', $data)) {
-                    $data['damage_waiver'] = (bool) $data['damage_waiver'];
+                // Standardize damage_waiver price
+                $damageWaiverAmount = 0.0;
+                if (isset($data['damage_waiver']) && is_numeric($data['damage_waiver'])) {
+                    $damageWaiverAmount = (float) $data['damage_waiver'];
+                } elseif (!empty($data['damage_waiver_options']) && is_array($data['damage_waiver_options'])) {
+                    foreach ($data['damage_waiver_options'] as $v) { $damageWaiverAmount += (float) $v; }
                 }
+                $data['damage_waiver'] = $damageWaiverAmount > 0 ? $damageWaiverAmount : null;
 
-                // Ensure insurance_option is numeric or 'none'
-                if (isset($data['insurance_option']) && $data['insurance_option'] === 'none') {
-                    // keep as 'none' or set null per storage convention if needed
+                // Insurance price
+                $insuranceAmount = 0.0;
+                if (isset($data['insurance_option']) && is_numeric($data['insurance_option'])) {
+                    $insuranceAmount = (float) $data['insurance_option'];
                 }
+                $data['insurance_option'] = $insuranceAmount > 0 ? $insuranceAmount : null;
 
                 // Apply discount if eligible
                 $data = $this->referralService->applyDiscount($user->id, $data);

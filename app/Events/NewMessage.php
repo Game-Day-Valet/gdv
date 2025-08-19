@@ -74,13 +74,22 @@ class NewMessage implements ShouldBroadcast
 
         $this->message->load(['sender', 'conversation']);
 
+        // For broadcast payload: sender should see is_read = 1, recipients see is_read = 0.
+        // We can't personalize a single broadcast for different subscribers on a public channel,
+        // so we default to is_read = 0 and let sender UI force it to 1 locally, OR broadcast two events if userId provided.
+        $isReadBroadcast = 0;
+        if ($this->userId && (int)$this->userId === (int)$this->message->sender_id) {
+            // When targeting a specific user channel (like in ChatManagementController), show read=1 to the sender
+            $isReadBroadcast = 1;
+        }
+
         $data = [
             'message' => [
                 'id' => $this->message->id,
                 'conversation_id' => (int) $this->message->conversation_id,
                 'sender_id' => (int) $this->message->sender_id,
                 'content' => $this->message->content,
-                'is_read' => (int) $this->message->is_read,
+                'is_read' => $isReadBroadcast,
                 'created_at' => $this->message->created_at->toISOString(),
                 'updated_at' => $this->message->updated_at->toISOString(),
                 'sender' => $this->message->sender ? [

@@ -49,6 +49,8 @@ Route::post('/validate/referral-code', [AuthController::class, 'checkReferralCod
 
 // Public coupon validate endpoint (used by website)
 Route::post('/coupon/validate', [CouponController::class, 'validateCoupon']);
+// Public booking settings
+Route::get('/settings/booking', [\App\Http\Controllers\Api\SettingsController::class, 'booking']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);

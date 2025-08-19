@@ -24,9 +24,15 @@ class BundleRepository implements BundleRepositoryInterface
     public function create(array $data, array $items)
     {
         return DB::transaction(function () use ($data, $items) {
+            $imagePath = null;
+            if (isset($data['image']) && $data['image']) {
+                $imagePath = $data['image']->store('bundles', 'public');
+            }
+
             $bundle = Bundle::create([
                 'name' => $data['name'],
                 'description' => $data['description'] ?? null,
+                'image' => $imagePath,
                 'price' => $data['price'],
                 'status' => $data['status'] ?? ItemStatus::AVAILABLE->value,
             ]);
@@ -41,9 +47,23 @@ class BundleRepository implements BundleRepositoryInterface
     {
         return DB::transaction(function () use ($id, $data, $items) {
             $bundle = Bundle::findOrFail($id);
+            $imagePath = $bundle->image;
+            if (isset($data['image']) && $data['image']) {
+                if ($imagePath) {
+                    \Storage::disk('public')->delete($imagePath);
+                }
+                $imagePath = $data['image']->store('bundles', 'public');
+            } elseif (array_key_exists('image', $data) && is_null($data['image'])) {
+                if ($imagePath) {
+                    \Storage::disk('public')->delete($imagePath);
+                }
+                $imagePath = null;
+            }
+
             $bundle->update([
                 'name' => $data['name'] ?? $bundle->name,
                 'description' => $data['description'] ?? $bundle->description,
+                'image' => $imagePath,
                 'price' => $data['price'] ?? $bundle->price,
                 'status' => $data['status'] ?? $bundle->status,
             ]);

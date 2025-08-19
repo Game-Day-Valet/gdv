@@ -35,10 +35,9 @@ class BundleController extends Controller
     public function store(BundleRequest $request)
     {
         try {
-            $this->bundleRepository->create(
-                $request->only(['name', 'description', 'price', 'status']),
-                $request->input('items', [])
-            );
+            $data = $request->only(['name', 'description', 'price', 'status']);
+            if ($request->hasFile('image')) { $data['image'] = $request->file('image'); }
+            $this->bundleRepository->create($data, $request->input('items', []));
             return redirect()->route('bundle-management.index')->with('success', 'Bundle created successfully.');
         } catch (Exception $e) {
             return redirect()->back()->withErrors(['items' => $e->getMessage()])->withInput();
@@ -56,11 +55,9 @@ class BundleController extends Controller
     public function update(BundleRequest $request, $id)
     {
         try {
-            $this->bundleRepository->update(
-                $id,
-                $request->only(['name', 'description', 'price', 'status']),
-                $request->input('items', [])
-            );
+            $data = $request->only(['name', 'description', 'price', 'status']);
+            if ($request->hasFile('image')) { $data['image'] = $request->file('image'); }
+            $this->bundleRepository->update($id, $data, $request->input('items', []));
             return redirect()->route('bundle-management.index')->with('success', 'Bundle updated successfully.');
         } catch (Exception $e) {
             return redirect()->back()->withErrors(['items' => $e->getMessage()])->withInput();

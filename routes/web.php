@@ -97,6 +97,8 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth'], function () {
 
 	// User Management - Admin only
 	Route::group(['middleware' => ['can:super_admin']], function () {
+		Route::resource('booking-settings', \App\Http\Controllers\BookingSettingsController::class)->except(['show']);
+		Route::post('booking-settings/reorder', [\App\Http\Controllers\BookingSettingsController::class, 'reorder'])->name('booking-settings.reorder');
 		Route::resource('user-management', UserController::class);
 		Route::resource('role-management', RoleController::class);
 		Route::resource('item-management', ItemController::class);

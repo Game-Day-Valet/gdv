@@ -41,6 +41,7 @@
                     <table id="datatable" class="table table-bordered dt-responsive table-responsive nowrap">
                         <thead>
                             <tr>
+                                <th>Image</th>
                                 <th>Name</th>
                                 <th>Description</th>
                                 <th>Price</th>
@@ -52,6 +53,13 @@
                         <tbody>
                             @foreach ($bundles as $bundle)
                                 <tr>
+                                    <td>
+                                        @if($bundle->image)
+                                            <img src="{{ asset('storage/'.$bundle->image) }}" alt="{{ $bundle->name }}" class="img-thumbnail" width="50" height="50">
+                                        @else
+                                            <span class="text-muted">No image</span>
+                                        @endif
+                                    </td>
                                     <td>{{ $bundle->name }}</td>
                                     <td>{{ $bundle->description ?? '-' }}</td>
                                     <td>{{ number_format($bundle->price, 2) }}</td>

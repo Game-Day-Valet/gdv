@@ -24,6 +24,7 @@ class BundleResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
+            'image' => $this->image ? asset('storage/' . $this->image) : null,
             'price' => $this->price,
             'status' => $this->status->value,
             'items' => $this->whenLoaded('items', fn() => $this->items->map(fn($item) => [

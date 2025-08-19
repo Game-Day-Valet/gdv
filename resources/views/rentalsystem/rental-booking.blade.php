@@ -98,13 +98,6 @@
                                 <input class="input" type="text" name="coach_name" placeholder="Coach name" required>
                             </div>
                         </div>
-                        <div class="row-two">
-                            <div>
-                                <label class="label">FIELD NUMBER <span class="text-danger">*</span></label>
-                                <input class="input" type="text" name="field_number" placeholder="Field number" required>
-                            </div>
-                            <div></div>
-                        </div>
                     </div>
 
                     <div class="card" style="margin-top:18px;">
@@ -113,7 +106,12 @@
                             @forelse(($availableItems ?? []) as $it)
                                 <div class="item-row" data-type="item" data-id="{{ $it->id }}" data-price="{{ (float)($it->price ?? 0) }}">
                                     <div class="item-meta">
-                                        <div class="item-title">{{ $it->name }}</div>
+                                        <div class="item-title">
+                                            @if(!empty($it->image_url))
+                                                <img src="{{ $it->image_url }}" alt="{{ $it->name }}" style="width:28px;height:28px;object-fit:cover;border-radius:6px;margin-right:8px;vertical-align:middle;">
+                                            @endif
+                                            {{ $it->name }}
+                                        </div>
                                         <div class="item-price">${{ number_format((float)($it->price ?? 0), 2) }}</div>
                                     </div>
                                     <div class="qty">
@@ -136,7 +134,12 @@
                             @forelse(($availableBundles ?? []) as $bd)
                                 <div class="item-row" data-type="bundle" data-id="{{ $bd->id }}" data-price="{{ (float)($bd->price ?? 0) }}">
                                     <div class="item-meta">
-                                        <div class="item-title">{{ $bd->name }}</div>
+                                        <div class="item-title">
+                                            @if(!empty($bd->image))
+                                                <img src="{{ asset('storage/'.$bd->image) }}" alt="{{ $bd->name }}" style="width:28px;height:28px;object-fit:cover;border-radius:6px;margin-right:8px;vertical-align:middle;">
+                                            @endif
+                                            {{ $bd->name }}
+                                        </div>
                                         <div class="item-price">${{ number_format((float)($bd->price ?? 0), 2) }}</div>
                                     </div>
                                     <div class="qty">
@@ -166,39 +169,28 @@
                             </div>
                         </div>
                     </div>
-
+<!-- 
                     <div class="card" style="margin-top:18px;">
                         <div class="section-title">DROP-OFF</div>
-                        <div class="row-two">
-                            <div>
-                                <label class="label">DATE</label>
-                                <input class="input" type="date" name="drop_off_date" required>
-                            </div>
-                            <div>
-                                <label class="label">TIME</label>
-                                <input class="input" type="time" name="drop_off_time" required>
-                            </div>
+                        <div class="text-muted">Drop-off details will be coordinated after booking.</div>
+                    </div> -->
+
+                    <div class="card" style="margin-top:18px;">
+                        <div class="section-title">INSURANCE OPTION</div>
+                        <div data-insurance-container>
+                            <label style="display:flex;gap:10px;align-items:center;">
+                                <input type="radio" name="insurance_option" value="none" checked> None
+                            </label>
                         </div>
                     </div>
 
                     <div class="card" style="margin-top:18px;">
-                        <div class="section-title">INSURANCE OPTION</div>
-                        <label style="display:flex;gap:10px;align-items:center;">
-                            <input type="radio" name="insurance_option" value="none" checked> None
-                        </label>
-                        <label style="display:flex;gap:10px;align-items:center;">
-                            <input type="radio" name="insurance_option" value="29"> 3‑day warranty — $29.00
-                        </label>
-                        <label style="display:flex;gap:10px;align-items:center;">
-                            <input type="radio" name="insurance_option" value="49"> 7‑day warranty — $49.00 (recommended)
-                        </label>
-                    </div>
-
-                    <div class="card" style="margin-top:18px;">
                         <div class="section-title">DAMAGE WAIVER</div>
-                        <label style="display:flex;gap:10px;align-items:center;">
-                            <input type="checkbox" name="damage_waiver" value="20"> Add damage waiver — $20.00
-                        </label>
+                        <div data-waiver-container>
+                            <label style="display:flex;gap:10px;align-items:center;">
+                                <input type="checkbox" name="damage_waiver_options[]" value="20" data-price="20" id="waiver_20"> Add damage waiver — $20.00
+                            </label>
+                        </div>
                     </div>
 
                     <div class="card" style="margin-top:18px;">
@@ -231,6 +223,53 @@
 
     <script>
         function formatUSD(v){ return `$${Number(v).toFixed(2)}`; }
+ 
+        // Booking settings loaded from API
+        let bookingSettings = { insurance: [], waivers: [] };
+
+        async function loadBookingSettings(){
+            try{
+                const resp = await fetch('/api/settings/booking');
+                const data = await resp.json();
+                bookingSettings.insurance = data.insurance_options || [];
+                bookingSettings.waivers = data.damage_waiver_options || [];
+                renderInsurance();
+                renderWaivers();
+                recalc();
+            }catch(e){ /* ignore, keep defaults */ }
+        }
+
+        function renderInsurance(){
+            const container = document.querySelector('[data-insurance-container]');
+            if(!container) return;
+            container.innerHTML = '';
+            // Static none first
+            const none = document.createElement('label');
+            none.style.cssText = 'display:flex;gap:10px;align-items:center;';
+            none.innerHTML = '<input type="radio" name="insurance_option" value="none" checked> None';
+            container.appendChild(none);
+            bookingSettings.insurance.forEach(opt => {
+                const lbl = document.createElement('label');
+                lbl.style.cssText = 'display:flex;gap:10px;align-items:center;';
+                lbl.innerHTML = `<input type="radio" name="insurance_option" value="${opt.price}"> ${opt.label} — ${formatUSD(opt.price)}`;
+                container.appendChild(lbl);
+            });
+            container.querySelectorAll('input[name="insurance_option"]').forEach(r => r.addEventListener('change', recalc));
+        }
+
+        function renderWaivers(){
+            const container = document.querySelector('[data-waiver-container]');
+            if(!container) return;
+            container.innerHTML = '';
+            bookingSettings.waivers.forEach((opt, idx) => {
+                const id = `waiver_${opt.id}`;
+                const lbl = document.createElement('label');
+                lbl.style.cssText = 'display:flex;gap:10px;align-items:center;';
+                lbl.innerHTML = `<input type="checkbox" name="damage_waiver_options[]" value="${opt.price}" data-price="${opt.price}" id="${id}"> ${opt.label} — ${formatUSD(opt.price)}`;
+                container.appendChild(lbl);
+            });
+            container.querySelectorAll('input[type="checkbox"]').forEach(c => c.addEventListener('change', recalc));
+        }
 
         function recalc(){
             let itemsSubtotal = 0, bundlesSubtotal = 0;
@@ -252,14 +291,18 @@
                 }
             });
             
-            // Fix insurance calculation - handle "none" value properly
+            // Insurance from dynamic radios
             const insuranceInput = document.querySelector('input[name="insurance_option"]:checked');
             let insuranceVal = 0;
             if (insuranceInput && insuranceInput.value !== 'none') {
                 insuranceVal = parseFloat(insuranceInput.value) || 0;
             }
-            
-            const waiverVal = document.querySelector('input[name="damage_waiver"]:checked') ? 20 : 0;
+
+            // Sum all selected waiver checkboxes
+            let waiverVal = 0;
+            document.querySelectorAll('input[name="damage_waiver_options[]"]:checked').forEach(c => {
+                waiverVal += parseFloat(c.getAttribute('data-price')) || 0;
+            });
             let total = itemsSubtotal + bundlesSubtotal + insuranceVal + waiverVal;
 
             // Apply promo discount if available
@@ -321,10 +364,7 @@
             });
         });
 
-        // Event listeners for insurance and waiver
-        document.querySelectorAll('input[name="insurance_option"]').forEach(r => r.addEventListener('change', recalc));
-        const waiver = document.querySelector('input[name="damage_waiver"]');
-        if (waiver) waiver.addEventListener('change', recalc);
+        // dynamic listeners bound in render
 
         // Form validation
         function validateForm() {
@@ -443,7 +483,7 @@
         document.getElementById('appModalOk').addEventListener('click', ()=>{ modalEl.style.display='none'; });
         modalEl.addEventListener('click', (e)=>{ if(e.target === modalEl){ modalEl.style.display='none'; } });
  
-        recalc();
+        loadBookingSettings();
         validateForm();
     </script>
 </body>

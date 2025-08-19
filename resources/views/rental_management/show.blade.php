@@ -147,17 +147,12 @@
                                         <div class="col-4"><strong>Coach:</strong></div>
                                         <div class="col-8">{{ $rental->coach_name }}</div>
                                     </div>
+                                    
                                     <div class="row mb-2">
-                                        <div class="col-4"><strong>Field:</strong></div>
-                                        <div class="col-8">{{ $rental->field_number }}</div>
+                                        
                                     </div>
                                     <div class="row mb-2">
-                                        <div class="col-4"><strong>Rental Date:</strong></div>
-                                        <div class="col-8">{{ $rental->rental_date ? \Carbon\Carbon::parse($rental->rental_date)->format('d M Y') : 'N/A' }}</div>
-                                    </div>
-                                    <div class="row mb-2">
-                                        <div class="col-4"><strong>Drop Off Time:</strong></div>
-                                        <div class="col-8">{{ $rental->drop_off_time ? \Carbon\Carbon::parse($rental->drop_off_time)->format('d M Y H:i') : 'N/A' }}</div>
+                                        
                                     </div>
                                 </div>
                             </div>
@@ -206,24 +201,20 @@
                                     <div class="row mb-2">
                                         <div class="col-4"><strong>Insurance:</strong></div>
                                         <div class="col-8">
-                                            @if($rental->insurance_option == '3')
-                                                3 Day Insurance
-                                            @elseif($rental->insurance_option == '7')
-                                                7 Day Insurance
-                                            @elseif($rental->insurance_option == 'none')
-                                                No Insurance
+                                            @if(!is_null($rental->insurance_option) && (float) $rental->insurance_option > 0)
+                                                ${{ number_format((float) $rental->insurance_option, 2) }}
                                             @else
-                                                N/A
+                                                <span class="text-muted">N/A</span>
                                             @endif
                                         </div>
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-4"><strong>Damage Waiver:</strong></div>
                                         <div class="col-8">
-                                            @if($rental->damage_waiver)
-                                                <span class="badge bg-success">Yes</span>
+                                            @if(!is_null($rental->damage_waiver) && (float) $rental->damage_waiver > 0)
+                                                ${{ number_format((float) $rental->damage_waiver, 2) }}
                                             @else
-                                                <span class="badge bg-secondary">No</span>
+                                                <span class="text-muted">N/A</span>
                                             @endif
                                         </div>
                                     </div>
