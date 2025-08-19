@@ -76,23 +76,23 @@ class ChatManagementController extends Controller
             'roles' => $user->getRoleNames()->toArray(),
         ]);
 
-        if ($user->hasRole(Role::USER) && $conversation->user_id !== $user->id) {
-            Log::error('Unauthorized access to conversation', [
-                'user_id' => $user->id,
-                'conversation_id' => $id,
-            ]);
-            abort(403);
-        }
+        // if ($user->hasRole(Role::USER) && $conversation->user_id !== $user->id) {
+        //     Log::error('Unauthorized access to conversation', [
+        //         'user_id' => $user->id,
+        //         'conversation_id' => $id,
+        //     ]);
+        //     abort(403);
+        // }
 
-        if ($user->hasRole([Role::MANAGER, Role::SUPER_ADMIN])) {
-            if ($conversation->responder_id && $conversation->responder_id !== $user->id) {
-                Log::error('Unauthorized access to conversation by responder', [
-                    'user_id' => $user->id,
-                    'conversation_id' => $id,
-                ]);
-                abort(403);
-            }
-        }
+        // if ($user->hasRole([Role::MANAGER, Role::SUPER_ADMIN])) {
+        //     if ($conversation->responder_id && $conversation->responder_id !== $user->id) {
+        //         Log::error('Unauthorized access to conversation by responder', [
+        //             'user_id' => $user->id,
+        //             'conversation_id' => $id,
+        //         ]);
+        //         abort(403);
+        //     }
+        // }
 
         Log::info('Conversation details retrieved', [
             'conversation_id' => $id,
@@ -132,23 +132,23 @@ class ChatManagementController extends Controller
             'roles' => $user->getRoleNames()->toArray(),
         ]);
 
-        if ($user->hasRole(Role::USER) && $conversation->user_id !== $user->id) {
-            Log::error('Unauthorized access to send message', [
-                'user_id' => $user->id,
-                'conversation_id' => $conversationId,
-            ]);
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+        // if ($user->hasRole(Role::USER) && $conversation->user_id !== $user->id) {
+        //     Log::error('Unauthorized access to send message', [
+        //         'user_id' => $user->id,
+        //         'conversation_id' => $conversationId,
+        //     ]);
+        //     return response()->json(['error' => 'Unauthorized'], 403);
+        // }
 
-        if ($user->hasRole([Role::MANAGER, Role::SUPER_ADMIN])) {
-            if ($conversation->responder_id && $conversation->responder_id !== $user->id) {
-                Log::error('Unauthorized access to send message by responder', [
-                    'user_id' => $user->id,
-                    'conversation_id' => $conversationId,
-                ]);
-                return response()->json(['error' => 'Conversation already assigned to another admin'], 403);
-            }
-        }
+        // if ($user->hasRole([Role::MANAGER, Role::SUPER_ADMIN])) {
+        //     if ($conversation->responder_id && $conversation->responder_id !== $user->id) {
+        //         Log::error('Unauthorized access to send message by responder', [
+        //             'user_id' => $user->id,
+        //             'conversation_id' => $conversationId,
+        //         ]);
+        //         return response()->json(['error' => 'Conversation already assigned to another admin'], 403);
+        //     }
+        // }
 
         $message = Message::create([
             'conversation_id' => $conversation->id,
@@ -205,23 +205,23 @@ class ChatManagementController extends Controller
             'roles' => $user->getRoleNames()->toArray(),
         ]);
 
-        if ($user->hasRole(Role::USER) && $conversation->user_id !== $user->id) {
-            Log::error('Unauthorized access to messages', [
-                'user_id' => $user->id,
-                'conversation_id' => $conversationId,
-            ]);
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+        // if ($user->hasRole(Role::USER) && $conversation->user_id !== $user->id) {
+        //     Log::error('Unauthorized access to messages', [
+        //         'user_id' => $user->id,
+        //         'conversation_id' => $conversationId,
+        //     ]);
+        //     return response()->json(['error' => 'Unauthorized'], 403);
+        // }
 
-        if ($user->hasRole([Role::MANAGER, Role::SUPER_ADMIN])) {
-            if ($conversation->responder_id && $conversation->responder_id !== $user->id) {
-                Log::error('Unauthorized access to messages by responder', [
-                    'user_id' => $user->id,
-                    'conversation_id' => $conversationId,
-                ]);
-                return response()->json(['error' => 'Unauthorized'], 403);
-            }
-        }
+        // if ($user->hasRole([Role::MANAGER, Role::SUPER_ADMIN])) {
+        //     if ($conversation->responder_id && $conversation->responder_id !== $user->id) {
+        //         Log::error('Unauthorized access to messages by responder', [
+        //             'user_id' => $user->id,
+        //             'conversation_id' => $conversationId,
+        //         ]);
+        //         return response()->json(['error' => 'Unauthorized'], 403);
+        //     }
+        // }
 
         $messages = $conversation->messages()->with('sender')->orderBy('created_at', 'asc')->get();
 
