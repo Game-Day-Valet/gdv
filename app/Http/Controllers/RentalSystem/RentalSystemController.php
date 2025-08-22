@@ -275,14 +275,14 @@ class RentalSystemController extends Controller
     {
         // Get tournament details
         $tournament = $this->tournaments->find($tournamentId);
-        
+
         if (!$tournament) {
             abort(404, 'Tournament not found');
         }
 
         // Get sport information
         $sport = $this->sports->find($tournament->sport_id ?? 1);
-        
+
         return view('rentalsystem.tournament-details', compact('tournament', 'sport'));
     }
 
@@ -290,8 +290,12 @@ class RentalSystemController extends Controller
     {
         $availableItems = $this->items->getAllAvailable();
         $availableBundles = $this->bundles->getAllAvailable();
+
+        // Fetch tournament details
+        $tournament = $this->tournaments->find($tournamentId);
+
         return view('rentalsystem.rental-booking', [
-            'tournament' => ['id' => $tournamentId],
+            'tournament' => $tournament,
             'tournamentId' => $tournamentId,
             'availableItems' => $availableItems,
             'availableBundles' => $availableBundles,
@@ -325,24 +329,24 @@ class RentalSystemController extends Controller
         // Additional validation: At least one item or bundle must be selected
         $itemsInput = (array) $request->input('items', []);
         $bundlesInput = (array) $request->input('bundles', []);
-        
+
         $hasItems = false;
         $hasBundles = false;
-        
+
         foreach ($itemsInput as $itemId => $qty) {
             if ((int) $qty > 0) {
                 $hasItems = true;
                 break;
             }
         }
-        
+
         foreach ($bundlesInput as $bundleId => $qty) {
             if ((int) $qty > 0) {
                 $hasBundles = true;
                 break;
             }
         }
-        
+
         if (!$hasItems && !$hasBundles) {
             return back()->withErrors(['items' => 'Please select at least one item or bundle.'])->withInput();
         }
@@ -400,6 +404,16 @@ class RentalSystemController extends Controller
 
         $total = $itemsSubtotal + $bundlesSubtotal + $insuranceAmount + $waiverAmount;
 
+        // Get the discounted total from frontend (if coupon was applied)
+        $frontendTotal = (float) $request->input('total_amount', 0);
+        
+        // Use frontend total if it's provided and reasonable, otherwise use calculated total
+        if ($frontendTotal > 0 && $frontendTotal <= $total) {
+            $finalTotal = $frontendTotal;
+        } else {
+            $finalTotal = $total;
+        }
+
         $dropOffDateTime = null;
 
         // Create rental record with pending payment
@@ -415,7 +429,7 @@ class RentalSystemController extends Controller
             'damage_waiver' => $waiverAmount > 0 ? $waiverAmount : null,
             'payment_method' => 'stripe',
             'payment_status' => 'pending',
-            'total_amount' => $total,
+            'total_amount' => $finalTotal,
             'status' => 'pending',
         ]);
 
@@ -435,9 +449,8 @@ class RentalSystemController extends Controller
             } else {
                 // Mark that we've fired an event for this rental
                 session()->put($eventKey, true);
-                
+
                 event(new RentalBookingCreated($rental));
-                
             }
         } catch (\Exception $e) {
             Log::error('Failed to dispatch RentalBookingCreated event from website', [
@@ -458,7 +471,7 @@ class RentalSystemController extends Controller
                     'price_data' => [
                         'currency' => 'usd',
                         'product_data' => ['name' => 'Tournament Rental Booking'],
-                        'unit_amount' => (int) round($total * 100),
+                        'unit_amount' => (int) round($finalTotal * 100),
                     ],
                     'quantity' => 1,
                 ]],
@@ -656,7 +669,6 @@ class RentalSystemController extends Controller
                 return redirect()->to($intended);
             }
             return redirect()->route('rentalsystem.sports');
-
         } catch (\Exception $e) {
             return back()->withErrors(['google' => 'Google authentication failed. Please try again.'])->withInput();
         }

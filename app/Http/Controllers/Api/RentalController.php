@@ -116,6 +116,38 @@ class RentalController extends Controller
                 }
                 $data['insurance_option'] = $insuranceAmount > 0 ? $insuranceAmount : null;
 
+                // Calculate total from items/bundles
+                $calculatedTotal = 0;
+                if (!empty($data['items']) && is_array($data['items'])) {
+                    foreach ($data['items'] as $item) {
+                        if (isset($item['item_id'], $item['quantity'])) {
+                            $itemModel = \App\Models\Item::find($item['item_id']);
+                            if ($itemModel) {
+                                $calculatedTotal += (float) ($itemModel->price ?? 0) * (int) $item['quantity'];
+                            }
+                        }
+                    }
+                }
+                if (!empty($data['bundles']) && is_array($data['bundles'])) {
+                    foreach ($data['bundles'] as $bundleId) {
+                        $bundleModel = \App\Models\Bundle::find($bundleId);
+                        if ($bundleModel) {
+                            $calculatedTotal += (float) ($bundleModel->price ?? 0);
+                        }
+                    }
+                }
+                
+                // Add insurance and damage waiver
+                $calculatedTotal += $insuranceAmount + $damageWaiverAmount;
+                
+                // Use frontend total if provided and reasonable, otherwise use calculated total
+                $frontendTotal = (float) ($data['total_amount'] ?? 0);
+                if ($frontendTotal > 0 && $frontendTotal <= $calculatedTotal) {
+                    $data['total_amount'] = $frontendTotal;
+                } else {
+                    $data['total_amount'] = $calculatedTotal;
+                }
+
                 // Apply discount if eligible
                 $data = $this->referralService->applyDiscount($user->id, $data);
                 

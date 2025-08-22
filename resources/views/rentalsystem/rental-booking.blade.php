@@ -7,8 +7,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     
-<!-- App favicon -->
-<link rel="shortcut icon" href="/images/logo-sm.png">
+    <!-- App favicon -->
+    <link rel="shortcut icon" href="/images/logo-sm.png">
     <style>
         :root {
             --primary-color: #dc3545;
@@ -86,9 +86,21 @@
             <p>Fill details, choose items/bundles, and confirm your booking</p>
         </div>
 
+        @if(isset($tournament) && $tournament)
+        <div class="tournament-info" style="text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 16px; border: 2px solid #dee2e6;">
+            <h3 style="margin: 0; color: #dc3545; font-size: 1.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;">
+                <i class="fas fa-trophy" style="margin-right: 10px; color: #ffc107;"></i>
+                {{ $tournament->name ?? 'Tournament' }}
+            </h3>
+        </div>
+        @endif
+
         <form id="bookingForm" method="POST" action="{{ route('rentalsystem.rental.create') }}">
             @csrf
             <input type="hidden" name="tournament_id" value="{{ $tournamentId }}">
+            
+            <!-- Hidden field for discounted total -->
+            <input type="hidden" name="total_amount" id="total_amount_input" value="0">
 
             <div class="layout">
                 <div>
@@ -174,11 +186,6 @@
                             </div>
                         </div>
                     </div>
-<!-- 
-                    <div class="card" style="margin-top:18px;">
-                        <div class="section-title">DROP-OFF</div>
-                        <div class="text-muted">Drop-off details will be coordinated after booking.</div>
-                    </div> -->
 
                     <div class="card" style="margin-top:18px;" id="insuranceCard">
                         <div class="section-title">INSURANCE OPTION</div>
@@ -214,7 +221,6 @@
                         <div class="sum-row"><span>Bundles Subtotal</span><span id="bundlesSubtotal">$0.00</span></div>
                         <div class="sum-row"><span>Insurance</span><span id="insuranceAmount">$0.00</span></div>
                         <div class="sum-row"><span>Damage Waiver</span><span id="waiverAmount">$0.00</span></div>
-                        <input type="hidden" name="total_amount" id="total_amount_input" value="0">
                         <div class="sum-row" id="discountRow" style="display:none; color: var(--primary-color); font-weight:700;">
                             <span>Discount</span><span id="discountAmount">-$0.00</span>
                         </div>
@@ -308,7 +314,6 @@
                 row.appendChild(checkbox);
                 row.appendChild(titleSpan);
                 wrapper.appendChild(row);
-
 
                 container.appendChild(wrapper);
             });
@@ -551,4 +556,4 @@
         @endif
     </script>
 </body>
-</html> 
+</html>
