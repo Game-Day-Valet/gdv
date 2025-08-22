@@ -112,8 +112,11 @@ class RentalSystemController extends Controller
         }
     }
 
-    public function showSignin()
+    public function showSignin(Request $request)
     {
+        if ($request->filled('redirect')) {
+            Session::put('url.intended', $request->query('redirect'));
+        }
         return view('rentalsystem.signin');
     }
 
@@ -152,6 +155,10 @@ class RentalSystemController extends Controller
 
         Auth::login($user);
         Session::flash('success', 'Welcome back!');
+        $intended = Session::pull('url.intended');
+        if ($intended) {
+            return redirect()->to($intended);
+        }
         return redirect()->route('rentalsystem.sports');
     }
 
@@ -279,9 +286,6 @@ class RentalSystemController extends Controller
 
     public function showRentalBooking($tournamentId)
     {
-        if (!Auth::check()) {
-            return redirect()->route('rentalsystem.signin');
-        }
         $availableItems = $this->items->getAllAvailable();
         $availableBundles = $this->bundles->getAllAvailable();
         return view('rentalsystem.rental-booking', [
@@ -295,7 +299,8 @@ class RentalSystemController extends Controller
     public function createRental(Request $request)
     {
         if (!Auth::check()) {
-            return redirect()->route('rentalsystem.signin');
+            session(['url.intended' => url()->previous()]);
+            return back()->with('login_required', true);
         }
 
         $validator = Validator::make($request->all(), [
@@ -615,6 +620,10 @@ class RentalSystemController extends Controller
 
             Auth::login($user);
             Session::flash('success', $isNewUser ? 'Welcome! Your account has been created successfully.' : 'Welcome back!');
+            $intended = Session::pull('url.intended');
+            if ($intended) {
+                return redirect()->to($intended);
+            }
             return redirect()->route('rentalsystem.sports');
 
         } catch (\Exception $e) {

@@ -13,6 +13,7 @@ class SportResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'status' => $this->status->value,
+            'image_url' => $this->image_url,
         ];
     }
 }

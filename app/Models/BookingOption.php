@@ -10,7 +10,7 @@ class BookingOption extends Model
     use HasFactory;
 
     protected $fillable = [
-        'type', 'label', 'price', 'enabled', 'sort_order',
+        'type', 'label', 'description', 'price', 'enabled', 'sort_order',
     ];
 
     protected $casts = [

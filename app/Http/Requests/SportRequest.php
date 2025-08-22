@@ -17,6 +17,7 @@ class SportRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'image' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
             'status' => 'nullable|in:' . implode(',', array_column(SportStatus::cases(), 'value')),
         ];
     }

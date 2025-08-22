@@ -68,9 +68,14 @@
         <div class="header-content">
             <div class="logo"><i class="fas fa-trophy"></i> Rental System</div>
             <div class="user-menu">
-                <span class="user-name">{{ session('user.name', 'User') }}</span>
-                <a href="{{ route('rentalsystem.profile') }}" class="nav-btn"><i class="fas fa-user"></i> Profile</a>
-                <a href="{{ route('rentalsystem.logout') }}" class="nav-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                @if(Auth::check())
+                    <span class="user-name">{{ Auth::user()->name }}</span>
+                    <a href="{{ route('rentalsystem.profile') }}" class="nav-btn"><i class="fas fa-user"></i> Profile</a>
+                    <a href="{{ route('rentalsystem.logout') }}" class="nav-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                @else
+                    <a href="{{ route('rentalsystem.signin') }}" class="nav-btn"><i class="fas fa-sign-in-alt"></i> Sign In</a>
+                    <a href="{{ route('rentalsystem.signup') }}" class="nav-btn"><i class="fas fa-user-plus"></i> Sign Up</a>
+                @endif
             </div>
         </div>
     </header>
@@ -175,7 +180,7 @@
                         <div class="text-muted">Drop-off details will be coordinated after booking.</div>
                     </div> -->
 
-                    <div class="card" style="margin-top:18px;">
+                    <div class="card" style="margin-top:18px;" id="insuranceCard">
                         <div class="section-title">INSURANCE OPTION</div>
                         <div data-insurance-container>
                             <label style="display:flex;gap:10px;align-items:center;">
@@ -186,6 +191,7 @@
 
                     <div class="card" style="margin-top:18px;">
                         <div class="section-title">DAMAGE WAIVER</div>
+                        <div id="waiverSubtitle" class="text-muted" style="margin-top:4px; display:none; font-size:12px;"></div>
                         <div data-waiver-container>
                             <label style="display:flex;gap:10px;align-items:center;">
                                 <input type="checkbox" name="damage_waiver_options[]" value="20" data-price="20" id="waiver_20"> Add damage waiver — $20.00
@@ -242,6 +248,14 @@
         function renderInsurance(){
             const container = document.querySelector('[data-insurance-container]');
             if(!container) return;
+            const card = document.getElementById('insuranceCard');
+            // If no options, hide entire card and do not render radios
+            if (!bookingSettings.insurance || bookingSettings.insurance.length === 0) {
+                if (card) card.style.display = 'none';
+                container.innerHTML = '';
+                return;
+            }
+            if (card) card.style.display = '';
             container.innerHTML = '';
             // Static none first
             const none = document.createElement('label');
@@ -261,12 +275,42 @@
             const container = document.querySelector('[data-waiver-container]');
             if(!container) return;
             container.innerHTML = '';
+            // Update subtitle under the section title with combined descriptions (if any)
+            const subtitleEl = document.getElementById('waiverSubtitle');
+            const descs = (bookingSettings.waivers || []).map(o => (o.description||'').trim()).filter(Boolean);
+            if (subtitleEl) {
+                if (descs.length > 0) {
+                    // Show unique descriptions joined with line breaks
+                    const unique = Array.from(new Set(descs));
+                    subtitleEl.innerHTML = unique.map(d => `<span>${d}</span>`).join('<br>');
+                    subtitleEl.style.display = '';
+                } else {
+                    subtitleEl.style.display = 'none';
+                    subtitleEl.textContent = '';
+                }
+            }
             bookingSettings.waivers.forEach((opt, idx) => {
                 const id = `waiver_${opt.id}`;
-                const lbl = document.createElement('label');
-                lbl.style.cssText = 'display:flex;gap:10px;align-items:center;';
-                lbl.innerHTML = `<input type="checkbox" name="damage_waiver_options[]" value="${opt.price}" data-price="${opt.price}" id="${id}"> ${opt.label} — ${formatUSD(opt.price)}`;
-                container.appendChild(lbl);
+                const wrapper = document.createElement('div');
+                wrapper.style.cssText = 'display:block;padding:8px 0;';
+
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex;gap:10px;align-items:center;';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.name = 'damage_waiver_options[]';
+                checkbox.value = opt.price;
+                checkbox.setAttribute('data-price', opt.price);
+                checkbox.id = id;
+                const titleSpan = document.createElement('span');
+                titleSpan.style.cssText = 'font-weight:600;';
+                titleSpan.textContent = `${opt.label} — ${formatUSD(opt.price)}`;
+                row.appendChild(checkbox);
+                row.appendChild(titleSpan);
+                wrapper.appendChild(row);
+
+
+                container.appendChild(wrapper);
             });
             container.querySelectorAll('input[type="checkbox"]').forEach(c => c.addEventListener('change', recalc));
         }
@@ -485,6 +529,26 @@
  
         loadBookingSettings();
         validateForm();
+
+        // If backend flagged login_required, show a login modal redirecting to sign-in and back
+        @if(session('login_required'))
+        (function(){
+            const loginModal = document.createElement('div');
+            loginModal.style.cssText='position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:10000;';
+            const redirectUrl = encodeURIComponent(window.location.href);
+            loginModal.innerHTML = `
+                <div style="background:#fff;border-radius:14px;min-width:300px;max-width:460px;padding:20px;border:1px solid var(--border-color);box-shadow:0 20px 40px rgba(0,0,0,.18);">
+                    <div style="font-weight:800;font-size:16px;margin-bottom:8px;color:var(--dark-color);">Login Required</div>
+                    <div style="color:var(--secondary-color);line-height:1.5;">Please sign in to complete your booking.</div>
+                    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+                        <a href="{{ route('rentalsystem.signin') }}?redirect=${redirectUrl}" target="_blank" rel="noopener noreferrer" class="btn-primary" style="width:auto;padding:10px 16px;text-decoration:none;">Sign In</a>
+                        <button id="dismissLoginPrompt" class="btn-primary" style="width:auto;padding:10px 16px;background:#6b7280;">Close</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(loginModal);
+            document.getElementById('dismissLoginPrompt').addEventListener('click', ()=>{ loginModal.remove(); });
+        })();
+        @endif
     </script>
 </body>
 </html> 

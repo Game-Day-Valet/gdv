@@ -23,6 +23,7 @@ class BookingSettingsController extends Controller
         $data = $request->validate([
             'type' => 'required|in:insurance,damage_waiver',
             'label' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'enabled' => 'nullable|boolean',
         ]);
@@ -43,6 +44,7 @@ class BookingSettingsController extends Controller
         $data = $request->validate([
             'type' => 'required|in:insurance,damage_waiver',
             'label' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'enabled' => 'nullable|boolean',
         ]);

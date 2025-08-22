@@ -271,26 +271,42 @@
             @forelse($sports as $sport)
                 <a href="{{ route('rentalsystem.tournaments', $sport->id) }}" class="sport-card">
                     <div class="sport-icon">
-                        @php($name = strtolower($sport->name ?? ''))
-                        @switch($name)
-                            @case('cricket')
-                                <i class="fa-solid fa-baseball-bat-ball"></i>
-                                @break
-                            @case('football')
-                                <i class="fa-regular fa-futbol"></i>
-                                @break
-                            @case('golf')
-                                <i class="fa-solid fa-golf-ball-tee"></i>
-                                @break
-                            @case('hockey')
-                                <i class="fa-solid fa-hockey-puck"></i>
-                                @break
-                            @case('baseball')
-                                <i class="fa-solid fa-baseball"></i>
-                                @break
-                            @default
-                                <i class="fa-solid fa-medal"></i>
-                        @endswitch
+                        @if(!empty($sport->image))
+                            <img src="{{ asset('storage/'.$sport->image) }}" alt="{{ $sport->name }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                        @else
+                            @php($name = strtolower($sport->name ?? ''))
+                            @switch($name)
+                                @case('cricket')
+                                    <i class="fa-solid fa-baseball-bat-ball"></i>
+                                    @break
+                                @case('football')
+                                    <i class="fa-regular fa-futbol"></i>
+                                    @break
+                                @case('soccer')
+                                    <i class="fa-regular fa-futbol"></i>
+                                    @break
+                                @case('golf')
+                                    <i class="fa-solid fa-golf-ball-tee"></i>
+                                    @break
+                                @case('hockey')
+                                    <i class="fa-solid fa-hockey-puck"></i>
+                                    @break
+                                @case('field hockey')
+                                    <i class="fa-solid fa-hockey-puck"></i>
+                                    @break
+                                @case('softball')
+                                    <i class="fa-solid fa-baseball-bat-ball"></i>
+                                    @break
+                                @case('baseball')
+                                    <i class="fa-solid fa-baseball"></i>
+                                    @break
+                                @case('lacrosse')
+                                    <i class="fa-solid fa-person-running"></i>
+                                    @break
+                                @default
+                                    <i class="fa-solid fa-medal"></i>
+                            @endswitch
+                        @endif
                     </div>
                     <h3 class="sport-name">{{ $sport->name }}</h3>
                     <p class="sport-description">

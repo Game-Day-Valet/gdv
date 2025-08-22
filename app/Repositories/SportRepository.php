@@ -8,6 +8,7 @@ use App\Models\Tournament;
 use Illuminate\Support\Facades\DB;
 use App\Enums\SportStatus;
 use App\Enums\TournamentStatus;
+use Illuminate\Support\Facades\Storage;
 
 class SportRepository implements SportRepositoryInterface
 {
@@ -25,9 +26,14 @@ class SportRepository implements SportRepositoryInterface
     public function create(array $data)
     {
         return DB::transaction(function () use ($data) {
+            $imagePath = null;
+            if (isset($data['image']) && $data['image']) {
+                $imagePath = $data['image']->store('sports', 'public');
+            }
             return Sport::create([
                 'name' => $data['name'],
                 'description' => $data['description'] ?? null,
+                'image' => $imagePath,
                 'status' => $data['status'] ?? SportStatus::ACTIVE->value,
             ]);
         });
@@ -37,9 +43,15 @@ class SportRepository implements SportRepositoryInterface
     {
         return DB::transaction(function () use ($id, $data) {
             $sport = Sport::findOrFail($id);
+            $imagePath = $sport->image;
+            if (isset($data['image']) && $data['image']) {
+                if ($imagePath) { Storage::disk('public')->delete($imagePath); }
+                $imagePath = $data['image']->store('sports', 'public');
+            }
             $sport->update([
                 'name' => $data['name'] ?? $sport->name,
                 'description' => $data['description'] ?? $sport->description,
+                'image' => $imagePath,
                 'status' => $data['status'] ?? $sport->status,
             ]);
             return $sport;
@@ -49,6 +61,7 @@ class SportRepository implements SportRepositoryInterface
     public function delete($id)
     {
         $sport = Sport::findOrFail($id);
+        if ($sport->image) { Storage::disk('public')->delete($sport->image); }
         $sport->delete();
     }
 

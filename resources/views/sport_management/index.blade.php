@@ -41,6 +41,7 @@
                 <table id="datatable" class="table table-bordered dt-responsive table-responsive nowrap">
                     <thead>
                         <tr>
+                            <th>Image</th>
                             <th>Name</th>
                             <th>Description</th>
                             <th>Status</th>
@@ -50,6 +51,13 @@
                     <tbody>
                         @foreach ($sports as $sport)
                         <tr>
+                            <td style="width:70px;">
+                                @if($sport->image)
+                                    <img src="{{ asset('storage/'.$sport->image) }}" alt="{{ $sport->name }}" style="height:50px;width:50px;object-fit:cover;border-radius:8px;">
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
+                            </td>
                             <td>{{ $sport->name }}</td>
                             <td>{{ $sport->description ?? '-' }}</td>
                             <td>{{ \Illuminate\Support\Str::title($sport->status->value) }}</td>

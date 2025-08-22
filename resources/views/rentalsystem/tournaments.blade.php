@@ -264,15 +264,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function handleBooking(tournamentId) {
-            // Check if user is logged in
-            @if(Auth::check())
-                // User is logged in, redirect to booking page
-                window.location.href = "{{ route('rentalsystem.rental-booking', ':id') }}".replace(':id', tournamentId);
-            @else
-                // User is not logged in, show login modal
-                const modal = new bootstrap.Modal(document.getElementById('loginModal'));
-                modal.show();
-            @endif
+            // Always go to booking page; login will be enforced on Confirm Booking
+            window.location.href = "{{ route('rentalsystem.rental-booking', ':id') }}".replace(':id', tournamentId);
         }
     </script>
 </body>

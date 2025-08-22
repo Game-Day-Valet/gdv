@@ -6,6 +6,7 @@ use App\Models\Bundle;
 use App\Models\Item;
 use Illuminate\Support\Facades\DB;
 use App\Enums\ItemStatus;
+use Illuminate\Support\Facades\Storage;
 
 class BundleRepository implements BundleRepositoryInterface
 {
@@ -20,6 +21,7 @@ class BundleRepository implements BundleRepositoryInterface
     {
         return Bundle::with('items')->findOrFail($id);
     }
+
 
     public function create(array $data, array $items)
     {
@@ -50,12 +52,12 @@ class BundleRepository implements BundleRepositoryInterface
             $imagePath = $bundle->image;
             if (isset($data['image']) && $data['image']) {
                 if ($imagePath) {
-                    \Storage::disk('public')->delete($imagePath);
+                    Storage::disk('public')->delete($imagePath);
                 }
                 $imagePath = $data['image']->store('bundles', 'public');
             } elseif (array_key_exists('image', $data) && is_null($data['image'])) {
                 if ($imagePath) {
-                    \Storage::disk('public')->delete($imagePath);
+                    Storage::disk('public')->delete($imagePath);
                 }
                 $imagePath = null;
             }

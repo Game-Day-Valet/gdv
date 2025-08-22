@@ -22,7 +22,15 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Price</label>
-                    <input type="number" name="price" class="form-control" step="0.01" min="0" required>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="number" name="price" class="form-control" step="0.01" min="0" required>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Description (optional)</label>
+                    <textarea name="description" class="form-control" rows="3" placeholder="Shown under the option on the booking page to explain terms or coverage."></textarea>
+                    <small class="text-muted">Keep it concise. Example: Covers accidental damage up to $500; does not include loss or theft.</small>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Enabled</label>

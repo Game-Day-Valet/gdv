@@ -40,6 +40,9 @@ Route::prefix('')->name('rentalsystem.')->group(function () {
 	Route::get('', [RentalSystemController::class, 'showSports'])->name('sports');
 	Route::get('/sports/{sportId}/tournaments', [RentalSystemController::class, 'showTournaments'])->name('tournaments');
 	Route::get('/tournaments/{tournamentId}/details', [RentalSystemController::class, 'showTournamentDetails'])->name('tournament.details');
+	// Allow anonymous to open booking page and submit; controller will enforce login on submit
+	Route::get('/tournaments/{tournamentId}/rental', [RentalSystemController::class, 'showRentalBooking'])->name('rental-booking');
+	Route::post('/rentals', [RentalSystemController::class, 'createRental'])->name('rental.create');
 	
 	// Authentication routes
 	Route::get('/signup', [RentalSystemController::class, 'showSignup'])->name('signup');
@@ -55,8 +58,6 @@ Route::prefix('')->name('rentalsystem.')->group(function () {
 
 	// Protected routes for authenticated users only
 	Route::middleware('auth')->group(function () {
-		Route::get('/tournaments/{tournamentId}/rental', [RentalSystemController::class, 'showRentalBooking'])->name('rental-booking');
-		Route::post('/rentals', [RentalSystemController::class, 'createRental'])->name('rental.create');
 		Route::get('/checkout/success', [RentalSystemController::class, 'checkoutSuccess'])->name('checkout.success');
 		Route::get('/checkout/cancel', [RentalSystemController::class, 'checkoutCancel'])->name('checkout.cancel');
 		Route::get('/profile', [RentalSystemController::class, 'showProfile'])->name('profile');

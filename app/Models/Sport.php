@@ -14,6 +14,7 @@ class Sport extends Model
     protected $fillable = [
         'name',
         'description',
+        'image',
         'status',
     ];
 
@@ -24,5 +25,10 @@ class Sport extends Model
     public function tournaments()
     {
         return $this->hasMany(Tournament::class);
+    }
+
+    public function getImageUrlAttribute()
+    {
+        return $this->image ? asset('storage/' . $this->image) : null;
     }
 }

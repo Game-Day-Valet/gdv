@@ -458,8 +458,8 @@
                                 <i class="fas fa-shopping-cart"></i> Book Equipment Now
                             </a>
                         @else
-                            <a href="{{ route('rentalsystem.signin') }}" class="btn-primary-custom">
-                                <i class="fas fa-sign-in-alt"></i> Sign In to Book
+                            <a href="{{ route('rentalsystem.rental-booking', $tournament->id) }}" class="btn-primary-custom">
+                                <i class="fas fa-shopping-cart"></i> Book Equipment Now
                             </a>
                         @endif
                         <a href="{{ route('rentalsystem.tournaments', $tournament->sport_id ?? 1) }}" class="btn-outline-custom">

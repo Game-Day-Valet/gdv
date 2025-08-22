@@ -20,7 +20,7 @@
                     <h5 class="card-title mb-0">Sport Edit</h5>
                 </div>
                 <div class="card-body">
-                    <form class="row g-3" action="{{ route('sport-management.update', $sport->id) }}" method="POST">
+                    <form class="row g-3" action="{{ route('sport-management.update', $sport->id) }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
                         @if ($errors->any())
@@ -55,6 +55,18 @@
                             <label for="description" class="form-label">Description</label>
                             <textarea name="description" class="form-control @error('description') is-invalid @enderror" id="description" placeholder="Enter description">{{ old('description', $sport->description) }}</textarea>
                             @error('description')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-12">
+                            <label for="image" class="form-label">Sport Image</label>
+                            @if($sport->image)
+                                <div class="mb-2">
+                                    <img src="{{ asset('storage/'.$sport->image) }}" alt="Current Image" style="max-height:80px;border-radius:8px;">
+                                </div>
+                            @endif
+                            <input type="file" name="image" id="image" class="form-control @error('image') is-invalid @enderror" accept="image/*" required>
+                            @error('image')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
