@@ -3,6 +3,38 @@
 @section('css')
     @vite(['node_modules/datatables.net-bs5/css/dataTables.bootstrap5.min.css', 'node_modules/datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css', 'node_modules/datatables.net-keytable-bs5/css/keyTable.bootstrap5.min.css', 'node_modules/datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css', 'node_modules/datatables.net-select-bs5/css/select.bootstrap5.min.css'])
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <style>
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .table-container table {
+            min-width: 700px;
+        }
+        
+        .table th, .table td {
+            white-space: nowrap;
+            vertical-align: top;
+        }
+        
+        .table th:nth-child(2), .table td:nth-child(2) {
+            white-space: normal;
+            max-width: 200px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        .description-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
+            max-height: 2.4em;
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -38,48 +70,54 @@
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
-                    <table id="datatable" class="table table-bordered dt-responsive table-responsive nowrap">
-                        <thead>
-                            <tr>
-                                <th>Title</th>
-                                <th>Description</th>
-                                <th>Status</th>
-                                <th>Created At</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($faqs as $faq)
+                    <div class="table-container">
+                        <table id="datatable" class="table table-bordered dt-responsive table-responsive nowrap">
+                            <thead>
                                 <tr>
-                                    <td>{{ $faq->title }}</td>
-                                    <td>{{ Str::limit($faq->description, 100) }}</td>
-                                    <td>
-                                        @if($faq->status)
-                                            <span class="badge bg-success">Active</span>
-                                        @else
-                                            <span class="badge bg-danger">Inactive</span>
-                                        @endif
-                                    </td>
-                                    <td>{{ date('d-M-Y', strtotime($faq->created_at)) }}</td>
-                                    <td>
-                                        <div class="d-flex gap-2">
-                                            <a href="{{ route('faq-management.show', $faq->id) }}"
-                                                class="btn btn-sm btn-info">View</a>
-                                            <a href="{{ route('faq-management.edit', $faq->id) }}"
-                                                class="btn btn-sm btn-primary">Edit</a>
-                                            <form action="{{ route('faq-management.destroy', $faq->id) }}" method="POST"
-                                                class="delete-faq-form" style="display:inline;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="button"
-                                                    class="btn btn-sm btn-danger delete-faq-btn">Delete</button>
-                                            </form>
-                                        </div>
-                                    </td>
+                                    <th>Title</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                    <th>Created At</th>
+                                    <th>Action</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @foreach ($faqs as $faq)
+                                    <tr>
+                                        <td>{{ $faq->title }}</td>
+                                        <td>
+                                            <div class="description-text" title="{{ $faq->description }}">
+                                                {{ Str::limit($faq->description, 100) }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @if($faq->status)
+                                                <span class="badge bg-success">Active</span>
+                                            @else
+                                                <span class="badge bg-danger">Inactive</span>
+                                            @endif
+                                        </td>
+                                        <td>{{ date('d-M-Y', strtotime($faq->created_at)) }}</td>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <a href="{{ route('faq-management.show', $faq->id) }}"
+                                                    class="btn btn-sm btn-info">View</a>
+                                                <a href="{{ route('faq-management.edit', $faq->id) }}"
+                                                    class="btn btn-sm btn-primary">Edit</a>
+                                                <form action="{{ route('faq-management.destroy', $faq->id) }}" method="POST"
+                                                    class="delete-faq-form" style="display:inline;">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="button"
+                                                        class="btn btn-sm btn-danger delete-faq-btn">Delete</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
