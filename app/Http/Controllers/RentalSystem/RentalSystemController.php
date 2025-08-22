@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\RentalSystem;
 
+use App\Events\RentalBookingCreated;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
@@ -28,6 +29,7 @@ use Illuminate\Validation\ValidationException;
 use Firebase\JWT\JWK;
 use Firebase\JWT\JWT;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class RentalSystemController extends Controller
 {
@@ -416,6 +418,35 @@ class RentalSystemController extends Controller
             'total_amount' => $total,
             'status' => 'pending',
         ]);
+
+
+        // Dispatch event for booking confirmation email
+        try {
+            // Check if we've already fired an event for this rental in this request
+            $eventKey = "event_fired_{$rental->id}";
+            if (session()->has($eventKey)) {
+                Log::warning('Event already fired for this rental in this request, skipping duplicate', [
+                    'rental_id' => $rental->id,
+                    'user_id' => $user->id,
+                    'controller' => 'RentalSystem\RentalSystemController',
+                    'method' => 'createRental',
+                    'timestamp' => now()->toISOString()
+                ]);
+            } else {
+                // Mark that we've fired an event for this rental
+                session()->put($eventKey, true);
+                
+                event(new RentalBookingCreated($rental));
+                
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to dispatch RentalBookingCreated event from website', [
+                'rental_id' => $rental->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'timestamp' => now()->toISOString()
+            ]);
+        }
 
         // Start Stripe Checkout session
         try {

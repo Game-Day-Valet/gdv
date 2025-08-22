@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\Permission;
+use App\Events\RentalBookingCreated;
 use App\Http\Requests\RentalRequest;
 use App\Http\Resources\RentalResource;
 use App\Http\Resources\RentalStatusLogResource;
@@ -13,6 +14,7 @@ use App\Services\ReferralService;
 use App\Models\Rental;
 use App\Models\RentalStatusLog;
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 class RentalController extends Controller
 {
@@ -118,6 +120,55 @@ class RentalController extends Controller
                 $data = $this->referralService->applyDiscount($user->id, $data);
                 
                 $rental = $this->rentalRepository->create($data);
+                
+                Log::info('Rental created successfully in API', [
+                    'rental_id' => $rental->id,
+                    'user_id' => $user->id,
+                    'tournament_id' => $rental->tournament_id,
+                    'total_amount' => $rental->total_amount,
+                    'timestamp' => now()->toISOString()
+                ]);
+                
+                // Dispatch event for booking confirmation email
+                try {
+                    // Check if we've already fired an event for this rental in this request
+                    $eventKey = "event_fired_{$rental->id}";
+                    if (cache()->has($eventKey)) {
+                        Log::warning('Event already fired for this rental in this request, skipping duplicate', [
+                            'rental_id' => $rental->id,
+                            'user_id' => $user->id,
+                            'controller' => 'Api\RentalController',
+                            'method' => 'store',
+                            'timestamp' => now()->toISOString()
+                        ]);
+                    } else {
+                        // Mark that we've fired an event for this rental (cache for 1 minute)
+                        cache()->put($eventKey, true, now()->addMinute());
+                        
+                        Log::info('Dispatching RentalBookingCreated event from API RentalController', [
+                            'rental_id' => $rental->id,
+                            'user_id' => $user->id,
+                            'controller' => 'Api\RentalController',
+                            'method' => 'store',
+                            'timestamp' => now()->toISOString()
+                        ]);
+                        
+                        event(new RentalBookingCreated($rental));
+                        
+                        Log::info('RentalBookingCreated event dispatched successfully from API RentalController', [
+                            'rental_id' => $rental->id,
+                            'timestamp' => now()->toISOString()
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Failed to dispatch RentalBookingCreated event from API', [
+                        'rental_id' => $rental->id,
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                        'timestamp' => now()->toISOString()
+                    ]);
+                }
+                
                 return new RentalResource($rental);
             }
             throw new Exception('Unauthorized');
