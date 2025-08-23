@@ -1,25 +1,31 @@
 <?php
 
-  namespace App\Models;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-  use Illuminate\Database\Eloquent\Model;
-  use Illuminate\Notifications\DatabaseNotification;
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('notifications', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('type');
+            $table->morphs('notifiable');
+            $table->text('data');
+            $table->timestamp('read_at')->nullable();
+            $table->timestamps();
+        });
+    }
 
-  class Notification extends DatabaseNotification
-  {
-      protected $table = 'notifications';
-
-      protected $fillable = [
-          'id',
-          'type',
-          'notifiable_id',
-          'notifiable_type',
-          'data',
-          'read_at',
-      ];
-
-      protected $casts = [
-          'data' => 'array',
-          'read_at' => 'datetime',
-      ];
-  }
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('notifications');
+    }
+};
