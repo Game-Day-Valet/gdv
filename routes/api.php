@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\PrivacyPolicyController;
 use App\Http\Controllers\Api\TermsConditionController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\RentalController;
@@ -58,6 +59,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/referral-code', [AuthController::class, 'getReferralCode']);
     
     Route::post('/profile', [ProfileController::class, 'update']);
+    Route::post('/notifications/fcm/set', [NotificationController::class, 'setFcm']);
+    Route::post('/notifications/fcm/toggle', [NotificationController::class, 'toggleFcm']);
 
     // Tournaments Module
     Route::get('/tournaments', [TournamentController::class, 'index']);

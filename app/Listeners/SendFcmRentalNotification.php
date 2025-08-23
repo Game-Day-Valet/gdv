@@ -18,7 +18,7 @@ class SendFcmRentalNotification implements ShouldQueue
     {
         $user = $event->rental->user;
 
-        if (!$user || !$user->fcm_token) {
+        if (!$user || !$user->fcm_token || $user->fcm_notification === false) {
             Log::warning('FCM notification skipped: No user or FCM token for rental ID ' . $event->rental->id);
             return;
         }

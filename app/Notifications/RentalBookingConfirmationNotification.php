@@ -61,10 +61,11 @@ class RentalBookingConfirmationNotification extends Notification implements Shou
 
     public function toFcm($notifiable)
     {
-        if (!$notifiable->fcm_token) {
+        if (!$notifiable->fcm_token || $notifiable->fcm_notification === false) {
             Log::info('User has no FCM token, skipping FCM notification', [
                 'rental_id' => $this->rental->id,
                 'user_id' => $notifiable->id,
+                'fcm_notification' => $notifiable->fcm_notification,
                 'timestamp' => now()->toISOString()
             ]);
             return null;

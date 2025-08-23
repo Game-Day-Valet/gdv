@@ -19,6 +19,7 @@ class ProfileController extends Controller
             'contact_number' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:255',
             'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'fcm_notification' => 'nullable|boolean',
         ]);
 
         if ($request->has('name')) {
@@ -36,6 +37,10 @@ class ProfileController extends Controller
         if ($request->hasFile('profile_image')) {
             $imagePath = $request->file('profile_image')->store('users', 'public');
             $user->profile_image = $imagePath;
+        }
+
+        if ($request->has('fcm_notification')) {
+            $user->fcm_notification = (bool) $request->boolean('fcm_notification');
         }
 
         $user->save();
