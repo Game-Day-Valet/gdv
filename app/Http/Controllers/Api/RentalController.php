@@ -13,6 +13,7 @@ use App\Http\Controllers\Controller;
 use App\Services\ReferralService;
 use App\Models\Rental;
 use App\Models\RentalStatusLog;
+use App\Notifications\RentalBookingConfirmationNotification;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
@@ -105,7 +106,9 @@ class RentalController extends Controller
                 if (isset($data['damage_waiver']) && is_numeric($data['damage_waiver'])) {
                     $damageWaiverAmount = (float) $data['damage_waiver'];
                 } elseif (!empty($data['damage_waiver_options']) && is_array($data['damage_waiver_options'])) {
-                    foreach ($data['damage_waiver_options'] as $v) { $damageWaiverAmount += (float) $v; }
+                    foreach ($data['damage_waiver_options'] as $v) {
+                        $damageWaiverAmount += (float) $v;
+                    }
                 }
                 $data['damage_waiver'] = $damageWaiverAmount > 0 ? $damageWaiverAmount : null;
 
@@ -136,10 +139,10 @@ class RentalController extends Controller
                         }
                     }
                 }
-                
+
                 // Add insurance and damage waiver
                 $calculatedTotal += $insuranceAmount + $damageWaiverAmount;
-                
+
                 // Use frontend total if provided and reasonable, otherwise use calculated total
                 $frontendTotal = (float) ($data['total_amount'] ?? 0);
                 if ($frontendTotal > 0 && $frontendTotal <= $calculatedTotal) {
@@ -150,17 +153,12 @@ class RentalController extends Controller
 
                 // Apply discount if eligible
                 $data = $this->referralService->applyDiscount($user->id, $data);
-                
+
                 $rental = $this->rentalRepository->create($data);
-                
-                Log::info('Rental created successfully in API', [
-                    'rental_id' => $rental->id,
-                    'user_id' => $user->id,
-                    'tournament_id' => $rental->tournament_id,
-                    'total_amount' => $rental->total_amount,
-                    'timestamp' => now()->toISOString()
-                ]);
-                
+
+                // Notify user about booking confirmation
+                $user->notify(new RentalBookingConfirmationNotification($rental, $user));
+
                 // Dispatch event for booking confirmation email
                 try {
                     // Check if we've already fired an event for this rental in this request
@@ -176,7 +174,7 @@ class RentalController extends Controller
                     } else {
                         // Mark that we've fired an event for this rental (cache for 1 minute)
                         cache()->put($eventKey, true, now()->addMinute());
-                        
+
                         Log::info('Dispatching RentalBookingCreated event from API RentalController', [
                             'rental_id' => $rental->id,
                             'user_id' => $user->id,
@@ -184,9 +182,9 @@ class RentalController extends Controller
                             'method' => 'store',
                             'timestamp' => now()->toISOString()
                         ]);
-                        
+
                         event(new RentalBookingCreated($rental));
-                        
+
                         Log::info('RentalBookingCreated event dispatched successfully from API RentalController', [
                             'rental_id' => $rental->id,
                             'timestamp' => now()->toISOString()
@@ -200,7 +198,7 @@ class RentalController extends Controller
                         'timestamp' => now()->toISOString()
                     ]);
                 }
-                
+
                 return new RentalResource($rental);
             }
             throw new Exception('Unauthorized');

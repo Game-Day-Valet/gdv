@@ -187,12 +187,18 @@ class AuthController extends Controller
             ]);
         }
 
+        // Store FCM token if provided
+        if ($request->has('fcm_token')) {
+            $user->update(['fcm_token' => $request->input('fcm_token')]);
+        }
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'message' => 'Login successful',
             'user' => new UserResource($user),
             'token' => $token,
+            'fcm_token' => $user->fcm_token,
         ], 200);
     }
 
@@ -210,6 +216,7 @@ class AuthController extends Controller
             'message' => 'User details retrieved successfully',
             'user' => new UserResource($user),
             'token' => $request->bearerToken(),
+            'fcm_token' => $user->fcm_token,
         ], 200);
     }
 
@@ -312,6 +319,7 @@ class AuthController extends Controller
     {
         $request->validate([
             'id_token' => 'required|string',
+            'fcm_token' => 'nullable|string',
         ]);
 
         $clientId = config('services.google.client_id');
@@ -348,6 +356,12 @@ class AuthController extends Controller
             }
         }
 
+        // Store FCM token if provided
+        if ($request->has('fcm_token')) {
+            $user->update(['fcm_token' => $request->input('fcm_token')]);
+        }
+        Log::info($user);
+
         $token = $user->createToken('google')->plainTextToken;
 
         return response()->json([
@@ -360,6 +374,7 @@ class AuthController extends Controller
                 'email' => $user->email,
             ],
             'token' => $token,
+            'fcm_token' => $user->fcm_token,
         ]);
     }
 

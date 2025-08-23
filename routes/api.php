@@ -55,8 +55,7 @@ Route::get('/settings/booking', [\App\Http\Controllers\Api\SettingsController::c
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::get('/user/referral-code', [AuthController::class, 'getReferralCode']);
-
-
+    
     Route::post('/profile', [ProfileController::class, 'update']);
 
     // Tournaments Module

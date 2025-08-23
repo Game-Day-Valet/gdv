@@ -34,16 +34,6 @@ class RentalBookingCreated
                 break;
             }
         }
-        
-        // Log event creation with caller information
-        Log::info('RentalBookingCreated event created', [
-            'rental_id' => $rental->id,
-            'user_id' => $rental->user_id,
-            'tournament_id' => $rental->tournament_id,
-            'total_amount' => $rental->total_amount,
-            'caller' => $caller,
-            'timestamp' => now()->toISOString()
-        ]);
     }
 
     /**

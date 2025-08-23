@@ -26,25 +26,12 @@ class RentalStatusUpdated implements ShouldBroadcast
         $this->oldStatus = $oldStatus;
         $this->newStatus = $newStatus;
         $this->updatedBy = $updatedBy;
-
-        Log::info('RentalStatusUpdated event constructed', [
-            'rental_id' => $rental->id,
-            'old_status' => $oldStatus,
-            'new_status' => $newStatus,
-            'updated_by' => $updatedBy,
-        ]);
     }
 
     public function broadcastOn()
     {
         $channelName = 'rental-' . $this->rental->id;
         $channel = new Channel($channelName);
-
-        Log::info('Broadcasting RentalStatusUpdated on channel', [
-            'channel' => $channel->name,
-            'rental_id' => $this->rental->id,
-            'new_status' => $this->newStatus,
-        ]);
 
         return $channel;
     }
