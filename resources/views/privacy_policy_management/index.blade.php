@@ -52,7 +52,7 @@
                             @foreach ($privacyPolicies as $privacyPolicy)
                                 <tr>
                                     <td>{{ $privacyPolicy->title }}</td>
-                                    <td>{{ Str::limit(strip_tags($privacyPolicy->description), 120) }}</td>
+                                    <td>{{ Str::limit(strip_tags($privacyPolicy->description), 90) }}</td>
                                     <td>
                                         @if($privacyPolicy->status)
                                             <span class="badge bg-success">Active</span>
