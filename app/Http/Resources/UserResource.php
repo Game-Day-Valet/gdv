@@ -16,6 +16,7 @@ class UserResource extends JsonResource
             'contact_number' => $this->contact_number,
             'profile_image' => $this->profile_image,
             'email_verified_at' => $this->email_verified_at,
+            'is_notification' => (bool) $this->fcm_notification,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

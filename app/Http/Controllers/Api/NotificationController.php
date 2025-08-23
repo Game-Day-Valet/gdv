@@ -25,14 +25,18 @@ class NotificationController extends Controller
     public function toggleFcm()
     {
         $user = Auth::user();
+    
         $user->fcm_notification = !(bool) $user->fcm_notification;
         $user->save();
-
+    
+        $status = $user->fcm_notification ? 'enabled' : 'disabled';
+    
         return response()->json([
-            'message' => 'FCM notifications toggled',
+            'message' => "Notifications {$status}.",
             'enabled' => (bool) $user->fcm_notification,
         ]);
     }
+    
 }
 
 
