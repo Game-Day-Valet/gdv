@@ -13,6 +13,7 @@ use App\Http\Controllers\ChatManagementController;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\FaqManagementController;
 use App\Http\Controllers\PrivacyPolicyManagementController;
+use App\Http\Controllers\TermsConditionManagementController;
 use App\Http\Controllers\RentalManagementController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RentalSystem\RentalSystemController;
@@ -109,5 +110,6 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth'], function () {
 		Route::get('/coupon-management/{id}/preview', [CouponManagementController::class, 'preview'])->name('coupon-management.preview');
 		Route::resource('faq-management', FaqManagementController::class);
 		Route::resource('privacy-policy-management', PrivacyPolicyManagementController::class);
+		Route::resource('terms-condition-management', TermsConditionManagementController::class);
 	});
 });

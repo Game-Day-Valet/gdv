@@ -1,4 +1,4 @@
-@extends('layouts.vertical', ['title' => 'Privacy Policy List'])
+@extends('layouts.vertical', ['title' => 'Terms & Conditions List'])
 
 @section('css')
     @vite(['node_modules/datatables.net-bs5/css/dataTables.bootstrap5.min.css', 'node_modules/datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css', 'node_modules/datatables.net-keytable-bs5/css/keyTable.bootstrap5.min.css', 'node_modules/datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css', 'node_modules/datatables.net-select-bs5/css/select.bootstrap5.min.css'])
@@ -8,11 +8,11 @@
 @section('content')
     <div class="py-3 d-flex align-items-sm-center flex-sm-row flex-column">
         <div class="flex-grow-1">
-            <h4 class="fs-18 fw-semibold m-0">Privacy Policy Management</h4>
+            <h4 class="fs-18 fw-semibold m-0">Terms & Conditions Management</h4>
         </div>
         <div class="text-end">
             <ol class="breadcrumb m-0 py-0">
-                <li class="breadcrumb-item"><a href="javascript: void(0);">Privacy Policy Management</a></li>
+                <li class="breadcrumb-item"><a href="javascript: void(0);">Terms & Conditions Management</a></li>
                 <li class="breadcrumb-item active">List</li>
             </ol>
         </div>
@@ -22,8 +22,8 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Privacy Policy List</h5>
-                    <a href="{{ route('privacy-policy-management.create') }}" class="btn btn-primary" id="createButton">Create</a>
+                    <h5 class="card-title mb-0">Terms & Conditions List</h5>
+                    <a href="{{ route('terms-condition-management.create') }}" class="btn btn-primary" id="createButton">Create</a>
                 </div>
                 <div class="card-body">
                     @if (session('success'))
@@ -49,30 +49,30 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($privacyPolicies as $privacyPolicy)
+                            @foreach ($termsConditions as $terms)
                                 <tr>
-                                    <td>{{ $privacyPolicy->title }}</td>
-                                    <td>{{ Str::limit(strip_tags($privacyPolicy->description), 120) }}</td>
+                                    <td>{{ $terms->title }}</td>
+                                    <td>{{ Str::limit(strip_tags($terms->description), 90) }}</td>
                                     <td>
-                                        @if($privacyPolicy->status)
+                                        @if((int) $terms->status === 1)
                                             <span class="badge bg-success">Active</span>
                                         @else
                                             <span class="badge bg-danger">Inactive</span>
                                         @endif
                                     </td>
-                                    <td>{{ $privacyPolicy->created_at ? $privacyPolicy->created_at->format('d-M-Y') : '-' }}</td>
+                                    <td>{{ $terms->created_at ? $terms->created_at->format('d-M-Y') : '-' }}</td>
                                     <td>
                                         <div class="d-flex gap-2">
-                                            <a href="{{ route('privacy-policy-management.show', $privacyPolicy->id) }}"
+                                            <a href="{{ route('terms-condition-management.show', $terms->id) }}"
                                                 class="btn btn-sm btn-info">View</a>
-                                            <a href="{{ route('privacy-policy-management.edit', $privacyPolicy->id) }}"
+                                            <a href="{{ route('terms-condition-management.edit', $terms->id) }}"
                                                 class="btn btn-sm btn-primary">Edit</a>
-                                            <form action="{{ route('privacy-policy-management.destroy', $privacyPolicy->id) }}" method="POST"
-                                                class="delete-privacy-policy-form" style="display:inline;">
+                                            <form action="{{ route('terms-condition-management.destroy', $terms->id) }}" method="POST"
+                                                class="delete-terms-form" style="display:inline;">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="button"
-                                                    class="btn btn-sm btn-danger delete-privacy-policy-btn">Delete</button>
+                                                    class="btn btn-sm btn-danger delete-terms-btn">Delete</button>
                                             </form>
                                         </div>
                                     </td>
@@ -91,7 +91,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('.delete-privacy-policy-btn').forEach(function (btn) {
+            document.querySelectorAll('.delete-terms-btn').forEach(function (btn) {
                 btn.addEventListener('click', function (e) {
                     Swal.fire({
                         title: 'Are you sure?',
@@ -111,3 +111,5 @@
         });
     </script>
 @endsection
+
+

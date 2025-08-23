@@ -180,6 +180,12 @@
                         <span>Privacy Policy</span>
                     </a>
                 </li>
+                <li>
+                    <a href="{{ route('terms-condition-management.index') }}">
+                        <i class="fas fa-file-contract"></i>
+                        <span>Terms & Conditions</span>
+                    </a>
+                </li>
                 @endcan
 
                 @can('super_admin')

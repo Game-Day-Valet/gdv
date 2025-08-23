@@ -11,6 +11,8 @@ use App\Repositories\FaqRepositoryInterface;
 use App\Repositories\FavoriteRepository;
 use App\Repositories\PrivacyPolicyRepository;
 use App\Repositories\PrivacyPolicyRepositoryInterface;
+use App\Repositories\TermsConditionRepository;
+use App\Repositories\TermsConditionRepositoryInterface;
 use App\Repositories\FavoriteRepositoryInterface;
 use App\Repositories\ItemRepository;
 use App\Repositories\ItemRepositoryInterface;
@@ -40,6 +42,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(FavoriteRepositoryInterface::class, FavoriteRepository::class);
         $this->app->bind(FaqRepositoryInterface::class, FaqRepository::class);
         $this->app->bind(PrivacyPolicyRepositoryInterface::class, PrivacyPolicyRepository::class);
+        $this->app->bind(TermsConditionRepositoryInterface::class, TermsConditionRepository::class);
     }
 
     /**
