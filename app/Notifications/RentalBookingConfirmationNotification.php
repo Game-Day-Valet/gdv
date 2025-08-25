@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification as FcmNotification;
+use Illuminate\Support\Facades\Cache;
 
 class RentalBookingConfirmationNotification extends Notification implements ShouldQueue
 {
@@ -69,6 +70,29 @@ class RentalBookingConfirmationNotification extends Notification implements Shou
                 'timestamp' => now()->toISOString()
             ]);
             return null;
+        }
+
+        // Idempotency guard to prevent duplicate FCM sends
+        $cacheKey = 'fcm_sent_booking_confirmation_' . $this->rental->id . '_' . $notifiable->id;
+        try {
+            // Try atomic lock first (Redis/memcached/file drivers support lock)
+            $lock = Cache::lock($cacheKey . '_lock', 10);
+            if (!$lock->get()) {
+                Log::warning('Duplicate FCM prevented by lock for booking confirmation', [
+                    'rental_id' => $this->rental->id,
+                    'user_id' => $notifiable->id,
+                ]);
+                return null;
+            }
+        } catch (\Throwable $e) {
+            // Fallback to Cache::add for drivers without locks
+            if (!Cache::add($cacheKey, true, now()->addMinutes(10))) {
+                Log::warning('Duplicate FCM prevented by cache-add for booking confirmation', [
+                    'rental_id' => $this->rental->id,
+                    'user_id' => $notifiable->id,
+                ]);
+                return null;
+            }
         }
 
         $credentials = config('firebase.projects.app.credentials');

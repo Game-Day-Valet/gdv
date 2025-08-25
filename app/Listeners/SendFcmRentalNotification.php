@@ -23,18 +23,26 @@ class SendFcmRentalNotification implements ShouldQueue
             return;
         }
 
-        // Prevent duplicate notifications using cache lock
-        $cacheKey = 'fcm_notification_rental_' . $event->rental->id . '_' . $event->newStatus;
-        if (Cache::has($cacheKey)) {
-            Log::warning('Duplicate FCM notification prevented for rental ID ' . $event->rental->id, [
-                'status' => $event->newStatus,
-                'user_id' => $user->id,
-            ]);
-            return;
+        // Prevent duplicate notifications using atomic lock or cache-add
+        $cacheKey = 'fcm_notification_rental_' . $event->rental->id . '_' . $event->newStatus . '_' . $user->id;
+        try {
+            $lock = Cache::lock($cacheKey . '_lock', 10);
+            if (!$lock->get()) {
+                Log::warning('Duplicate FCM notification prevented by lock for rental ID ' . $event->rental->id, [
+                    'status' => $event->newStatus,
+                    'user_id' => $user->id,
+                ]);
+                return;
+            }
+        } catch (\Throwable $e) {
+            if (!Cache::add($cacheKey, true, now()->addSeconds(30))) {
+                Log::warning('Duplicate FCM notification prevented by cache-add for rental ID ' . $event->rental->id, [
+                    'status' => $event->newStatus,
+                    'user_id' => $user->id,
+                ]);
+                return;
+            }
         }
-
-        // Set cache lock for 10 seconds to prevent duplicate processing
-        Cache::put($cacheKey, true, now()->addSeconds(10));
 
         $messaging = app('firebase.messaging');
 
