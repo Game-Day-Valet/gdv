@@ -61,6 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile', [ProfileController::class, 'update']);
     Route::post('/notifications/fcm/set', [NotificationController::class, 'setFcm']);
     Route::post('/notifications/fcm/toggle', [NotificationController::class, 'toggleFcm']);
+    Route::get('/notifications', [NotificationController::class, 'list']);
 
     // Tournaments Module
     Route::get('/tournaments', [TournamentController::class, 'index']);

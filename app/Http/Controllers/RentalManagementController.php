@@ -92,7 +92,7 @@ class RentalManagementController extends Controller
             'status' => 'required|in:pending,confirmed,out_for_delivery,delivered,cancelled',
             'notes' => 'nullable|string|max:500',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max per image
-            'estimated_delivery_time' => 'nullable|date|after:now',
+            'estimated_delivery_time' => 'nullable|date',
             'assigned_manager_id' => 'nullable|exists:users,id',
         ]);
 

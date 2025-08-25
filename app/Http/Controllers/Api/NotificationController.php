@@ -8,6 +8,41 @@ use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
 {
+    public function list(Request $request)
+    {
+        $user = Auth::user();
+
+        $perPage = (int) max(1, min(100, (int) $request->query('per_page', 20)));
+        $unreadOnly = (bool) $request->boolean('unread_only', false);
+
+        $query = $unreadOnly ? $user->unreadNotifications() : $user->notifications();
+
+        $notifications = $query
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+
+        $items = $notifications->getCollection()->map(function ($n) {
+            return [
+                'id' => $n->id,
+                'type' => $n->type,
+                'data' => $n->data,
+                'read_at' => $n->read_at,
+                'created_at' => $n->created_at,
+                'updated_at' => $n->updated_at,
+            ];
+        })->values();
+
+        return response()->json([
+            'data' => $items,
+            'pagination' => [
+                'current_page' => $notifications->currentPage(),
+                'per_page' => $notifications->perPage(),
+                'total' => $notifications->total(),
+                'last_page' => $notifications->lastPage(),
+            ],
+        ]);
+    }
+
     public function setFcm(Request $request)
     {
         $request->validate(['enabled' => 'required|boolean']);
