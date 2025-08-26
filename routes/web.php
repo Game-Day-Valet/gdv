@@ -56,6 +56,10 @@ Route::prefix('')->name('rentalsystem.')->group(function () {
 	Route::get('/email-verification/resend', [RentalSystemController::class, 'resendVerificationCode'])->name('email-verification.resend');
 	Route::get('/forgot-password', [RentalSystemController::class, 'showForgotPassword'])->name('forgot-password');
 	Route::post('/forgot-password', [RentalSystemController::class, 'forgotPassword'])->name('forgot-password.submit');
+	Route::get('/reset-password/code', [RentalSystemController::class, 'showResetCode'])->name('reset-password.code');
+	Route::post('/reset-password/code', [RentalSystemController::class, 'verifyResetCode'])->name('reset-password.code.submit');
+	Route::get('/reset-password/new', [RentalSystemController::class, 'showResetPassword'])->name('reset-password.new');
+	Route::post('/reset-password/new', [RentalSystemController::class, 'resetPassword'])->name('reset-password.submit');
 
 	// Protected routes for authenticated users only
 	Route::middleware('auth')->group(function () {

@@ -22,10 +22,22 @@ class NotificationController extends Controller
             ->paginate($perPage);
 
         $items = $notifications->getCollection()->map(function ($n) {
+            $payload = $n->data;
+            if (is_array($payload) && array_key_exists('user_id', $payload)) {
+                $payload['user_id'] = (int) $payload['user_id'];
+            }
+            if (is_array($payload) && array_key_exists('timestamp', $payload) && !empty($payload['timestamp'])) {
+                try {
+                    $payload['formatted_timestamp'] = \Carbon\Carbon::parse($payload['timestamp'])->format('d M Y H:i');
+                } catch (\Throwable $e) {
+                    $payload['formatted_timestamp'] = $payload['timestamp'];
+                }
+            }
+
             return [
                 'id' => $n->id,
                 'type' => $n->type,
-                'data' => $n->data,
+                'data' => $payload,
                 'read_at' => $n->read_at,
                 'created_at' => $n->created_at,
                 'updated_at' => $n->updated_at,

@@ -235,8 +235,9 @@ class RentalSystemController extends Controller
         );
         Mail::to($user->email)->send(new PasswordResetEmail($user, $code));
 
-        Session::flash('success', 'Password reset code sent to your email.');
-        return redirect()->route('rentalsystem.signin');
+        Session::put('reset_email', $user->email);
+        Session::flash('success', 'Password reset code sent to your email. Enter the code to continue.');
+        return redirect()->route('rentalsystem.reset-password.code', ['email' => $user->email]);
     }
 
     public function showSports()
@@ -253,6 +254,76 @@ class RentalSystemController extends Controller
             }
         }
         return view('rentalsystem.sports', compact('sports'));
+    }
+
+    public function showResetCode(Request $request)
+    {
+        $email = $request->query('email', Session::get('reset_email'));
+        if (!$email) {
+            return redirect()->route('rentalsystem.forgot-password')->with('error', 'Please enter your email to receive the reset code.');
+        }
+        return view('rentalsystem.reset-code', ['email' => $email]);
+    }
+
+    public function verifyResetCode(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|string|email',
+            'code' => 'required|string|digits:6',
+        ]);
+
+        $email = $request->input('email');
+        $code = $request->input('code');
+
+        $record = PasswordResetToken::where('email', $email)->where('token', $code)->first();
+        if (!$record) {
+            return back()->withErrors(['code' => 'Invalid code.'])->withInput();
+        }
+        // Token valid for 60 minutes
+        if (\Carbon\Carbon::parse($record->created_at)->lt(now()->subMinutes(60))) {
+            return back()->withErrors(['code' => 'Code has expired. Please request a new one.'])->withInput();
+        }
+
+        Session::put('reset_email', $email);
+        Session::put('reset_verified', true);
+        return redirect()->route('rentalsystem.reset-password.new');
+    }
+
+    public function showResetPassword()
+    {
+        $email = Session::get('reset_email');
+        $verified = Session::get('reset_verified');
+        if (!$email || !$verified) {
+            return redirect()->route('rentalsystem.forgot-password')->with('error', 'Please verify the code sent to your email first.');
+        }
+        return view('rentalsystem.reset-password', ['email' => $email]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $email = Session::get('reset_email');
+        $verified = Session::get('reset_verified');
+        if (!$email || !$verified) {
+            return redirect()->route('rentalsystem.forgot-password')->with('error', 'Please verify the code sent to your email first.');
+        }
+
+        $request->validate([
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = User::where('email', $email)->first();
+        if (!$user) {
+            return redirect()->route('rentalsystem.forgot-password')->with('error', 'User not found.');
+        }
+
+        $user->password = Hash::make($request->input('password'));
+        $user->save();
+
+        // Cleanup reset token and session
+        PasswordResetToken::where('email', $email)->delete();
+        Session::forget(['reset_email', 'reset_verified']);
+
+        return redirect()->route('rentalsystem.signin')->with('success', 'Password updated successfully. Please sign in.');
     }
 
     public function showTournaments($sportId)
