@@ -217,6 +217,13 @@
                                         <td>
                                             <div class="d-flex gap-2">
                                                 <a href="{{ route('rental-management.show', $rental->id) }}" class="btn btn-sm btn-info">View</a>
+                                                @can('super_admin')
+                                                <form method="POST" action="{{ route('rental-management.destroy', $rental->id) }}" onsubmit="return confirmDelete(event)" style="display:inline;">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                                </form>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>
@@ -306,6 +313,22 @@
     @vite(['resources/js/pages/datatable.init.js'])
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        function confirmDelete(e){
+            e.preventDefault();
+            const form = e.target;
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'This will permanently delete the rental booking.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it'
+            }).then((result) => {
+                if (result.isConfirmed) form.submit();
+            });
+            return false;
+        }
         document.addEventListener('DOMContentLoaded', function () {
             console.log('DOM loaded, initializing rental management...');
             let currentRentalId = null;

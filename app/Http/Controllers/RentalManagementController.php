@@ -256,4 +256,23 @@ class RentalManagementController extends Controller
 
         return $validProgressions[$currentStatus] ?? [];
     }
+
+    /**
+     * Remove the specified rental (admin only)
+     */
+    public function destroy($id)
+    {
+        try {
+            $user = Auth::user();
+            if (!$user || !$user->hasRole(Role::SUPER_ADMIN)) {
+                return redirect()->back()->with('error', 'Unauthorized');
+            }
+
+            $this->rentalRepository->delete($id);
+
+            return redirect()->back()->with('success', 'Rental deleted successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to delete rental: ' . $e->getMessage());
+        }
+    }
 }

@@ -7,6 +7,7 @@ use App\Events\NewMessage;
 use App\Jobs\AssignConversation;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\User;
 use App\Http\Resources\ConversationResource;
 use App\Http\Resources\MessageResource;
 use Illuminate\Http\Request;
@@ -40,11 +41,13 @@ class ChatController extends Controller
                 'conversation_id' => $request->conversation_id,
             ]);
 
+            $isNewConversation = false;
             if (!$request->conversation_id) {
                 $conversation = Conversation::create([
                     'user_id' => $user->id,
                     'status' => 'open',
                 ]);
+                $isNewConversation = true;
                 Log::info('New conversation created', [
                     'conversation_id' => $conversation->id,
                     'user_id' => $user->id,
@@ -87,6 +90,39 @@ class ChatController extends Controller
                     'stack' => $e->getTraceAsString(),
                 ]);
                 throw $e;
+            }
+
+            // Auto-reply when a user starts a brand new conversation
+            if ($isNewConversation && $user->hasRole(Role::USER)) {
+                try {
+                    $adminUser = User::role([Role::SUPER_ADMIN->value, Role::MANAGER->value])
+                        ->orderBy('id')
+                        ->first();
+
+                    if ($adminUser) {
+                        $autoMessage = Message::create([
+                            'conversation_id' => $conversation->id,
+                            'sender_id' => $adminUser->id,
+                            'content' => 'Hi! A GDV team member will be with you shortly.',
+                        ]);
+
+                        // Broadcast auto-reply directly to the user's conversation channel
+                        event(new NewMessage($autoMessage, $conversation->user_id));
+
+                        Log::info('Auto-reply sent for new conversation', [
+                            'conversation_id' => $conversation->id,
+                            'auto_message_id' => $autoMessage->id,
+                            'admin_sender_id' => $adminUser->id,
+                        ]);
+                    } else {
+                        Log::warning('No admin/manager found to send auto-reply');
+                    }
+                } catch (\Throwable $e) {
+                    Log::error('Failed to send auto-reply for new conversation', [
+                        'conversation_id' => $conversation->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
             }
 
             return response()->json([

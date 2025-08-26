@@ -115,5 +115,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth'], function () {
 		Route::resource('faq-management', FaqManagementController::class);
 		Route::resource('privacy-policy-management', PrivacyPolicyManagementController::class);
 		Route::resource('terms-condition-management', TermsConditionManagementController::class);
+		// Allow only super_admin to delete rentals
+		Route::delete('/rental-management/{id}', [RentalManagementController::class, 'destroy'])->name('rental-management.destroy');
 	});
 });
