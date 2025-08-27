@@ -578,7 +578,7 @@ class RentalSystemController extends Controller
             $session = \Stripe\Checkout\Session::retrieve($sessionId);
             $rentalId = $session->metadata->rental_id ?? null;
             if ($session->payment_status === 'paid' && $rentalId) {
-                $this->rentals->update($rentalId, ['payment_status' => 'completed', 'status' => 'confirmed']);
+                $this->rentals->update($rentalId, ['payment_status' => 'completed']);
                 return redirect()->route('rentalsystem.profile')->with('success', 'Booking confirmed. Payment completed.');
             }
             return redirect()->route('rentalsystem.profile')->with('info', 'Payment not completed yet.');
