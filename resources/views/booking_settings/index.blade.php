@@ -67,6 +67,23 @@
         </table>
     </div>
 </div>
+
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Rental Booking Email Content</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ route('booking-settings.save-email-content') }}">
+            @csrf
+            <div class="mb-3">
+                <label for="email_content" class="form-label">Email Paragraph Content</label>
+                <textarea name="email_content" id="email_content" class="form-control" rows="5" placeholder="Enter confirmation paragraph..." required>{{ old('email_content', $emailContent) }}</textarea>
+                <div class="form-text">This text appears in the booking confirmation email body.</div>
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+        </form>
+    </div>
+</div>
 @endsection
 
 @section('script')

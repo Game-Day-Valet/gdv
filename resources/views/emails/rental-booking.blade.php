@@ -259,7 +259,7 @@
             <h2 class="welcome-text">Hello {{ $user->name ?? 'User' }}!</h2>
 
             <p class="verification-text">
-                Great news! Your rental booking has been confirmed successfully. We're excited to provide you with the equipment you need for your upcoming event.
+                {{ $email_content ?? "Great news! Your rental booking has been confirmed successfully. We're excited to provide you with the equipment you need for your upcoming event." }}
             </p>
 
             <!-- Confirmation Image -->

@@ -105,6 +105,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth'], function () {
 	Route::group(['middleware' => ['can:super_admin']], function () {
 		Route::resource('booking-settings', \App\Http\Controllers\BookingSettingsController::class)->except(['show']);
 		Route::post('booking-settings/reorder', [\App\Http\Controllers\BookingSettingsController::class, 'reorder'])->name('booking-settings.reorder');
+		Route::post('booking-settings/save-email-content', [\App\Http\Controllers\BookingSettingsController::class, 'saveEmailContent'])->name('booking-settings.save-email-content');
 		Route::resource('user-management', UserController::class);
 		Route::resource('role-management', RoleController::class);
 		Route::resource('item-management', ItemController::class);

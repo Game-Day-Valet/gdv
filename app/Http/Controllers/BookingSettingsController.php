@@ -10,7 +10,8 @@ class BookingSettingsController extends Controller
     public function index()
     {
         $options = BookingOption::orderBy('type')->orderByRaw('COALESCE(sort_order, 999999) asc')->get();
-        return view('booking_settings.index', compact('options'));
+        $emailContent = BookingOption::where('type', 'email_content')->value('description');
+        return view('booking_settings.index', compact('options', 'emailContent'));
     }
 
     public function create()
@@ -73,5 +74,24 @@ class BookingSettingsController extends Controller
             }
         });
         return response()->json(['success' => true]);
+    }
+
+    public function saveEmailContent(Request $request)
+    {
+        $data = $request->validate([
+            'email_content' => 'required|string',
+        ]);
+
+        BookingOption::updateOrCreate(
+            ['type' => 'email_content'],
+            [
+                'label' => 'Rental Booking Email Content',
+                'description' => $data['email_content'],
+                'price' => 0,
+                'enabled' => true,
+            ]
+        );
+
+        return redirect()->route('booking-settings.index')->with('success', 'Booking confirmation email content updated.');
     }
 } 

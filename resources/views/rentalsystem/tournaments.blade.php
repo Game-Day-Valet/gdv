@@ -70,8 +70,10 @@
         @media (min-width:860px){ .list { grid-template-columns:1fr 1fr; } }
 
         .card { background:#fff; border:1.6px solid var(--border-color); border-radius:18px; overflow:hidden; box-shadow:0 1px 0 rgba(0,0,0,.02); }
-        .media { position:relative; aspect-ratio: 16/9; background:#f3f4f6; }
-        .media img { width:100%; height:100%; object-fit:cover; display:block; }
+        .media { position:relative; background:#f3f4f6; width:100%; }
+        /* 16:9 ratio fallback for broader browser support */
+        .media::before { content:""; display:block; padding-top:56.25%; }
+        .media > img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
         .book {
             padding:10px 18px; border-radius:10px; border:none; color:#fff; font-weight:800;
             background: var(--primary-color); box-shadow: 0 6px 16px rgba(220, 53, 69, 0.25);
