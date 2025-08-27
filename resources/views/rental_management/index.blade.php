@@ -127,7 +127,7 @@
                                 <tr>
                                       <th>User</th>
                                     <th>Tournament</th>
-                                    <th>Team Name</th>
+                                    <th>Team Name /Age Group</th>
                                     <th>Coach</th>
                                     
                                     <th>Total Amount</th>
@@ -149,7 +149,7 @@
                                             </div>
                                         </td>
                                         <td>{{ $rental->tournament->name ?? 'N/A' }}</td>
-                                        <td>{{ $rental->team_name }}</td>
+                                        <td>{{ $rental->team_name_with_age_group }}</td>
                                         <td>{{ $rental->coach_name }}</td>
                                         
                                         <td>

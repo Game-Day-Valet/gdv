@@ -283,7 +283,7 @@
 
                 <div class="detail-row">
                     <span class="detail-label">Team Name:</span>
-                    <span class="detail-value">{{ $rental->team_name ?? 'N/A' }}</span>
+                    <span class="detail-value">{{ $rental->team_name_with_age_group ?? 'N/A' }}</span>
                 </div>
 
             </div>

@@ -51,7 +51,7 @@ class RentalRepository implements RentalRepositoryInterface
             $rental = Rental::create([
                 'user_id' => $data['user_id'],
                 'tournament_id' => $data['tournament_id'],
-                'team_name' => $data['team_name'],
+                'team_name_with_age_group' => $data['team_name_with_age_group'],
                 'coach_name' => $data['coach_name'],
                 'phone_number' => $data['phone_number'] ?? null,
                 'field_number' => $data['field_number'] ?? null,
@@ -89,7 +89,7 @@ class RentalRepository implements RentalRepositoryInterface
             $rental->update([
                 'user_id' => $data['user_id'] ?? $rental->user_id,
                 'tournament_id' => $data['tournament_id'] ?? $rental->tournament_id,
-                'team_name' => $data['team_name'] ?? $rental->team_name,
+                'team_name_with_age_group' => $data['team_name_with_age_group'] ?? $rental->team_name_with_age_group,
                 'coach_name' => $data['coach_name'] ?? $rental->coach_name,
                 'phone_number' => $data['phone_number'] ?? $rental->phone_number,
                 'field_number' => $data['field_number'] ?? $rental->field_number,

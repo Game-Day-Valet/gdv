@@ -18,7 +18,7 @@ class RentalRequest extends FormRequest
         return [
             // 'user_id' => 'required|exists:users,id',
             'tournament_id' => 'nullable|exists:tournaments,id',
-            'team_name' => 'nullable|string|max:255',
+            'team_name_with_age_group' => 'nullable|string|max:255',
             'coach_name' => 'nullable|string|max:255',
             'phone_number' => 'nullable|string|max:30',
             'field_number' => 'nullable|string|max:50',

@@ -382,7 +382,7 @@ class RentalSystemController extends Controller
 
         $validator = Validator::make($request->all(), [
             'tournament_id' => 'required|integer',
-            'team_name' => 'nullable|string|max:255',
+            'team_name_with_age_group' => 'nullable|string|max:255',
             'coach_name' => 'nullable|string|max:255',
             // 'field_number' removed
             // drop_off_date/time removed
@@ -491,7 +491,7 @@ class RentalSystemController extends Controller
         $rental = $this->rentals->create([
             'user_id' => $user->id,
             'tournament_id' => (int) $request->input('tournament_id'),
-            'team_name' => $request->input('team_name') ?: null,
+            'team_name_with_age_group' => $request->input('team_name_with_age_group') ?: null,
             'coach_name' => $request->input('coach_name') ?: null,
             'items' => !empty($selectedItems) ? $selectedItems : null,
             'bundles' => !empty($selectedBundles) ? $selectedBundles : null,

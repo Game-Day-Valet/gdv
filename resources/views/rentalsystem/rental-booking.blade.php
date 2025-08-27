@@ -107,8 +107,8 @@
                     <div class="card">
                         <div class="row-two">
                             <div>
-                                <label class="label">TEAM NAME <span class="text-danger">*</span></label>
-                                <input class="input" type="text" name="team_name" placeholder="Team name" required>
+                                <label class="label">TEAM NAME WITH AGE GROUP <span class="text-danger">*</span></label>
+                                <input class="input" type="text" name="team_name_with_age_group" placeholder="Team name with age group" required>
                             </div>
                             <div>
                                 <label class="label">COACH NAME <span class="text-danger">*</span></label>

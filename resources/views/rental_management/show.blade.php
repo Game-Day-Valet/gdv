@@ -140,8 +140,8 @@
                                         <div class="col-8">{{ $rental->tournament->name ?? 'N/A' }}</div>
                                     </div>
                                     <div class="row mb-2">
-                                        <div class="col-4"><strong>Team Name:</strong></div>
-                                        <div class="col-8">{{ $rental->team_name }}</div>
+                                        <div class="col-4"><strong>Team Name/Age Group:</strong></div>
+                                        <div class="col-8">{{ $rental->team_name_with_age_group }}</div>
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-4"><strong>Coach:</strong></div>

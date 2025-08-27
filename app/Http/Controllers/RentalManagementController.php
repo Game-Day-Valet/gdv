@@ -35,7 +35,7 @@ class RentalManagementController extends Controller
 
         // Debug: Check raw database data first
         $rawRentals = DB::table('rentals')
-            ->select('id', 'created_at', 'team_name')
+            ->select('id', 'created_at', 'team_name_with_age_group')
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
