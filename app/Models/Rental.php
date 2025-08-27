@@ -17,6 +17,7 @@ class Rental extends Model
         'team_name_with_age_group',
         'coach_name',
         'phone_number',
+        'email',
         'field_number',
         'items',
         'bundles',

@@ -115,6 +115,18 @@
                                 <input class="input" type="text" name="coach_name" placeholder="Coach name" required>
                             </div>
                         </div>
+                        <div class="row-two">
+                            <div>
+                                <label class="label">PHONE NUMBER <span class="text-danger">*</span></label>
+                                <input class="input" type="tel" name="phone_number" placeholder="e.g., +1 555 123 4567" value="{{ Auth::check() ? (Auth::user()->contact_number ?? '') : '' }}" required>
+                                <small class="text-muted">We’ll use this to send booking text updates.</small>
+                            </div>
+                            <div>
+                                <label class="label">EMAIL <span class="text-danger">*</span></label>
+                                <input class="input" type="email" name="email" placeholder="you@example.com" value="{{ Auth::check() ? (Auth::user()->email ?? '') : '' }}" required>
+                                <small class="text-muted">Booking confirmation and updates will be emailed here.</small>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="card" style="margin-top:18px;">

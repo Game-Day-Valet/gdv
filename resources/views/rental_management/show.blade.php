@@ -144,6 +144,10 @@
                                         <div class="col-8">{{ $rental->team_name_with_age_group }}</div>
                                     </div>
                                     <div class="row mb-2">
+                                        <div class="col-4"><strong>Rental Email:</strong></div>
+                                        <div class="col-8">{{ $rental->email ?? 'N/A' }}</div>
+                                    </div>
+                                    <div class="row mb-2">
                                         <div class="col-4"><strong>Coach:</strong></div>
                                         <div class="col-8">{{ $rental->coach_name }}</div>
                                     </div>

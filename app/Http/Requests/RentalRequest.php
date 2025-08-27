@@ -21,6 +21,7 @@ class RentalRequest extends FormRequest
             'team_name_with_age_group' => 'nullable|string|max:255',
             'coach_name' => 'nullable|string|max:255',
             'phone_number' => 'nullable|string|max:30',
+            'email' => 'nullable|email',
             'field_number' => 'nullable|string|max:50',
             'items' => 'nullable|array',
             // Accept format: [{"item_id": 1, "quantity": 3}]

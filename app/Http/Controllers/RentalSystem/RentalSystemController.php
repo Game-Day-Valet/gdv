@@ -384,6 +384,8 @@ class RentalSystemController extends Controller
             'tournament_id' => 'required|integer',
             'team_name_with_age_group' => 'nullable|string|max:255',
             'coach_name' => 'nullable|string|max:255',
+            'phone_number' => 'nullable|string|max:30',
+            'email' => 'nullable|email',
             // 'field_number' removed
             // drop_off_date/time removed
             'items' => 'nullable|array',
@@ -493,6 +495,8 @@ class RentalSystemController extends Controller
             'tournament_id' => (int) $request->input('tournament_id'),
             'team_name_with_age_group' => $request->input('team_name_with_age_group') ?: null,
             'coach_name' => $request->input('coach_name') ?: null,
+            'phone_number' => $request->input('phone_number') ?: ($user->contact_number ?? null),
+            'email' => $request->input('email') ?: ($user->email ?? null),
             'items' => !empty($selectedItems) ? $selectedItems : null,
             'bundles' => !empty($selectedBundles) ? $selectedBundles : null,
             'drop_off_time' => $dropOffDateTime,

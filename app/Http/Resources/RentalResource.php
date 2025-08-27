@@ -50,6 +50,7 @@ class RentalResource extends JsonResource
             'team_name_with_age_group' => $this->team_name_with_age_group,
             'coach_name' => $this->coach_name,
             'phone_number' => $this->phone_number,
+            'email' => $this->email,
             'field_number' => $this->field_number,
             'items' => $this->items,
             'bundles' => $this->bundles,
