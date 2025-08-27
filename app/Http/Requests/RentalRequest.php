@@ -20,6 +20,7 @@ class RentalRequest extends FormRequest
             'tournament_id' => 'nullable|exists:tournaments,id',
             'team_name' => 'nullable|string|max:255',
             'coach_name' => 'nullable|string|max:255',
+            'phone_number' => 'nullable|string|max:30',
             'field_number' => 'nullable|string|max:50',
             'items' => 'nullable|array',
             // Accept format: [{"item_id": 1, "quantity": 3}]

@@ -8,6 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Twilio\Rest\Client as TwilioClient;
 
 class SendRentalBookingEmailJob implements ShouldQueue
 {
@@ -41,17 +42,45 @@ class SendRentalBookingEmailJob implements ShouldQueue
             $rental = $this->rental->load(['user', 'tournament', 'tournament.sport']);
 
             // Prepare email data
+            $dynamicContent = \App\Models\BookingOption::where('type', 'email_content')->value('description');
+
             $emailData = [
                 'rental' => $rental,
                 'user' => $rental->user,
                 'tournament' => $rental->tournament,
                 'sport' => $rental->tournament->sport ?? null,
+                'email_content' => $dynamicContent,
             ];
 
             Mail::send('emails.rental-booking', $emailData, function ($message) use ($rental) {
                 $message->to($rental->user->email, $rental->user->name)
                         ->subject('Booking Confirmation - Rental #' . $rental->id);
             });
+
+            // Send SMS via Twilio if phone number is present
+            $to = $rental->phone_number;
+            $sid = config('services.twilio.sid');
+            $token = config('services.twilio.token');
+            $from = config('services.twilio.from');
+            if (!empty($to) && $sid && $token && $from) {
+                try {
+                    $twilio = new TwilioClient($sid, $token);
+                    $twilio->messages->create($to, [
+                        'from' => $from,
+                        'body' => 'GDV: Your rental booking #' . $rental->id . ' has been confirmed. Total $' . number_format((float) ($rental->total_amount ?? 0), 2) . '.',
+                    ]);
+                    Log::info('Twilio SMS sent for rental booking', [
+                        'rental_id' => $rental->id,
+                        'to' => $to,
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::error('Twilio SMS failed', [
+                        'rental_id' => $rental->id,
+                        'to' => $to,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
 
         } catch (\Exception $e) {
             Log::error('SendRentalBookingEmailJob failed', [

@@ -49,6 +49,7 @@ class RentalResource extends JsonResource
             'tournament_name' => $this->whenLoaded('tournament', fn() => $this->tournament->name),
             'team_name' => $this->team_name,
             'coach_name' => $this->coach_name,
+            'phone_number' => $this->phone_number,
             'field_number' => $this->field_number,
             'items' => $this->items,
             'bundles' => $this->bundles,

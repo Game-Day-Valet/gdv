@@ -52,6 +52,12 @@ return [
         'secret' => env('STRIPE_SECRET'),
     ],
 
+    'twilio' => [
+        'sid'    => env('TWILIO_SID', 'TWILIO_SID_REMOVED'),
+        'token'  => env('TWILIO_TOKEN', 'TWILIO_TOKEN_REMOVED'),
+        'from'   => env('TWILIO_FROM', '+19802917404'),
+    ],
+
     'apple' => [
         'client_id' => env('APPLE_CLIENT_ID'),
         'client_secret' => env('APPLE_CLIENT_SECRET'),

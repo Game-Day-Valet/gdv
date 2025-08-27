@@ -16,6 +16,7 @@ class Rental extends Model
         'tournament_id',
         'team_name',
         'coach_name',
+        'phone_number',
         'field_number',
         'items',
         'bundles',
