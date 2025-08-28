@@ -74,6 +74,9 @@
                         <table id="datatable" class="table table-bordered dt-responsive table-responsive nowrap">
                             <thead>
                                 <tr>
+                                    @can('super_admin')
+                                    <th style="width:32px;"></th>
+                                    @endcan
                                     <th>Title</th>
                                     <th>Description</th>
                                     <th>Status</th>
@@ -81,9 +84,12 @@
                                     <th>Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="faqsTbody">
                                 @foreach ($faqs as $faq)
-                                    <tr>
+                                    <tr data-id="{{ $faq->id }}">
+                                        @can('super_admin')
+                                        <td class="drag-handle" style="cursor:move; text-align:center;">⇅</td>
+                                        @endcan
                                         <td>{{ $faq->title }}</td>
                                         <td>
                                             <div class="description-text" title="{{ $faq->description }}">
@@ -127,6 +133,7 @@
 @section('script')
     @vite(['resources/js/pages/datatable.init.js'])
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             document.querySelectorAll('.delete-faq-btn').forEach(function (btn) {
@@ -146,6 +153,25 @@
                     });
                 });
             });
+
+            @can('super_admin')
+            const tbody = document.getElementById('faqsTbody');
+            const sortable = new Sortable(tbody, {
+                handle: '.drag-handle',
+                animation: 150,
+                onEnd: async function(){
+                    const rows = Array.from(tbody.querySelectorAll('tr[data-id]'));
+                    const orders = rows.map((row, idx) => ({ id: parseInt(row.getAttribute('data-id')), sort_order: idx }));
+                    try{
+                        await fetch('{{ route('faq-management.reorder') }}', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                            body: JSON.stringify({ orders })
+                        });
+                    }catch(e){ Swal.fire('Error', 'Failed to save order', 'error'); }
+                }
+            });
+            @endcan
         });
     </script>
 @endsection

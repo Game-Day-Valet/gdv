@@ -187,6 +187,25 @@
 
                     <!-- Promo Code - moved here between Bundles and Drop-Off -->
                     <div class="card" style="margin-top:18px;">
+                        
+                    <div class="section-title">BOOKING DAYS<span class="text-danger">*</span></div>
+                        
+                    <div class="row-two">
+                            <div>
+                                <label class="label">Select Days</label>
+                                <select class="select" name="booking_days" required>
+                                    @for($i=1; $i<=7; $i++)
+                                        <option value="{{ $i }}">{{ $i }} day{{ $i>1? 's':'' }}</option>
+                                    @endfor
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    
+                    <!-- Promo Code - moved here between Bundles and Drop-Off -->
+                    <div class="card" style="margin-top:18px;">
                         <div class="section-title">PROMO CODE</div>
                         <div class="row-two">
                             <div>

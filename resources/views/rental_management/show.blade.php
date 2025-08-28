@@ -148,6 +148,10 @@
                                         <div class="col-8">{{ $rental->email ?? 'N/A' }}</div>
                                     </div>
                                     <div class="row mb-2">
+                                        <div class="col-4"><strong>Booking Days:</strong></div>
+                                        <div class="col-8">{{ $rental->booking_days ?? 'N/A' }}</div>
+                                    </div>
+                                    <div class="row mb-2">
                                         <div class="col-4"><strong>Coach:</strong></div>
                                         <div class="col-8">{{ $rental->coach_name }}</div>
                                     </div>

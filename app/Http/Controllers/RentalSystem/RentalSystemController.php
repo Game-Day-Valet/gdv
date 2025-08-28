@@ -386,6 +386,7 @@ class RentalSystemController extends Controller
             'coach_name' => 'nullable|string|max:255',
             'phone_number' => 'nullable|string|max:30',
             'email' => 'nullable|email',
+            'booking_days' => 'nullable|integer|min:1|max:7',
             // 'field_number' removed
             // drop_off_date/time removed
             'items' => 'nullable|array',
@@ -497,6 +498,7 @@ class RentalSystemController extends Controller
             'coach_name' => $request->input('coach_name') ?: null,
             'phone_number' => $request->input('phone_number') ?: ($user->contact_number ?? null),
             'email' => $request->input('email') ?: ($user->email ?? null),
+            'booking_days' => (int) $request->input('booking_days'),
             'items' => !empty($selectedItems) ? $selectedItems : null,
             'bundles' => !empty($selectedBundles) ? $selectedBundles : null,
             'drop_off_time' => $dropOffDateTime,

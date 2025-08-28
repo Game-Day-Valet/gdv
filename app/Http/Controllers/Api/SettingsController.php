@@ -11,6 +11,7 @@ class SettingsController extends Controller
     {
         $insurance = BookingOption::where('type', 'insurance')->where('enabled', true)->orderByRaw('COALESCE(sort_order, 999999) asc')->get(['id','label','description','price']);
         $waivers = BookingOption::where('type', 'damage_waiver')->where('enabled', true)->orderByRaw('COALESCE(sort_order, 999999) asc')->get(['id','label','description','price']);
+        $chatInitial = BookingOption::where('type', 'chat_initial_message')->value('description');
         return response()->json([
             'insurance_options' => $insurance->map(fn($o)=>[
                 'id' => (int) $o->id,
@@ -24,6 +25,15 @@ class SettingsController extends Controller
                 'description' => $o->description,
                 'price' => (float) $o->price,
             ]),
+            'chat_initial_message' => $chatInitial,
+        ]);
+    }
+
+    public function chat()
+    {
+        $chatInitial = BookingOption::where('type', 'chat_initial_message')->value('description');
+        return response()->json([
+            'chat_initial_message' => $chatInitial ?? 'Hi! A GDV team member will be with you shortly.',
         ]);
     }
 } 

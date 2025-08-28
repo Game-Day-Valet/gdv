@@ -35,6 +35,7 @@ class RentalRequest extends FormRequest
             'insurance_option' => 'nullable|numeric|min:0',
             'damage_waiver' => 'nullable|numeric|min:0',
             'rental_date' => 'nullable|date',
+            'booking_days' => 'nullable|integer|min:1|max:7',
             'delivery_assigned_to' => 'nullable|string',
             'payment_method' => 'nullable|in:stripe,apple_pay,google_pay',
             'payment_status' => 'nullable|in:pending,completed',

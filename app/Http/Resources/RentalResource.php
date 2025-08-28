@@ -64,6 +64,7 @@ class RentalResource extends JsonResource
             'created_at' => \Carbon\Carbon::parse($this->created_at)->format('d M Y H:i'),
             'rental_date' => $this->rental_date,
             'delivery_assigned_to' => $this->delivery_assigned_to,
+            'booking_days' => $this->booking_days ? (int) $this->booking_days : null,
             'payment_method' => $this->payment_method,
             'payment_status' => $this->payment_status,
             'total_amount' => $this->total_amount,

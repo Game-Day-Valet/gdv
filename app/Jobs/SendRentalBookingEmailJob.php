@@ -57,18 +57,23 @@ class SendRentalBookingEmailJob implements ShouldQueue
                         ->subject('Booking Confirmation - Rental #' . $rental->id);
             });
 
-            // Send SMS via Twilio if phone number is present
+            // Send SMS via Twilio if phone number is present and service is enabled
             $to = $rental->phone_number;
             $sid = config('services.twilio.sid');
             $token = config('services.twilio.token');
             $from = config('services.twilio.from');
-            if (!empty($to) && $sid && $token && $from) {
+            $enabled = (bool) config('services.twilio.enabled', true);
+            if ($enabled && !empty($to) && $sid && $token && $from) {
                 try {
                     $twilio = new TwilioClient($sid, $token);
-                    $twilio->messages->create($to, [
-                        'from' => $from,
-                        'body' => 'GDV: Your rental booking #' . $rental->id . ' has been confirmed. Total $' . number_format((float) ($rental->total_amount ?? 0), 2) . '.',
-                    ]);
+                    $body = (string) (\App\Models\BookingOption::where('type', 'sms_booking_confirmation')->value('description') ?? '');
+                    if ($body === '') {
+                        // If admin left blank, skip silently
+                        Log::info('SMS template empty for booking confirmation; skipping Twilio send.', ['rental_id' => $rental->id]);
+                    } else {
+                        $twilio->messages->create($to, ['from' => $from, 'body' => $body]);
+                    }
+                    $twilio->messages->create($to, ['from' => $from, 'body' => $body]);
                     Log::info('Twilio SMS sent for rental booking', [
                         'rental_id' => $rental->id,
                         'to' => $to,
@@ -78,6 +83,7 @@ class SendRentalBookingEmailJob implements ShouldQueue
                         'rental_id' => $rental->id,
                         'to' => $to,
                         'error' => $e->getMessage(),
+                        'hint' => 'Ensure server has internet/DNS, correct Twilio credentials, phone in E.164 format.'
                     ]);
                 }
             }

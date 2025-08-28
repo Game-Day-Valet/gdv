@@ -53,8 +53,8 @@
                             @enderror
                         </div>
                         <div class="col-md-6">
-                            <label for="image" class="form-label">Tournament Image <span class="text-danger">*</span></label>
-                            <input type="file" name="image" class="form-control @error('image') is-invalid @enderror" id="image" accept="image/*" required>
+                            <label for="image" class="form-label">Tournament Image</label>
+                            <input type="file" name="image" class="form-control @error('image') is-invalid @enderror" id="image" accept="image/*">
                             @error('image')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

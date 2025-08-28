@@ -21,20 +21,21 @@ class TournamentRepository implements TournamentRepositoryInterface
         $query = Tournament::where('status', TournamentStatus::ACTIVE->value)
             ->with('sport');
 
-        // If search parameter is provided
         if ($search) {
-            $searchTerms = preg_split('/\s+/', trim($search)); // Split by whitespace
+            $searchTerms = preg_split('/\s+/', trim($search));
 
             $query->where(function ($q) use ($searchTerms) {
                 foreach ($searchTerms as $term) {
                     // Check if term looks like a date (YYYY-MM-DD format)
                     if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $term)) {
-                        $q->whereDate('start_date', '=', $term)
-                            ->orWhereDate('end_date', '=', $term);
-                    } else {
-                        // Treat as name or location
-                        $q->where('name', 'like', "%{$term}%")
-                            ->orWhere('location', 'like', "%{$term}%");
+                        $q->where(function ($dateQuery) use ($term) {
+                            $dateQuery->whereDate('start_date', $term)
+                                ->orWhereDate('end_date', $term)
+                                ->orWhere(function ($between) use ($term) {
+                                    $between->whereDate('start_date', '<=', $term)
+                                        ->whereDate('end_date', '>=', $term);
+                                });
+                        });
                     }
                 }
             });
@@ -45,7 +46,6 @@ class TournamentRepository implements TournamentRepositoryInterface
             return $query->paginate($limit);
         }
         return $query->get();
-
     }
 
     public function updateSortOrders(array $orders)
@@ -63,15 +63,15 @@ class TournamentRepository implements TournamentRepositoryInterface
     {
         $today = now()->toDateString();
         return Tournament::where('status', TournamentStatus::ACTIVE->value)
-            ->where(function($query) use ($today) {
-                $query->where(function($q) use ($today) {
+            ->where(function ($query) use ($today) {
+                $query->where(function ($q) use ($today) {
                     $q->whereDate('start_date', '<=', $today)
-                      ->whereDate('end_date', '>=', $today);
+                        ->whereDate('end_date', '>=', $today);
                 })
-                ->orWhere(function($q) use ($today) {
-                    $q->whereDate('start_date', $today)
-                      ->whereNull('end_date');
-                });
+                    ->orWhere(function ($q) use ($today) {
+                        $q->whereDate('start_date', $today)
+                            ->whereNull('end_date');
+                    });
             })
             ->with('sport')
             ->get();

@@ -78,5 +78,42 @@ class SendFcmRentalNotification implements ShouldQueue
                 'user_id' => $user->id,
             ]);
         }
+
+        // Also send Twilio SMS for status updates if enabled and phone number exists
+        $to = $event->rental->phone_number;
+        $sid = config('services.twilio.sid');
+        $token = config('services.twilio.token');
+        $from = config('services.twilio.from');
+        $enabled = (bool) config('services.twilio.enabled', true);
+        if ($enabled && $to && $sid && $token && $from) {
+            try {
+                $twilio = new \Twilio\Rest\Client($sid, $token);
+                $typeMap = [
+                    'confirmed' => 'sms_status_confirmed',
+                    'out_for_delivery' => 'sms_status_out_for_delivery',
+                    'delivered' => 'sms_status_delivered',
+                    'cancelled' => 'sms_status_cancelled',
+                ];
+                $templateType = $typeMap[$event->newStatus] ?? null;
+                if ($templateType) {
+                    $body = (string) (\App\Models\BookingOption::where('type', $templateType)->value('description') ?? '');
+                    if ($body !== '') {
+                        $twilio->messages->create($to, ['from' => $from, 'body' => $body]);
+                        Log::info('Twilio SMS sent for rental status update', [
+                            'rental_id' => $event->rental->id,
+                            'status' => $event->newStatus,
+                            'to' => $to,
+                        ]);
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::error('Twilio SMS failed for rental status update', [
+                    'rental_id' => $event->rental->id,
+                    'status' => $event->newStatus,
+                    'to' => $to,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
     }
 }

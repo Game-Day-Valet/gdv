@@ -154,6 +154,16 @@ class RentalController extends Controller
                 // Apply discount if eligible
                 $data = $this->referralService->applyDiscount($user->id, $data);
 
+                // booking_days: allow 1-7 days if provided (nullable)
+                if (isset($data['booking_days'])) {
+                    $bd = (int) $data['booking_days'];
+                    if ($bd < 1 || $bd > 7) {
+                        $data['booking_days'] = null;
+                    } else {
+                        $data['booking_days'] = $bd;
+                    }
+                }
+
                 $rental = $this->rentalRepository->create($data);
 
                 // Notify user about booking confirmation

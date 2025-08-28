@@ -27,6 +27,7 @@ class Rental extends Model
         'insurance_option',
         'damage_waiver',
         'rental_date',
+        'booking_days',
         'delivery_assigned_to',
         'payment_method',
         'payment_status',
@@ -35,6 +36,7 @@ class Rental extends Model
         'return_instruction',
         'estimated_delivery_time',
         'assigned_manager_id',
+        'sort_order',
     ];
 
     protected $casts = [
@@ -46,6 +48,7 @@ class Rental extends Model
         'damage_waiver' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'estimated_delivery_time' => 'datetime',
+        'booking_days' => 'integer',
     ];
 
     public function tournament()
@@ -76,5 +79,12 @@ class Rental extends Model
     public function assignedManager()
     {
         return $this->belongsTo(User::class, 'assigned_manager_id');
+    }
+
+    protected static function booted()
+    {
+        static::addGlobalScope('sort_order', function ($query) {
+            $query->orderByRaw('COALESCE(sort_order, 999999) ASC')->orderByDesc('created_at');
+        });
     }
 }

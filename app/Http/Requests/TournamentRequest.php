@@ -16,14 +16,22 @@ class TournamentRequest extends FormRequest
 
     public function rules()
     {
-        return [
+        $rules = [
             'sport_id' => 'required|exists:sports,id',
             'name' => 'required|string|max:255',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'location' => 'required|string|max:255',
             'status' => 'nullable|in:' . implode(',', array_column(TournamentStatus::cases(), 'value')),
         ];
+
+        // Image is required only on create; optional on update
+        if ($this->isMethod('post')) {
+            $rules['image'] = 'required|image|mimes:jpeg,png,jpg,gif|max:2048';
+        } else {
+            $rules['image'] = 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048';
+        }
+
+        return $rules;
     }
 }

@@ -125,6 +125,9 @@
                         <table id="datatable" class="table table-bordered dt-responsive nowrap" style="min-width: 1400px;">
                             <thead>
                                 <tr>
+                                    @can('super_admin')
+                                    <th style="width:32px;"></th>
+                                    @endcan
                                       <th>User</th>
                                     <th>Tournament</th>
                                     <th>Team Name /Age Group</th>
@@ -132,6 +135,7 @@
                                     
                                     <th>Total Amount</th>
                                     <th>Payment Status</th>
+                                    <th>Booking Days</th>
                                     <th>Status</th>
                                     <th>Estimated Delivery</th>
                                     <th>Assigned Manager</th>
@@ -139,9 +143,12 @@
                                     <th>Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="rentalsTbody">
                                 @foreach ($rentals as $rental)
-                                    <tr>
+                                    <tr data-id="{{ $rental->id }}">
+                                        @can('super_admin')
+                                        <td class="drag-handle" style="cursor:move; text-align:center;">⇅</td>
+                                        @endcan
                                          <td>
                                             <div>
                                                 <strong>{{ $rental->user->name ?? 'N/A' }}</strong><br>
@@ -171,6 +178,13 @@
                                             <span class="{{ $paymentStatusClass }}">
                                                 {{ ucfirst($rental->payment_status ?? 'pending') }}
                                             </span>
+                                        </td>
+                                        <td>
+                                            @if($rental->booking_days)
+                                                {{ $rental->booking_days }}
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
                                         </td>
                                         <td>
                                             @php
@@ -312,6 +326,7 @@
 @section('script')
     @vite(['resources/js/pages/datatable.init.js'])
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
     <script>
         function confirmDelete(e){
             e.preventDefault();
@@ -591,6 +606,28 @@
                 selectedImages.forEach(file => dt.items.add(file));
                 document.getElementById('delivery_images').files = dt.files;
             };
+
+            // Drag and drop reorder for rentals
+            @can('super_admin')
+            const tbody = document.getElementById('rentalsTbody');
+            if (tbody && typeof Sortable !== 'undefined') {
+                const sortable = new Sortable(tbody, {
+                    handle: '.drag-handle',
+                    animation: 150,
+                    onEnd: async function(){
+                        const rows = Array.from(tbody.querySelectorAll('tr[data-id]'));
+                        const orders = rows.map((row, idx) => ({ id: parseInt(row.getAttribute('data-id')), sort_order: idx }));
+                        try{
+                            await fetch('{{ route('rental-management.reorder') }}', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                                body: JSON.stringify({ orders })
+                            });
+                        }catch(e){ Swal.fire('Error', 'Failed to save order', 'error'); }
+                    }
+                });
+            }
+            @endcan
 
             // Close modals
             document.querySelectorAll('.btn-close, .btn-secondary').forEach(function(btn) {

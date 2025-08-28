@@ -15,9 +15,17 @@ class Faq extends Model
         'description',
         'status',
         'type',
+        'sort_order',
     ];
 
     protected $casts = [
         'status' => 'boolean',
     ];
+
+    protected static function booted()
+    {
+        static::addGlobalScope('sort_order', function ($query) {
+            $query->orderByRaw('COALESCE(sort_order, 999999) ASC')->orderByDesc('created_at');
+        });
+    }
 }

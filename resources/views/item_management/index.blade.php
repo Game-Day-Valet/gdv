@@ -74,6 +74,9 @@
                     <table id="datatable" class="table table-bordered dt-responsive table-responsive nowrap">
                         <thead>
                             <tr>
+                                @can('super_admin')
+                                <th style="width:32px;"></th>
+                                @endcan
                                 <th>Name</th>
                                 <th>Description</th>
                                 <th>Price</th>
@@ -83,9 +86,12 @@
                                 <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="itemsTbody">
                             @foreach ($items as $item)
-                            <tr>
+                            <tr data-id="{{ $item->id }}">
+                                @can('super_admin')
+                                <td class="drag-handle" style="cursor:move; text-align:center;">⇅</td>
+                                @endcan
                                 <td>{{ $item->name }}</td>
                                 <td>
                                     <div class="description-text" title="{{ $item->description ?? 'No description' }}">
@@ -128,6 +134,7 @@
 @section('script')
 @vite(['resources/js/pages/datatable.init.js'])
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.delete-item-btn').forEach(function(btn) {
@@ -147,6 +154,25 @@
                 });
             });
         });
+
+        @can('super_admin')
+        const tbody = document.getElementById('itemsTbody');
+        const sortable = new Sortable(tbody, {
+            handle: '.drag-handle',
+            animation: 150,
+            onEnd: async function(){
+                const rows = Array.from(tbody.querySelectorAll('tr[data-id]'));
+                const orders = rows.map((row, idx) => ({ id: parseInt(row.getAttribute('data-id')), sort_order: idx }));
+                try{
+                    await fetch('{{ route('item-management.reorder') }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                        body: JSON.stringify({ orders })
+                    });
+                }catch(e){ Swal.fire('Error', 'Failed to save order', 'error'); }
+            }
+        });
+        @endcan
     });
 </script>
 @endsection

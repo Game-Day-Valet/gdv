@@ -53,9 +53,10 @@ return [
     ],
 
     'twilio' => [
-        'sid'    => env('TWILIO_SID', 'TWILIO_SID_REMOVED'),
-        'token'  => env('TWILIO_TOKEN', 'TWILIO_TOKEN_REMOVED'),
-        'from'   => env('TWILIO_FROM', '+19802917404'),
+        'sid'     => env('TWILIO_SID', 'TWILIO_SID_REMOVED'),
+        'token'   => env('TWILIO_TOKEN', 'TWILIO_TOKEN_REMOVED'),
+        'from'    => env('TWILIO_FROM', '+19802917404'),
+        'enabled' => env('TWILIO_ENABLED', true),
     ],
 
     'apple' => [

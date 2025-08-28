@@ -11,13 +11,12 @@ class RentalRepository implements RentalRepositoryInterface
 {
     public function getAll()
     {
-        return Rental::with('tournament')->get();
+        return Rental::with(['user', 'tournament'])->get();
     }
 
     public function getAllPaginated($perPage = 15)
     {
-        $query = Rental::with(['user', 'tournament'])
-            ->orderBy('created_at', 'desc');
+        $query = Rental::with(['user', 'tournament']);
         $result = $query->paginate($perPage);
         
         return $result;
@@ -64,6 +63,7 @@ class RentalRepository implements RentalRepositoryInterface
                 'insurance_option' => $data['insurance_option'] ?? null,
                 'damage_waiver' => $data['damage_waiver'] ?? null,
                 'rental_date' => $data['rental_date'] ?? null,
+                'booking_days' => isset($data['booking_days']) ? (int) $data['booking_days'] : null,
                 'delivery_assigned_to' => $data['delivery_assigned_to'] ?? null,
                 'payment_method' => $data['payment_method'] ?? null,
                 'payment_status' => $data['payment_status'] ?? 'pending',
@@ -103,6 +103,7 @@ class RentalRepository implements RentalRepositoryInterface
                 'insurance_option' => $data['insurance_option'] ?? $rental->insurance_option,
                 'damage_waiver' => $data['damage_waiver'] ?? $rental->damage_waiver,
                 'rental_date' => $data['rental_date'] ?? $rental->rental_date,
+                'booking_days' => array_key_exists('booking_days', $data) ? (int) $data['booking_days'] : $rental->booking_days,
                 'delivery_assigned_to' => $data['delivery_assigned_to'] ?? $rental->delivery_assigned_to,
                 'payment_method' => $data['payment_method'] ?? $rental->payment_method,
                 'payment_status' => $data['payment_status'] ?? $rental->payment_status,

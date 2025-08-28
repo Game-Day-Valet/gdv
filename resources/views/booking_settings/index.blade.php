@@ -84,6 +84,55 @@
         </form>
     </div>
 </div>
+
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Chat Initial Message</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ route('booking-settings.save-chat-initial') }}">
+            @csrf
+            <div class="mb-3">
+                <label for="chat_initial_message" class="form-label">Initial Message</label>
+                <textarea name="chat_initial_message" id="chat_initial_message" class="form-control" rows="3" placeholder="Hi! A GDV team member will be with you shortly." required>{{ old('chat_initial_message', $chatInitial) }}</textarea>
+                <div class="form-text">This message is auto-sent when a new chat conversation starts.</div>
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+        </form>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Twilio SMS Templates</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ route('booking-settings.save-sms-templates') }}">
+            @csrf
+            <div class="mb-3">
+                <label class="form-label" for="sms_booking_confirmation">Booking Confirmation SMS</label>
+                <textarea name="sms_booking_confirmation" id="sms_booking_confirmation" class="form-control" rows="2" placeholder="Type the exact SMS text to send">{{ old('sms_booking_confirmation', $smsBooking) }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="sms_status_confirmed">Status: Confirmed</label>
+                <textarea name="sms_status_confirmed" id="sms_status_confirmed" class="form-control" rows="2" placeholder="Type the exact SMS text to send">{{ old('sms_status_confirmed', $smsConfirmed) }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="sms_status_out_for_delivery">Status: Out For Delivery</label>
+                <textarea name="sms_status_out_for_delivery" id="sms_status_out_for_delivery" class="form-control" rows="2" placeholder="Type the exact SMS text to send">{{ old('sms_status_out_for_delivery', $smsOutForDelivery) }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="sms_status_delivered">Status: Delivered</label>
+                <textarea name="sms_status_delivered" id="sms_status_delivered" class="form-control" rows="2" placeholder="Type the exact SMS text to send">{{ old('sms_status_delivered', $smsDelivered) }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="sms_status_cancelled">Status: Cancelled</label>
+                <textarea name="sms_status_cancelled" id="sms_status_cancelled" class="form-control" rows="2" placeholder="Type the exact SMS text to send">{{ old('sms_status_cancelled', $smsCancelled) }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+        </form>
+    </div>
+</div>
 @endsection
 
 @section('script')

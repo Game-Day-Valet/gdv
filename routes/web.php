@@ -100,20 +100,43 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth'], function () {
 	Route::post('/rental-management/{id}/update-status', [RentalManagementController::class, 'updateStatus'])->name('rental-management.update-status');
 	Route::post('/rental-management/{id}/update-payment-status', [RentalManagementController::class, 'updatePaymentStatus'])->name('rental-management.update-payment-status');
 	Route::get('/rental-management/{id}/available-statuses', [RentalManagementController::class, 'getAvailableStatuses'])->name('rental-management.available-statuses');
+	Route::post('rental-management/reorder', [RentalManagementController::class, function(\Illuminate\Http\Request $request){
+		$validated = $request->validate(['orders' => 'required|array', 'orders.*.id' => 'required|integer|exists:rentals,id', 'orders.*.sort_order' => 'required|integer|min:0']);
+		\DB::transaction(function() use ($validated){
+			foreach ($validated['orders'] as $o) { \App\Models\Rental::where('id', $o['id'])->update(['sort_order' => (int)$o['sort_order']]); }
+		});
+		return response()->json(['success' => true]);
+	}])->middleware('can:super_admin')->name('rental-management.reorder');
 
 	// User Management - Admin only
 	Route::group(['middleware' => ['can:super_admin']], function () {
 		Route::resource('booking-settings', \App\Http\Controllers\BookingSettingsController::class)->except(['show']);
 		Route::post('booking-settings/reorder', [\App\Http\Controllers\BookingSettingsController::class, 'reorder'])->name('booking-settings.reorder');
 		Route::post('booking-settings/save-email-content', [\App\Http\Controllers\BookingSettingsController::class, 'saveEmailContent'])->name('booking-settings.save-email-content');
+		Route::post('booking-settings/save-chat-initial', [\App\Http\Controllers\BookingSettingsController::class, 'saveChatInitialMessage'])->name('booking-settings.save-chat-initial');
+		Route::post('booking-settings/save-sms-templates', [\App\Http\Controllers\BookingSettingsController::class, 'saveSmsTemplates'])->name('booking-settings.save-sms-templates');
 		Route::resource('user-management', UserController::class);
 		Route::resource('role-management', RoleController::class);
 		Route::resource('item-management', ItemController::class);
+		Route::post('item-management/reorder', [ItemController::class, function(\Illuminate\Http\Request $request) {
+			$validated = $request->validate(['orders' => 'required|array', 'orders.*.id' => 'required|integer|exists:items,id', 'orders.*.sort_order' => 'required|integer|min:0']);
+			\DB::transaction(function() use ($validated){
+				foreach ($validated['orders'] as $o) { \App\Models\Item::where('id', $o['id'])->update(['sort_order' => (int)$o['sort_order']]); }
+			});
+			return response()->json(['success' => true]);
+		}])->name('item-management.reorder');
 		Route::resource('bundle-management', BundleController::class);
 		Route::resource('coupon-management', CouponManagementController::class);
 		Route::post('/coupon-management/{id}/send', [CouponManagementController::class, 'send'])->name('coupon-management.send');
 		Route::get('/coupon-management/{id}/preview', [CouponManagementController::class, 'preview'])->name('coupon-management.preview');
 		Route::resource('faq-management', FaqManagementController::class);
+		Route::post('faq-management/reorder', [FaqManagementController::class, function(\Illuminate\Http\Request $request) {
+			$validated = $request->validate(['orders' => 'required|array', 'orders.*.id' => 'required|integer|exists:faqs,id', 'orders.*.sort_order' => 'required|integer|min:0']);
+			\DB::transaction(function() use ($validated){
+				foreach ($validated['orders'] as $o) { \App\Models\Faq::where('id', $o['id'])->update(['sort_order' => (int)$o['sort_order']]); }
+			});
+			return response()->json(['success' => true]);
+		}])->name('faq-management.reorder');
 		Route::resource('privacy-policy-management', PrivacyPolicyManagementController::class);
 		Route::resource('terms-condition-management', TermsConditionManagementController::class);
 		// Allow only super_admin to delete rentals
