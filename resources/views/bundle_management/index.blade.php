@@ -61,7 +61,7 @@
                                         @endif
                                     </td>
                                     <td>{{ $bundle->name }}</td>
-                                    <td>{{ $bundle->description ?? '-' }}</td>
+                                    <td>{{ \Illuminate\Support\Str::limit(strip_tags($bundle->description ?? '-'), 60) }}</td>
                                     <td>{{ number_format($bundle->price, 2) }}</td>
                                     <td>
                                         @if ($bundle->items->isNotEmpty())
