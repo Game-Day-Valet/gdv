@@ -23,6 +23,13 @@ class TournamentRequest extends FormRequest
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'location' => 'required|string|max:255',
             'status' => 'nullable|in:' . implode(',', array_column(TournamentStatus::cases(), 'value')),
+            // Tournament specific item/bundle assignments (keyed by id)
+            'items' => 'nullable|array',
+            'items.*.enabled' => 'nullable|boolean',
+            'items.*.price' => 'nullable|numeric|min:0',
+            'bundles' => 'nullable|array',
+            'bundles.*.enabled' => 'nullable|boolean',
+            'bundles.*.price' => 'nullable|numeric|min:0',
         ];
 
         // Image is required only on create; optional on update

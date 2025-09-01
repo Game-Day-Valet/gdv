@@ -38,6 +38,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/token/validate', [AuthController::class, 'validateToken']);
 Route::post('/password/reset', [AuthController::class, 'passwordResetRequest']);
 Route::post('/password/reset/confirm', [AuthController::class, 'passwordResetConfirm']);
 Route::post('/verify-reset-code', [AuthController::class, 'verifyResetCode']);
@@ -54,6 +55,8 @@ Route::post('/coupon/validate', [CouponController::class, 'validateCoupon']);
 // Public booking settings
 Route::get('/settings/booking', [\App\Http\Controllers\Api\SettingsController::class, 'booking']);
 Route::get('/settings/chat', [\App\Http\Controllers\Api\SettingsController::class, 'chat']);
+// Public: tournament details with items/bundles
+Route::get('/tournaments/details/{id}', [TournamentController::class, 'details']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);

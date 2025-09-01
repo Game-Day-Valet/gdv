@@ -359,11 +359,20 @@ class RentalSystemController extends Controller
 
     public function showRentalBooking($tournamentId)
     {
-        $availableItems = $this->items->getAllAvailable();
-        $availableBundles = $this->bundles->getAllAvailable();
-
-        // Fetch tournament details
+        // Fetch tournament with associated items/bundles and apply per-tournament override pricing
         $tournament = $this->tournaments->find($tournamentId);
+
+        $availableItems = collect($tournament->items ?? [])->map(function ($item) {
+            $override = $item->pivot?->price;
+            $item->effective_price = $override !== null ? (float) $override : (float) ($item->price ?? 0);
+            return $item;
+        });
+
+        $availableBundles = collect($tournament->bundles ?? [])->map(function ($bundle) {
+            $override = $bundle->pivot?->price;
+            $bundle->effective_price = $override !== null ? (float) $override : (float) ($bundle->price ?? 0);
+            return $bundle;
+        });
 
         return view('rentalsystem.rental-booking', [
             'tournament' => $tournament,
@@ -427,6 +436,17 @@ class RentalSystemController extends Controller
 
         $user = Auth::user();
 
+        // Tournament-specific allowed items/bundles and prices (override if set)
+        $tournament = $this->tournaments->find((int) $request->input('tournament_id'));
+        $itemPrices = [];
+        foreach (($tournament->items ?? []) as $it) {
+            $itemPrices[$it->id] = (float) ($it->pivot?->price ?? $it->price ?? 0);
+        }
+        $bundlePrices = [];
+        foreach (($tournament->bundles ?? []) as $bd) {
+            $bundlePrices[$bd->id] = (float) ($bd->pivot?->price ?? $bd->price ?? 0);
+        }
+
         // Normalize selections
         $itemsInput = (array) $request->input('items', []);
         $bundlesInput = (array) $request->input('bundles', []);
@@ -435,13 +455,13 @@ class RentalSystemController extends Controller
         $itemsSubtotal = 0.0;
         $bundlesSubtotal = 0.0;
 
-        // Process items - store as [{"item_id":"1","quantity":3}]
+        // Process items - store as [{"item_id":"1","quantity":3}] using tournament-specific allowed list
         foreach ($itemsInput as $itemId => $qty) {
             $quantity = max(0, (int) $qty);
             if ($quantity > 0) {
-                $item = $this->items->find($itemId);
-                if ($item) {
-                    $price = (float) ($item->price ?? 0);
+                // Only include if associated with tournament
+                if (array_key_exists($itemId, $itemPrices)) {
+                    $price = (float) $itemPrices[$itemId];
                     $itemsSubtotal += $price * $quantity;
                     $selectedItems[] = [
                         'item_id' => (string) $itemId,
@@ -451,13 +471,12 @@ class RentalSystemController extends Controller
             }
         }
 
-        // Process bundles - store as [10,4] (just IDs, no quantities)
+        // Process bundles - store as [10,4] (just IDs, no quantities), only if associated with tournament
         foreach ($bundlesInput as $bundleId => $qty) {
             $quantity = max(0, (int) $qty);
             if ($quantity > 0) {
-                $bundle = $this->bundles->find($bundleId);
-                if ($bundle) {
-                    $price = (float) ($bundle->price ?? 0);
+                if (array_key_exists($bundleId, $bundlePrices)) {
+                    $price = (float) $bundlePrices[$bundleId];
                     $bundlesSubtotal += $price * $quantity;
                     // Store just the bundle ID, no quantity needed
                     $selectedBundles[] = (int) $bundleId;

@@ -91,6 +91,71 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+                        <div class="col-12">
+                            <hr>
+                            <h5>Items for this Tournament</h5>
+                            <div style="margin:6px 0 10px;">
+                                <label style="display:flex;align-items:center;gap:8px;">
+                                    <input type="checkbox" id="select_all_items" checked>
+                                    <span>Select All</span>
+                                </label>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:60px;">Enable</th>
+                                            <th>Name</th>
+                                            <th style="width:160px;">Price (optional)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach(($items ?? []) as $it)
+                                        <tr>
+                                            <td>
+                                                <input type="checkbox" name="items[{{ $it->id }}][enabled]" value="1" checked>
+                                            </td>
+                                            <td>{{ $it->name }} <small class="text-muted">(default {{ number_format($it->price,2) }})</small></td>
+                                            <td>
+                                                <input type="number" step="0.01" min="0" name="items[{{ $it->id }}][price]" class="form-control form-control-sm" placeholder="Leave blank for default">
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                            <h5 class="mt-4">Bundles for this Tournament</h5>
+                            <div style="margin:6px 0 10px;">
+                                <label style="display:flex;align-items:center;gap:8px;">
+                                    <input type="checkbox" id="select_all_bundles" checked>
+                                    <span>Select All</span>
+                                </label>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:60px;">Enable</th>
+                                            <th>Name</th>
+                                            <th style="width:160px;">Price (optional)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach(($bundles ?? []) as $b)
+                                        <tr>
+                                            <td>
+                                                <input type="checkbox" name="bundles[{{ $b->id }}][enabled]" value="1" checked>
+                                            </td>
+                                            <td>{{ $b->name }} <small class="text-muted">(default {{ number_format($b->price,2) }})</small></td>
+                                            <td>
+                                                <input type="number" step="0.01" min="0" name="bundles[{{ $b->id }}][price]" class="form-control form-control-sm" placeholder="Leave blank for default">
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                         <div class="col-12 mt-4">
                             <button class="btn btn-primary" type="submit">Submit form</button>
                         </div>
@@ -99,4 +164,22 @@
             </div>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            function wireSelectAll(masterId, selector) {
+                const master = document.getElementById(masterId);
+                if (!master) return;
+                const syncFromMaster = () => document.querySelectorAll(selector).forEach(c => c.checked = master.checked);
+                const syncMaster = () => {
+                    const list = Array.from(document.querySelectorAll(selector));
+                    master.checked = list.length > 0 && list.every(c => c.checked);
+                };
+                master.addEventListener('change', syncFromMaster);
+                document.querySelectorAll(selector).forEach(c => c.addEventListener('change', syncMaster));
+                syncMaster();
+            }
+            wireSelectAll('select_all_items', 'input[type="checkbox"][name^="items"][name$="[enabled]"]');
+            wireSelectAll('select_all_bundles', 'input[type="checkbox"][name^="bundles"][name$="[enabled]"]');
+        });
+    </script>
 @endsection

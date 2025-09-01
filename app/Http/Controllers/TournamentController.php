@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ItemStatus;
 use Illuminate\Http\Request;
 use App\Enums\TournamentStatus;
 use App\Repositories\TournamentRepositoryInterface;
 use App\Http\Requests\TournamentRequest;
+use App\Models\Bundle;
+use App\Models\Item;
 use App\Models\Sport;
 
 class TournamentController extends Controller
@@ -41,7 +44,9 @@ class TournamentController extends Controller
     {
         $statuses = TournamentStatus::cases();
         $sports = Sport::where('status', 'active')->get();
-        return view('tournament_management.create', compact('statuses', 'sports'));
+        $items = Item::where('status', ItemStatus::AVAILABLE->value)->orderBy('name')->get();
+        $bundles = Bundle::where('status', ItemStatus::AVAILABLE->value)->orderBy('name')->get();
+        return view('tournament_management.create', compact('statuses', 'sports', 'items', 'bundles'));
     }
 
     public function store(TournamentRequest $request)
@@ -55,7 +60,9 @@ class TournamentController extends Controller
         $tournament = $this->tournamentRepository->find($id);
         $statuses = TournamentStatus::cases();
         $sports = Sport::where('status', 'active')->get();
-        return view('tournament_management.edit', compact('tournament', 'statuses', 'sports'));
+        $items = Item::where('status', ItemStatus::AVAILABLE->value)->orderBy('name')->get();
+        $bundles = Bundle::where('status', ItemStatus::AVAILABLE->value)->orderBy('name')->get();
+        return view('tournament_management.edit', compact('tournament', 'statuses', 'sports', 'items', 'bundles'));
     }
 
     public function update(TournamentRequest $request, $id)

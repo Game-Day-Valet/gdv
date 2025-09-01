@@ -39,4 +39,18 @@ class Tournament extends Model
     {
         return $this->belongsTo(Sport::class);
     }
+
+    public function items()
+    {
+        return $this->belongsToMany(Item::class, 'tournament_item')
+            ->withPivot('price')
+            ->withTimestamps();
+    }
+
+    public function bundles()
+    {
+        return $this->belongsToMany(Bundle::class, 'tournament_bundle')
+            ->withPivot('price')
+            ->withTimestamps();
+    }
 }

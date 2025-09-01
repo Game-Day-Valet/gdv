@@ -89,6 +89,24 @@ class AuthController extends Controller
         return response()->json(['referral_code' => $code, 'link' => route('register.referal', ['referralCode' => $code])]);
     }
 
+    public function validateToken(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string',
+        ]);
+
+        $token = $request->input('token');
+        try {
+            $user = \Laravel\Sanctum\PersonalAccessToken::findToken($token)?->tokenable;
+            if ($user) {
+                return response()->json(['valid' => true]);
+            }
+            return response()->json(['valid' => false]);
+        } catch (\Throwable $e) {
+            return response()->json(['valid' => false]);
+        }
+    }
+
     public function checkReferralCode(Request $request)
     {
         $request->validate([

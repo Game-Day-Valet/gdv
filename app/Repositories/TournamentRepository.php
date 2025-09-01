@@ -79,7 +79,7 @@ class TournamentRepository implements TournamentRepositoryInterface
 
     public function find($id)
     {
-        return Tournament::with('sport')->findOrFail($id);
+        return Tournament::with(['sport', 'items', 'bundles'])->findOrFail($id);
     }
 
     public function create(array $data)
@@ -91,7 +91,7 @@ class TournamentRepository implements TournamentRepositoryInterface
                 $imagePath = $data['image']->store('tournaments', 'public');
             }
 
-            return Tournament::create([
+            $tournament = Tournament::create([
                 'sport_id' => $data['sport_id'],
                 'name' => $data['name'],
                 'image' => $imagePath, // Store relative path
@@ -100,6 +100,40 @@ class TournamentRepository implements TournamentRepositoryInterface
                 'location' => $data['location'],
                 'status' => $data['status'] ?? TournamentStatus::ACTIVE->value,
             ]);
+
+            // Attach items if provided: items[itemId] => ['enabled' => bool, 'price' => number|null]
+            if (!empty($data['items']) && is_array($data['items'])) {
+                $syncItems = [];
+                foreach ($data['items'] as $itemId => $payload) {
+                    if (empty($payload['enabled'])) continue; // only when checkbox is checked
+                    $pivot = [];
+                    if (isset($payload['price']) && $payload['price'] !== '' && $payload['price'] !== null) {
+                        $pivot['price'] = (float)$payload['price'];
+                    }
+                    $syncItems[(int)$itemId] = $pivot;
+                }
+                if (!empty($syncItems)) {
+                    $tournament->items()->sync($syncItems);
+                }
+            }
+
+            // Attach bundles if provided: bundles[bundleId] => ['enabled' => bool, 'price' => number|null]
+            if (!empty($data['bundles']) && is_array($data['bundles'])) {
+                $syncBundles = [];
+                foreach ($data['bundles'] as $bundleId => $payload) {
+                    if (empty($payload['enabled'])) continue; // only when checkbox is checked
+                    $pivot = [];
+                    if (isset($payload['price']) && $payload['price'] !== '' && $payload['price'] !== null) {
+                        $pivot['price'] = (float)$payload['price'];
+                    }
+                    $syncBundles[(int)$bundleId] = $pivot;
+                }
+                if (!empty($syncBundles)) {
+                    $tournament->bundles()->sync($syncBundles);
+                }
+            }
+
+            return $tournament;
 
             // Optional Airtable sync (commented out)
             /*
@@ -150,6 +184,34 @@ class TournamentRepository implements TournamentRepositoryInterface
                 'location' => $data['location'] ?? $tournament->location,
                 'status' => $data['status'] ?? $tournament->status,
             ]);
+
+            // Sync items if provided
+            if (array_key_exists('items', $data)) {
+                $syncItems = [];
+                foreach ((array)$data['items'] as $itemId => $payload) {
+                    if (empty($payload['enabled'])) continue; // only attach checked
+                    $pivot = [];
+                    if (isset($payload['price']) && $payload['price'] !== '' && $payload['price'] !== null) {
+                        $pivot['price'] = (float)$payload['price'];
+                    }
+                    $syncItems[(int)$itemId] = $pivot;
+                }
+                $tournament->items()->sync($syncItems);
+            }
+
+            // Sync bundles if provided
+            if (array_key_exists('bundles', $data)) {
+                $syncBundles = [];
+                foreach ((array)$data['bundles'] as $bundleId => $payload) {
+                    if (empty($payload['enabled'])) continue; // only attach checked
+                    $pivot = [];
+                    if (isset($payload['price']) && $payload['price'] !== '' && $payload['price'] !== null) {
+                        $pivot['price'] = (float)$payload['price'];
+                    }
+                    $syncBundles[(int)$bundleId] = $pivot;
+                }
+                $tournament->bundles()->sync($syncBundles);
+            }
 
             // Optional Airtable sync (commented out)
             /*
