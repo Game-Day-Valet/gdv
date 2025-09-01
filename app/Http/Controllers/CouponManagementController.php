@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Models\CouponSendBatch;
+use App\Jobs\SendCouponBatchJob;
 
 class CouponManagementController extends Controller
 {
@@ -112,7 +114,7 @@ class CouponManagementController extends Controller
         try {
             // Debug: Log the request
             $user = Auth::user();
-            Log::info('Coupon send request', [
+            Log::channel('daily')->info('Coupon send request', [
                 'id' => $id,
                 'user_id' => Auth::id(),
                 'user_roles' => $user ? $user->roles->pluck('name') : [],
@@ -120,57 +122,66 @@ class CouponManagementController extends Controller
                 'has_super_admin_permission' => $user ? $user->hasPermissionTo('super_admin') : false,
                 'has_super_admin_role' => $user ? $user->hasRole('super_admin') : false,
                 'is_ajax' => request()->ajax(),
-                'headers' => request()->headers->all()
+                'headers' => request()->headers->all(),
+                'ip' => request()->ip(),
+                'user_agent' => request()->userAgent(),
             ]);
 
+            // Validate coupon exists before queuing
             $coupon = $this->couponRepository->find($id);
             if (!$coupon) {
-                    return response()->json(['success' => false, 'message' => 'Coupon not found.'], 404);
-              }
-
-            // Get users with 'user' role and specific email
-            $users = User::where('email_verified_at', '!=', null)
-                ->whereHas('roles', function ($query) {
-                    $query->where('name', 'user');
-                })
-                ->get();
-
-            if ($users->isEmpty()) {
-                    return response()->json(['success' => false, 'message' => 'No verified customers found to send the coupon to.'], 400);
-             }
-
-            $sentCount = 0;
-            $failedCount = 0;
-
-            foreach ($users as $user) {
-                if(empty($user->email)) continue;
-                Log::info('user ' . $user);
-                try {
-
-                    Mail::to($user->email)->send(new CouponEmail($user, $coupon));
-                     $sentCount++;
-
-                    Log::info('request sent ' . $user->email);
-                } catch (\Exception $e) {
-                    $failedCount++;
-                    Log::error('Failed to send coupon email to ' . $user->email . ': ' . $e->getMessage());
-                }
-            }
-            $message = "Coupon sent successfully to {$sentCount} customers.";
-            if ($failedCount > 0) {
-                $message .= " Failed to send to {$failedCount} customers.";
+                Log::warning('Coupon not found', ['coupon_id' => $id]);
+                return response()->json(['success' => false, 'message' => 'Coupon not found.'], 404);
             }
 
-                return response()->json([
-                    'success' => true,
-                    'message' => $message,
-                    'sent_count' => $sentCount,
-                    'failed_count' => $failedCount
-                ]);
+            // Create batch log entry and dispatch background job
+            $batch = CouponSendBatch::create([
+                'coupon_id' => (int) $id,
+                'initiated_by' => (int) Auth::id(),
+                'status' => 'queued',
+                'message' => 'Queued for sending',
+            ]);
+
+            SendCouponBatchJob::dispatch($batch->id);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Coupon email sending queued. You will see results shortly.',
+                'batch_id' => $batch->id,
+                'status_url' => route('coupon-management.send-status', $batch->id),
+                'logs_url' => route('coupon-management.logs'),
+            ]);
             } catch (\Exception $e) {
-            Log::error('Failed to send coupon. Please try again.' . $e->getMessage());
+            Log::error('Coupon send endpoint failed', [
+                'coupon_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
                 return response()->json(['success' => false, 'message' => 'Failed to send coupon. Please try again.'], 500);
             }
+    }
+
+    public function sendStatus(int $batchId)
+    {
+        $batch = CouponSendBatch::find($batchId);
+        if (!$batch) {
+            return response()->json(['success' => false, 'message' => 'Batch not found'], 404);
+        }
+        return response()->json([
+            'success' => true,
+            'status' => $batch->status,
+            'sent_count' => (int) $batch->sent_count,
+            'failed_count' => (int) $batch->failed_count,
+            'total_recipients' => (int) $batch->total_recipients,
+            'message' => $batch->message,
+            'finished_at' => optional($batch->finished_at)->toDateTimeString(),
+        ]);
+    }
+
+    public function logs()
+    {
+        $batches = CouponSendBatch::with('coupon')->latest()->paginate(25);
+        return view('coupon_management.logs', compact('batches'));
     }
 
     /**

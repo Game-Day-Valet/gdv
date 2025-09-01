@@ -23,7 +23,10 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Coupon List</h5>
-                    <a href="{{ route('coupon-management.create') }}" class="btn btn-primary" id="createButton">Create</a>
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('coupon-management.logs') }}" class="btn btn-outline-secondary">View Logs</a>
+                        <a href="{{ route('coupon-management.create') }}" class="btn btn-primary" id="createButton">Create</a>
+                    </div>
                 </div>
                 <div class="card-body">
                     @if (session('success'))
@@ -67,7 +70,8 @@
                                                 class="btn btn-sm btn-info" target="_blank">Preview</a>
                                             <button type="button" class="btn btn-sm btn-success send-coupon-btn"
                                                     data-coupon-id="{{ $coupon->id }}"
-                                                    data-coupon-code="{{ $coupon->code }}">Send</button>
+                                                    data-coupon-code="{{ $coupon->code }}"
+                                                    data-send-url="{{ route('coupon-management.send', $coupon->id) }}">Send</button>
                                             <a href="{{ route('coupon-management.edit', $coupon->id) }}"
                                                 class="btn btn-sm btn-primary">Edit</a>
                                             <form action="{{ route('coupon-management.destroy', $coupon->id) }}" method="POST"
@@ -118,6 +122,7 @@
                 btn.addEventListener('click', function (e) {
                     const couponId = btn.getAttribute('data-coupon-id');
                     const couponCode = btn.getAttribute('data-coupon-code');
+                    const sendUrl = btn.getAttribute('data-send-url');
 
                     Swal.fire({
                         title: 'Send Coupon to Customers?',
@@ -132,11 +137,12 @@
                             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
                             console.log('Sending coupon request:', { couponId, csrfToken });
 
-                            return fetch(`/coupon-management/${couponId}/send`, {
+                            return fetch(sendUrl, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': csrfToken
+                                    'X-CSRF-TOKEN': csrfToken,
+                                    'Accept': 'application/json'
                                 }
                             })
                             .then(response => {
@@ -167,14 +173,36 @@
                         allowOutsideClick: () => !Swal.isLoading()
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            if (result.value.success) {
-                                Swal.fire({
-                                    title: 'Success!',
-                                    text: result.value.message,
-                                    icon: 'success',
-                                    confirmButtonColor: '#28a745'
-                                });
-                            } else {
+                            if (result.value && result.value.success && result.value.batch_id) {
+                                const statusUrl = result.value.status_url;
+                                const logsUrl = result.value.logs_url;
+                                // Poll for status for a short while to show progress summary
+                                let attempts = 0;
+                                const poll = setInterval(() => {
+                                    attempts++;
+                                    fetch(statusUrl, { headers: { 'Accept': 'application/json' }})
+                                        .then(r => r.json())
+                                        .then(data => {
+                                            if (data && data.success && (data.status === 'completed' || data.status === 'failed')) {
+                                                clearInterval(poll);
+                                                Swal.fire({
+                                                    title: data.status === 'completed' ? 'Emails Sent' : 'Emails Failed',
+                                                    html: `Total: ${data.total_recipients}<br/>Sent: ${data.sent_count}<br/>Failed: ${data.failed_count}<br/><a href="${logsUrl}" target="_blank">View logs</a>`,
+                                                    icon: data.status === 'completed' ? 'success' : 'error',
+                                                    confirmButtonColor: data.status === 'completed' ? '#28a745' : '#dc3545'
+                                                });
+                                            } else if (attempts >= 20) { // ~20 * 1s = 20 seconds
+                                                clearInterval(poll);
+                                                Swal.fire({
+                                                    title: 'Queued',
+                                                    html: `The send job is still running in background. <a href="${logsUrl}" target="_blank">Open logs</a> to check later.`,
+                                                    icon: 'info'
+                                                });
+                                            }
+                                        })
+                                        .catch(() => {});
+                                }, 1000);
+                            } else if (result.value && !result.value.success) {
                                 Swal.fire({
                                     title: 'Error!',
                                     text: result.value.message,

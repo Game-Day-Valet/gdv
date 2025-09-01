@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RoutingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EmailPreviewController;
+use Illuminate\Support\Facades\DB;
 
 require __DIR__ . '/auth.php';
 
@@ -126,13 +127,16 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth'], function () {
 			return response()->json(['success' => true]);
 		}])->name('item-management.reorder');
 		Route::resource('bundle-management', BundleController::class);
-		Route::resource('coupon-management', CouponManagementController::class);
+		// Place specific coupon routes BEFORE the resource route to avoid conflicts with `coupon-management/{id}`
+		Route::get('/coupon-management/logs', [CouponManagementController::class, 'logs'])->name('coupon-management.logs');
+		Route::get('/coupon-management/send-status/{id}', [CouponManagementController::class, 'sendStatus'])->name('coupon-management.send-status');
 		Route::post('/coupon-management/{id}/send', [CouponManagementController::class, 'send'])->name('coupon-management.send');
 		Route::get('/coupon-management/{id}/preview', [CouponManagementController::class, 'preview'])->name('coupon-management.preview');
+		Route::resource('coupon-management', CouponManagementController::class);
 		Route::resource('faq-management', FaqManagementController::class);
 		Route::post('faq-management/reorder', [FaqManagementController::class, function(\Illuminate\Http\Request $request) {
 			$validated = $request->validate(['orders' => 'required|array', 'orders.*.id' => 'required|integer|exists:faqs,id', 'orders.*.sort_order' => 'required|integer|min:0']);
-			\DB::transaction(function() use ($validated){
+			DB::transaction(function() use ($validated){
 				foreach ($validated['orders'] as $o) { \App\Models\Faq::where('id', $o['id'])->update(['sort_order' => (int)$o['sort_order']]); }
 			});
 			return response()->json(['success' => true]);
