@@ -62,16 +62,16 @@
                                     @endcan
                                     <td>
                                         @if($tournament->image)
-                                            <img src="{{  asset('storage/'.$tournament->image) }}" alt="{{ $tournament->name }}" class="img-thumbnail" width="50px" height="50px">
+                                            <img src="{{  asset('storage/'.$tournament->image) }}" alt="" class="img-thumbnail" width="50px" height="50px">
                                         @else
                                             <span class="text-muted">No image</span>
                                         @endif
                                     </td>
                                     <td>{{ $tournament->sport->name ?? '-' }}</td>
-                                    <td>{{ $tournament->name }}</td>
+                                    <td><span class="d-inline-block text-truncate" style="max-width: 220px;" title="{{ $tournament->name }}">{{ $tournament->name }}</span></td>
                                     <td>{{ \Carbon\Carbon::parse($tournament->start_date)->format('d M Y') }}</td>
                                     <td>{{ $tournament->end_date ? \Carbon\Carbon::parse($tournament->end_date)->format('d M Y') : '-' }}</td>
-                                    <td>{{ $tournament->location }}</td>
+                                    <td><span class="d-inline-block text-truncate" style="max-width: 260px;" title="{{ $tournament->location }}">{{ $tournament->location }}</span></td>
                                     <td>{{ \Illuminate\Support\Str::title($tournament->status->value) }}</td>
                                     <td>
                                         <div class="d-flex gap-2">
