@@ -17,6 +17,7 @@ class FaqRequest extends FormRequest
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'status' => 'required|boolean',
+            'color' => 'nullable|string|max:20',
         ];
     }
 }

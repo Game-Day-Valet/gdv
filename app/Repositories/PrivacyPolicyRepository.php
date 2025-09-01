@@ -25,6 +25,7 @@ class PrivacyPolicyRepository implements PrivacyPolicyRepositoryInterface
                 'description' => $data['description'],
                 'status' => $data['status'] ?? true,
                 'type' => 'privacy_policy',
+                'color' => $data['color'] ?? null,
             ]);
         });
     }
@@ -37,6 +38,7 @@ class PrivacyPolicyRepository implements PrivacyPolicyRepositoryInterface
                 'title' => $data['title'] ?? $privacyPolicy->title,
                 'description' => $data['description'] ?? $privacyPolicy->description,
                 'status' => $data['status'] ?? $privacyPolicy->status,
+                'color' => array_key_exists('color', $data) ? $data['color'] : $privacyPolicy->color,
             ]);
             return $privacyPolicy;
         });

@@ -25,6 +25,7 @@ class TermsConditionRepository implements TermsConditionRepositoryInterface
                 'description' => $data['description'],
                 'status' => $data['status'] ?? true,
                 'type' => 'terms_and_conditions',
+                'color' => $data['color'] ?? null,
             ]);
         });
     }
@@ -37,6 +38,7 @@ class TermsConditionRepository implements TermsConditionRepositoryInterface
                 'title' => $data['title'] ?? $terms->title,
                 'description' => $data['description'] ?? $terms->description,
                 'status' => $data['status'] ?? $terms->status,
+                'color' => array_key_exists('color', $data) ? $data['color'] : $terms->color,
             ]);
             return $terms;
         });

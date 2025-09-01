@@ -22,7 +22,13 @@ class FaqController extends Controller
     public function index()
     {
         $faqs = $this->faqRepository->getAll()->where('status', true); // Only enabled FAQs
-        return FaqResource::collection($faqs);
+        $color = optional($this->faqRepository->getAll()->first())->color; // page-level color (nullable)
+        $hex = strtoupper(ltrim((string)($color ?: '#FFFFFF'), '#'));
+        $topColor = '0xFF' . $hex;
+        return response()->json([
+            'data' => FaqResource::collection($faqs)->resolve(),
+            'color' => $topColor,
+        ]);
     }
 
     public function store(FaqRequest $request)

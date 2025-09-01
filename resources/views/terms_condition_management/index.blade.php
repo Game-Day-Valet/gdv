@@ -23,7 +23,17 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Terms & Conditions List</h5>
-                    <a href="{{ route('terms-condition-management.create') }}" class="btn btn-primary" id="createButton">Create</a>
+                    <div class="d-flex align-items-center gap-2">
+                        @php $tFirst = $termsConditions->first(); $tColor = $tFirst->color ?? '#ffffff'; @endphp
+                        @if($tFirst)
+                        <button type="button" class="btn btn-light border d-flex align-items-center gap-2" id="termsColorBtn" title="Change page theme color">
+                            <span class="rounded-circle" id="termsColorSwatch" style="width:16px;height:16px;display:inline-block;border:1px solid #ccc;background: {{ $tColor }};"></span>
+                            <span class="d-none d-sm-inline">Theme color</span>
+                        </button>
+                        <input type="color" id="termsColorInput" value="{{ $tColor }}" class="visually-hidden">
+                        @endif
+                        <a href="{{ route('terms-condition-management.create') }}" class="btn btn-primary" id="createButton">Create</a>
+                    </div>
                 </div>
                 <div class="card-body">
                     @if (session('success'))
@@ -91,6 +101,24 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            (function(){
+                const btn = document.getElementById('termsColorBtn');
+                const input = document.getElementById('termsColorInput');
+                const swatch = document.getElementById('termsColorSwatch');
+                if(btn && input){
+                    btn.addEventListener('click', ()=> input.click());
+                    input.addEventListener('input', async function(){
+                        const id = {{ $tFirst->id ?? 'null' }};
+                        if(!id){ return; }
+                        const color = input.value || '#ffffff';
+                        if(swatch){ swatch.style.background = color; }
+                        try{
+                            const resp = await fetch(`{{ url('admin/terms-condition-management') }}/${id}`, { method:'POST', headers:{'X-CSRF-TOKEN':'{{ csrf_token() }}'}, body:(()=>{ const f=new FormData(); f.append('_method','PUT'); f.append('color', color); f.append('title','{{ $tFirst->title ?? '' }}'); f.append('description','{{ Str::limit(strip_tags($tFirst->description ?? ''), 90) }}'); f.append('status','{{ $tFirst->status ?? 1 }}'); return f; })() });
+                            if(!resp.ok){ throw new Error(); }
+                        }catch(e){ Swal && Swal.fire('Error', 'Failed to save color', 'error'); }
+                    });
+                }
+            })();
             document.querySelectorAll('.delete-terms-btn').forEach(function (btn) {
                 btn.addEventListener('click', function (e) {
                     Swal.fire({

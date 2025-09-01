@@ -26,6 +26,7 @@ class FaqRepository implements FaqRepositoryInterface
                 'description' => $data['description'],
                 'status' => $data['status'] ?? true,
                 'type' => 'faq',
+                'color' => $data['color'] ?? null,
             ]);
         });
     }
@@ -38,6 +39,7 @@ class FaqRepository implements FaqRepositoryInterface
                 'title' => $data['title'] ?? $faq->title,
                 'description' => $data['description'] ?? $faq->description,
                 'status' => $data['status'] ?? $faq->status,
+                'color' => array_key_exists('color', $data) ? $data['color'] : $faq->color,
             ]);
             return $faq;
         });

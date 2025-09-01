@@ -23,7 +23,17 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Privacy Policy List</h5>
-                    <a href="{{ route('privacy-policy-management.create') }}" class="btn btn-primary" id="createButton">Create</a>
+                    <div class="d-flex align-items-center gap-2">
+                        @php $ppFirst = $privacyPolicies->first(); $ppColor = $ppFirst->color ?? '#ffffff'; @endphp
+                        @if($ppFirst)
+                        <button type="button" class="btn btn-light border d-flex align-items-center gap-2" id="privacyColorBtn" title="Change page theme color">
+                            <span class="rounded-circle" id="privacyColorSwatch" style="width:16px;height:16px;display:inline-block;border:1px solid #ccc;background: {{ $ppColor }};"></span>
+                            <span class="d-none d-sm-inline">Theme color</span>
+                        </button>
+                        <input type="color" id="privacyColorInput" value="{{ $ppColor }}" class="visually-hidden">
+                        @endif
+                        <a href="{{ route('privacy-policy-management.create') }}" class="btn btn-primary" id="createButton">Create</a>
+                    </div>
                 </div>
                 <div class="card-body">
                     @if (session('success'))
@@ -91,6 +101,24 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            (function(){
+                const btn = document.getElementById('privacyColorBtn');
+                const input = document.getElementById('privacyColorInput');
+                const swatch = document.getElementById('privacyColorSwatch');
+                if(btn && input){
+                    btn.addEventListener('click', ()=> input.click());
+                    input.addEventListener('input', async function(){
+                        const id = {{ $ppFirst->id ?? 'null' }};
+                        if(!id){ return; }
+                        const color = input.value || '#ffffff';
+                        if(swatch){ swatch.style.background = color; }
+                        try{
+                            const resp = await fetch(`{{ url('admin/privacy-policy-management') }}/${id}`, { method:'POST', headers:{'X-CSRF-TOKEN':'{{ csrf_token() }}'}, body:(()=>{ const f=new FormData(); f.append('_method','PUT'); f.append('color', color); f.append('title','{{ $ppFirst->title ?? '' }}'); f.append('description','{{ Str::limit(strip_tags($ppFirst->description ?? ''), 90) }}'); f.append('status','{{ $ppFirst->status ?? 1 }}'); return f; })() });
+                            if(!resp.ok){ throw new Error(); }
+                        }catch(e){ Swal && Swal.fire('Error', 'Failed to save color', 'error'); }
+                    });
+                }
+            })();
             document.querySelectorAll('.delete-privacy-policy-btn').forEach(function (btn) {
                 btn.addEventListener('click', function (e) {
                     Swal.fire({

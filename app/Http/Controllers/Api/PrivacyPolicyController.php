@@ -18,6 +18,12 @@ class PrivacyPolicyController extends Controller
     public function index()
     {
         $privacyPolicies = $this->privacyPolicyRepository->getAll()->where('status', true); // Only enabled privacy policies
-        return PrivacyPolicyResource::collection($privacyPolicies);
+        $color = optional($this->privacyPolicyRepository->getAll()->first())->color;
+        $hex = strtoupper(ltrim((string)($color ?: '#FFFFFF'), '#'));
+        $topColor = '0xFF' . $hex;
+        return response()->json([
+            'data' => PrivacyPolicyResource::collection($privacyPolicies)->resolve(),
+            'color' => $topColor,
+        ]);
     }
 }

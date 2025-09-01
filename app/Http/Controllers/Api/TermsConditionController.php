@@ -18,7 +18,13 @@ class TermsConditionController extends Controller
     public function index()
     {
         $terms = $this->termsRepository->getAll()->where('status', true);
-        return TermsConditionResource::collection($terms);
+        $color = optional($this->termsRepository->getAll()->first())->color;
+        $hex = strtoupper(ltrim((string)($color ?: '#FFFFFF'), '#'));
+        $topColor = '0xFF' . $hex;
+        return response()->json([
+            'data' => TermsConditionResource::collection($terms)->resolve(),
+            'color' => $topColor,
+        ]);
     }
 }
 

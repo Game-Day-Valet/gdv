@@ -16,6 +16,7 @@ class Faq extends Model
         'status',
         'type',
         'sort_order',
+        'color',
     ];
 
     protected $casts = [
