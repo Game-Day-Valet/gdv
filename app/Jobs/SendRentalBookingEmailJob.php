@@ -44,12 +44,34 @@ class SendRentalBookingEmailJob implements ShouldQueue
             // Prepare email data
             $dynamicContent = \App\Models\BookingOption::where('type', 'email_content')->value('description');
 
+            // Build name maps for items and bundles displayed in the email
+            $itemNames = [];
+            $bundleNames = [];
+            try {
+                if (!empty($rental->items) && is_array($rental->items)) {
+                    $ids = collect($rental->items)->pluck('item_id')->filter()->unique()->values()->all();
+                    if (!empty($ids)) {
+                        $itemNames = \App\Models\Item::whereIn('id', $ids)->pluck('name', 'id')->toArray();
+                    }
+                }
+            } catch (\Throwable $e) { /* ignore */ }
+            try {
+                if (!empty($rental->bundles) && is_array($rental->bundles)) {
+                    $bids = collect($rental->bundles)->filter('is_numeric')->unique()->values()->all();
+                    if (!empty($bids)) {
+                        $bundleNames = \App\Models\Bundle::whereIn('id', $bids)->pluck('name', 'id')->toArray();
+                    }
+                }
+            } catch (\Throwable $e) { /* ignore */ }
+
             $emailData = [
                 'rental' => $rental,
                 'user' => $rental->user,
                 'tournament' => $rental->tournament,
                 'sport' => $rental->tournament->sport ?? null,
                 'email_content' => $dynamicContent,
+                'itemNames' => $itemNames,
+                'bundleNames' => $bundleNames,
             ];
 
             Mail::send('emails.rental-booking', $emailData, function ($message) use ($rental) {
@@ -68,16 +90,14 @@ class SendRentalBookingEmailJob implements ShouldQueue
                     $twilio = new TwilioClient($sid, $token);
                     $body = (string) (\App\Models\BookingOption::where('type', 'sms_booking_confirmation')->value('description') ?? '');
                     if ($body === '') {
-                        // If admin left blank, skip silently
                         Log::info('SMS template empty for booking confirmation; skipping Twilio send.', ['rental_id' => $rental->id]);
                     } else {
                         $twilio->messages->create($to, ['from' => $from, 'body' => $body]);
+                        Log::info('Twilio SMS sent for rental booking', [
+                            'rental_id' => $rental->id,
+                            'to' => $to,
+                        ]);
                     }
-                    $twilio->messages->create($to, ['from' => $from, 'body' => $body]);
-                    Log::info('Twilio SMS sent for rental booking', [
-                        'rental_id' => $rental->id,
-                        'to' => $to,
-                    ]);
                 } catch (\Throwable $e) {
                     Log::error('Twilio SMS failed', [
                         'rental_id' => $rental->id,

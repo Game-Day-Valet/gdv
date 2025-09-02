@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Events\RentalBookingCreated;
 use App\Events\RentalStatusUpdated;
 use App\Listeners\SendFcmRentalNotification;
+use App\Listeners\SendRentalStatusUpdateEmail;
 use App\Listeners\SendRentalBookingEmail;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -27,6 +28,7 @@ class EventServiceProvider extends ServiceProvider
         ],
         RentalStatusUpdated::class => [
         SendFcmRentalNotification::class,
+        SendRentalStatusUpdateEmail::class,
         ],
     ];
 

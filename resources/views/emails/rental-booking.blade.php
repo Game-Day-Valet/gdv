@@ -294,7 +294,7 @@
                 @foreach($rental->items as $item)
                 @if(is_array($item) && isset($item['item_id']) && isset($item['quantity']))
                 <div class="item-row">
-                    <span>Item #{{ $item['item_id'] }}</span>
+                    <span>{{ $itemNames[$item['item_id']] ?? ('Item #' . $item['item_id']) }}</span>
                     <span>Qty: {{ $item['quantity'] }}</span>
                 </div>
                 @endif
@@ -308,7 +308,7 @@
                 @foreach($rental->bundles as $bundleId)
                 @if(is_numeric($bundleId))
                 <div class="item-row">
-                    <span>Bundle #{{ $bundleId }}</span>
+                    <span>{{ $bundleNames[$bundleId] ?? ('Bundle #' . $bundleId) }}</span>
                     <span>Qty: 1</span>
                 </div>
                 @endif

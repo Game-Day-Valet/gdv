@@ -11,29 +11,32 @@ class NotificationController extends Controller
     public function list(Request $request)
     {
         $user = Auth::user();
-
+    
         $perPage = (int) max(1, min(100, (int) $request->query('per_page', 20)));
         $unreadOnly = (bool) $request->boolean('unread_only', false);
-
+    
         $query = $unreadOnly ? $user->unreadNotifications() : $user->notifications();
-
+    
         $notifications = $query
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
-
+    
         $items = $notifications->getCollection()->map(function ($n) {
             $payload = $n->data;
+    
             if (is_array($payload) && array_key_exists('user_id', $payload)) {
                 $payload['user_id'] = (int) $payload['user_id'];
             }
+    
             if (is_array($payload) && array_key_exists('timestamp', $payload) && !empty($payload['timestamp'])) {
                 try {
-                    $payload['formatted_timestamp'] = \Carbon\Carbon::parse($payload['timestamp'])->format('d M Y H:i');
+                    $payload['formatted_timestamp'] = \Carbon\Carbon::parse($payload['timestamp'])
+                        ->format('d M Y H:i');
                 } catch (\Throwable $e) {
                     $payload['formatted_timestamp'] = $payload['timestamp'];
                 }
             }
-
+    
             return [
                 'id' => $n->id,
                 'type' => $n->type,
@@ -43,7 +46,7 @@ class NotificationController extends Controller
                 'updated_at' => $n->updated_at,
             ];
         })->values();
-
+    
         return response()->json([
             'data' => $items,
             'pagination' => [
@@ -51,9 +54,12 @@ class NotificationController extends Controller
                 'per_page' => $notifications->perPage(),
                 'total' => $notifications->total(),
                 'last_page' => $notifications->lastPage(),
+                'next_page_url' => $notifications->nextPageUrl(),
+                'prev_page_url' => $notifications->previousPageUrl(),
             ],
         ]);
     }
+    
 
     public function setFcm(Request $request)
     {

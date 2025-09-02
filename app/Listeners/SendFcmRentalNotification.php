@@ -9,6 +9,7 @@ use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+// use Illuminate\Support\Facades\Mail; // email sending moved to SendRentalStatusUpdateEmail listener
 
 class SendFcmRentalNotification implements ShouldQueue
 {
@@ -18,10 +19,7 @@ class SendFcmRentalNotification implements ShouldQueue
     {
         $user = $event->rental->user;
 
-        if (!$user || !$user->fcm_token || $user->fcm_notification === false) {
-            Log::warning('FCM notification skipped: No user or FCM token for rental ID ' . $event->rental->id);
-            return;
-        }
+        $hasFcm = $user && $user->fcm_token && $user->fcm_notification !== false;
 
         // Prevent duplicate notifications using atomic lock or cache-add
         $cacheKey = 'fcm_notification_rental_' . $event->rental->id . '_' . $event->newStatus . '_' . $user->id;
@@ -44,7 +42,7 @@ class SendFcmRentalNotification implements ShouldQueue
             }
         }
 
-        $messaging = app('firebase.messaging');
+        if ($hasFcm) { $messaging = app('firebase.messaging'); }
 
         $statusLabel = ucfirst(str_replace('_', ' ', $event->newStatus));
         $title = 'Rental Status Updated';
@@ -55,31 +53,33 @@ class SendFcmRentalNotification implements ShouldQueue
             $body .= " Estimated delivery: {$formattedTime}.";
         }
 
-        $notification = Notification::create($title, $body);
-
-        $message = CloudMessage::withTarget('token', $user->fcm_token)
-            ->withNotification($notification)
-            ->withData([
-                'rental_id' => (string) $event->rental->id,
-                'new_status' => $event->newStatus,
-                'updated_at' => $event->rental->updated_at->toIso8601String(),
-            ]);
-
-        try {
-            $messaging->send($message);
-            Log::info('FCM notification sent for rental ID ' . $event->rental->id, [
-                'user_id' => $user->id,
-                'fcm_token' => $user->fcm_token,
-                'status' => $event->newStatus,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('FCM notification failed for rental ID ' . $event->rental->id, [
-                'error' => $e->getMessage(),
-                'user_id' => $user->id,
-            ]);
+        if ($hasFcm) {
+            $notification = Notification::create($title, $body);
+            $message = CloudMessage::withTarget('token', $user->fcm_token)
+                ->withNotification($notification)
+                ->withData([
+                    'rental_id' => (string) $event->rental->id,
+                    'new_status' => $event->newStatus,
+                    'updated_at' => $event->rental->updated_at->toIso8601String(),
+                ]);
+            try {
+                $messaging->send($message);
+                Log::info('FCM notification sent for rental ID ' . $event->rental->id, [
+                    'user_id' => $user->id,
+                    'fcm_token' => $user->fcm_token,
+                    'status' => $event->newStatus,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('FCM notification failed for rental ID ' . $event->rental->id, [
+                    'error' => $e->getMessage(),
+                    'user_id' => $user->id,
+                ]);
+            }
+        } else {
+            Log::info('FCM skipped (no token); proceeding with SMS for rental ID ' . $event->rental->id);
         }
 
-        // Also send Twilio SMS for status updates if enabled and phone number exists
+        // Always attempt SMS regardless of FCM
         $to = $event->rental->phone_number;
         $sid = config('services.twilio.sid');
         $token = config('services.twilio.token');
