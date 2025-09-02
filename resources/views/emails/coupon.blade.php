@@ -217,7 +217,8 @@
     <div class="email-container">
         <!-- Header Section -->
         <div class="email-header">
-            <img src="{{ asset('images/gdv-logo.png') }}" alt="Game Day Valet" class="logo">
+            <!-- <img src="{{ asset('images/gdv-logo.png') }}" alt="Game Day Valet" class="logo"> -->
+            <img src="https://drive.google.com/uc?export=download&id=1k0Ud895vW8x-xSzLKUZmtBFcU3I6j6P2" alt="Game Day Valet" class="logo">
             <h1 class="header-title">Special Offer Just for You!</h1>
             <p class="header-subtitle">Exclusive discount on your next purchase</p>
         </div>
