@@ -96,15 +96,24 @@ class SendFcmRentalNotification implements ShouldQueue
                 ];
                 $templateType = $typeMap[$event->newStatus] ?? null;
                 if ($templateType) {
-                    $body = (string) (\App\Models\BookingOption::where('type', $templateType)->value('description') ?? '');
-                    if ($body !== '') {
-                        $twilio->messages->create($to, ['from' => $from, 'body' => $body]);
-                        Log::info('Twilio SMS sent for rental status update', [
-                            'rental_id' => $event->rental->id,
-                            'status' => $event->newStatus,
-                            'to' => $to,
-                        ]);
+                    $rawBody = (string) (\App\Models\BookingOption::where('type', $templateType)->value('description') ?? '');
+                    $body = trim($rawBody);
+                    if ($body === '') {
+                        $fallbackByStatus = [
+                            'confirmed' => 'Your rental booking has been confirmed successfully.',
+                            'out_for_delivery' => 'Your rental is out for delivery and on its way.',
+                            'delivered' => 'Your rental has been delivered. Thank you for choosing us.',
+                            'cancelled' => 'Your rental has been cancelled. Contact support if this is unexpected.',
+                        ];
+                        $body = $fallbackByStatus[$event->newStatus] ?? 'Your rental status has been updated.';
                     }
+                    $twilio->messages->create($to, ['from' => $from, 'body' => $body]);
+                    Log::info('Twilio SMS sent for rental status update', [
+                        'rental_id' => $event->rental->id,
+                        'status' => $event->newStatus,
+                        'to' => $to,
+                        'used_fallback' => $rawBody === null || trim($rawBody) === '',
+                    ]);
                 }
             } catch (\Throwable $e) {
                 Log::error('Twilio SMS failed for rental status update', [

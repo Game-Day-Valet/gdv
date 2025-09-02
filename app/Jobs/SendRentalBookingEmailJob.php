@@ -88,16 +88,17 @@ class SendRentalBookingEmailJob implements ShouldQueue
             if ($enabled && !empty($to) && $sid && $token && $from) {
                 try {
                     $twilio = new TwilioClient($sid, $token);
-                    $body = (string) (\App\Models\BookingOption::where('type', 'sms_booking_confirmation')->value('description') ?? '');
+                    $rawBody = (string) (\App\Models\BookingOption::where('type', 'sms_booking_confirmation')->value('description') ?? '');
+                    $body = trim($rawBody);
                     if ($body === '') {
-                        Log::info('SMS template empty for booking confirmation; skipping Twilio send.', ['rental_id' => $rental->id]);
-                    } else {
-                        $twilio->messages->create($to, ['from' => $from, 'body' => $body]);
-                        Log::info('Twilio SMS sent for rental booking', [
-                            'rental_id' => $rental->id,
-                            'to' => $to,
-                        ]);
+                        $body = 'Your rental booking has been received. We will notify you with updates.';
                     }
+                    $twilio->messages->create($to, ['from' => $from, 'body' => $body]);
+                    Log::info('Twilio SMS sent for rental booking', [
+                        'rental_id' => $rental->id,
+                        'to' => $to,
+                        'used_fallback' => trim($rawBody) === '',
+                    ]);
                 } catch (\Throwable $e) {
                     Log::error('Twilio SMS failed', [
                         'rental_id' => $rental->id,
