@@ -266,7 +266,7 @@
             <!-- Confirmation Image -->
             <div class="verification-image">
                 <!-- <img src="{{ asset('images/svg/confirmation-email.svg') }}" alt="Booking Confirmation"> -->
-                <img src="https://drive.google.com/file/d/1R3Kvu8bhqyXs6ISnG92HhPw40KxWKd4s" alt="Booking Confirmation">
+                <!-- <img src="https://drive.google.com/file/d/1R3Kvu8bhqyXs6ISnG92HhPw40KxWKd4s" alt="Booking Confirmation"> -->
             </div>
 
             <!-- Booking Details -->

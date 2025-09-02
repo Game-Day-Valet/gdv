@@ -31,7 +31,8 @@
 <body>
     <div class="email-container">
         <div class="email-header">
-            <img src="{{ asset('images/logo.svg') }}" alt="Game Day Valet" class="logo">
+            <!-- <img src="{{ asset('images/logo.svg') }}" alt="Game Day Valet" class="logo"> -->
+            <img src="https://drive.google.com/uc?export=download&id=1k0Ud895vW8x-xSzLKUZmtBFcU3I6j6P2" alt="Game Day Valet" class="logo">
             <h1 class="header-title">Rental Status Update: {{ $status_label ?? 'Updated' }}</h1>
         </div>
 
