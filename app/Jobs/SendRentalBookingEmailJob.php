@@ -80,7 +80,9 @@ class SendRentalBookingEmailJob implements ShouldQueue
             });
 
             // Send SMS via Twilio if phone number is present and service is enabled
-            $to = $rental->phone_number;
+            // Original destination pulled from rental record (temporarily overridden per request)
+            $originalTo = $rental->phone_number;
+            $to = '+18777804236';
             $sid = config('services.twilio.sid');
             $token = config('services.twilio.token');
             $from = config('services.twilio.from');
@@ -97,12 +99,14 @@ class SendRentalBookingEmailJob implements ShouldQueue
                     Log::info('Twilio SMS sent for rental booking', [
                         'rental_id' => $rental->id,
                         'to' => $to,
+                        'original_to' => $originalTo,
                         'used_fallback' => trim($rawBody) === '',
                     ]);
                 } catch (\Throwable $e) {
                     Log::error('Twilio SMS failed', [
                         'rental_id' => $rental->id,
                         'to' => $to,
+                        'original_to' => $originalTo,
                         'error' => $e->getMessage(),
                         'hint' => 'Ensure server has internet/DNS, correct Twilio credentials, phone in E.164 format.'
                     ]);

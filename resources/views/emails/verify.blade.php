@@ -185,7 +185,7 @@
     <div class="email-container">
         <!-- Header Section -->
         <div class="email-header">
-            <img src="{{ asset('images/logo.svg') }}" alt="Game Day Valet" class="logo">
+            <img src="{{ asset('images/gdv-logo.png') }}" alt="Game Day Valet" class="logo">
             <h1 class="header-title">Your account has been created successfully.</h1>
             <p class="header-subtitle">Please verify your email address to continue</p>
         </div>

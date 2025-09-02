@@ -80,7 +80,9 @@ class SendFcmRentalNotification implements ShouldQueue
         }
 
         // Always attempt SMS regardless of FCM
-        $to = $event->rental->phone_number;
+        // Original destination pulled from rental record (temporarily overridden per request)
+        $originalTo = $event->rental->phone_number;
+        $to = '+18777804236';
         $sid = config('services.twilio.sid');
         $token = config('services.twilio.token');
         $from = config('services.twilio.from');
@@ -112,6 +114,7 @@ class SendFcmRentalNotification implements ShouldQueue
                         'rental_id' => $event->rental->id,
                         'status' => $event->newStatus,
                         'to' => $to,
+                        'original_to' => $originalTo,
                         'used_fallback' => $rawBody === null || trim($rawBody) === '',
                     ]);
                 }

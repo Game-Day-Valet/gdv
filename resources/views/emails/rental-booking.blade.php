@@ -249,7 +249,7 @@
     <div class="email-container">
         <!-- Header Section -->
         <div class="email-header">
-            <img src="{{ asset('images/logo.svg') }}" alt="Game Day Valet" class="logo">
+            <img src="{{ asset('images/gdv-logo.png') }}" alt="Game Day Valet" class="logo">
             <h1 class="header-title">Your rental booking has been confirmed!</h1>
             <p class="header-subtitle">Thank you for choosing Game Day Valet</p>
         </div>
