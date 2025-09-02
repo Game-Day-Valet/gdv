@@ -821,27 +821,29 @@
         })();
         validateForm();
 
-        // If backend flagged login_required, show a login modal redirecting to sign-in and back
-        @if(session('login_required'))
-            (function() {
-                const loginModal = document.createElement('div');
-                loginModal.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:10000;';
-                const redirectUrl = encodeURIComponent(window.location.href);
-                loginModal.innerHTML = `
-                <div style="background:#fff;border-radius:14px;min-width:300px;max-width:460px;padding:20px;border:1px solid var(--border-color);box-shadow:0 20px 40px rgba(0,0,0,.18);">
-                    <div style="font-weight:800;font-size:16px;margin-bottom:8px;color:var(--dark-color);">Login Required</div>
-                    <div style="color:var(--secondary-color);line-height:1.5;">Please sign in to complete your booking.</div>
-                    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
-                        <a href="{{ route('rentalsystem.signin') }}?redirect=${redirectUrl}" target="_blank" rel="noopener noreferrer" class="btn-primary" style="width:auto;padding:10px 16px;text-decoration:none;">Sign In</a>
-                        <button id="dismissLoginPrompt" class="btn-primary" style="width:auto;padding:10px 16px;background:#6b7280;">Close</button>
-                    </div>
-                </div>`;
-                document.body.appendChild(loginModal);
-                document.getElementById('dismissLoginPrompt').addEventListener('click', () => {
-                    loginModal.remove();
-                });
-            })();
+        // If user is not logged in, immediately invite to sign in and return back here
+        @if(!Auth::check())
+        (function(){
+            const loginModal = document.createElement('div');
+            loginModal.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:10000;';
+            const redirectUrl = encodeURIComponent(window.location.href);
+            loginModal.innerHTML = `
+            <div style="background:#fff;border-radius:14px;min-width:300px;max-width:460px;padding:20px;border:1px solid var(--border-color);box-shadow:0 20px 40px rgba(0,0,0,.18);">
+                <div style="font-weight:800;font-size:16px;margin-bottom:8px;color:var(--dark-color);">Login Recommended</div>
+                <div style="color:var(--secondary-color);line-height:1.5;">Sign in to save your booking to your account and track it. You can also continue as a guest.</div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+                    <a href="{{ route('rentalsystem.signin') }}?redirect=${redirectUrl}" class="btn-primary" style="width:auto;padding:10px 16px;text-decoration:none;">Sign In</a>
+                    <button id="dismissLoginNow" class="btn-primary" style="width:auto;padding:10px 16px;background:#6b7280;">Continue as guest</button>
+                </div>
+            </div>`;
+            document.body.appendChild(loginModal);
+            document.getElementById('dismissLoginNow').addEventListener('click', () => {
+                loginModal.remove();
+            });
+        })();
         @endif
+
+        // Removed old conditional login modal (now shown immediately on page load for guests)
     </script>
 </body>
 
