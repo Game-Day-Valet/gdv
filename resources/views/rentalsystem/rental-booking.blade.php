@@ -294,9 +294,13 @@
 
         @if(isset($tournament) && $tournament)
         <div class="tournament-info" style="text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 16px; border: 2px solid #dee2e6;">
-            <h3 style="margin: 0; color: #dc3545; font-size: 1.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;">
-                <i class="fas fa-trophy" style="margin-right: 10px; color: #ffc107;"></i>
-                {{ $tournament->name ?? 'Tournament' }}
+            <h3 style="margin: 0; color: #dc3545; font-size: 1.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; display:inline-flex; align-items:center; gap:10px;">
+                @if(!empty($tournament->image))
+                    <img id="tournamentImg" src="{{ asset('storage/'.$tournament->image) }}" data-fullurl="{{ asset('storage/'.$tournament->image) }}" alt="{{ $tournament->name }}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;border:1px solid #dee2e6; margin-right: 8px; cursor:pointer;">
+                @else
+                    <i class="fas fa-trophy" style="color: #ffc107;"></i>
+                @endif
+                <span>{{ $tournament->name ?? 'Tournament' }}</span>
             </h3>
         </div>
         @endif
@@ -468,6 +472,13 @@
                 </div>
             </div>
         </form>
+    </div>
+
+    <div id="imageModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10000;align-items:center;justify-content:center;">
+        <div style="position:relative;max-width:90vw;max-height:90vh;">
+            <button id="imageModalClose" aria-label="Close" style="position:absolute;right:-10px;top:-10px;background:#fff;border:1px solid #ddd;border-radius:50%;width:32px;height:32px;cursor:pointer;font-weight:900;">×</button>
+            <img id="imageModalImg" src="" alt="Tournament image" style="max-width:90vw;max-height:90vh;border-radius:12px;border:2px solid #fff;box-shadow:0 20px 60px rgba(0,0,0,.35);">
+        </div>
     </div>
 
     <script>
@@ -735,11 +746,7 @@
                     },
                     body: JSON.stringify({
                         promo_code: code,
-                        user_id: {
-                            {
-                                auth() - > check() ? auth() - > id() : 'null'
-                            }
-                        }
+                        user_id: @json(Auth::check() ? Auth::id() : null)
                     })
                 });
                 const data = await resp.json();
@@ -795,6 +802,23 @@
         });
 
         loadBookingSettings();
+        // Image modal for tournament image
+        (function(){
+            const img = document.getElementById('tournamentImg');
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('imageModalImg');
+            const closeBtn = document.getElementById('imageModalClose');
+            if(img && modal && modalImg){
+                img.addEventListener('click', function(){
+                    const fullUrl = img.getAttribute('data-fullurl') || img.src;
+                    modalImg.src = fullUrl;
+                    modal.style.display = 'flex';
+                });
+                const hide = ()=>{ modal.style.display='none'; modalImg.src=''; };
+                modal.addEventListener('click', function(e){ if(e.target === modal) hide(); });
+                if(closeBtn){ closeBtn.addEventListener('click', hide); }
+            }
+        })();
         validateForm();
 
         // If backend flagged login_required, show a login modal redirecting to sign-in and back

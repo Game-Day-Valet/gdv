@@ -130,7 +130,7 @@ class TournamentController extends Controller
 
         return response()->json([
             'id' => $tournament->id,
-            'sport_id' => $tournament->sport_id,
+            'sport_id' => (int) $tournament->sport_id,
             'sport_name' => $tournament->sport?->name,
             'name' => $tournament->name,
             'image' => $tournament->image ? asset('storage/' . $tournament->image) : null,

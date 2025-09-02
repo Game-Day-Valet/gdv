@@ -60,6 +60,14 @@
 			transform: translateY(-1px);
 		}
 		.small { color: var(--muted); font-size: 13px; text-align: center; margin-top: 12px; }
+		/* Password toggle */
+		.input-wrap { position: relative; }
+		.toggle-pass { position:absolute; right:10px; top:50%; transform:translateY(-50%); border:0; background:transparent; color:#64748b; cursor:pointer; padding:6px; }
+		.toggle-pass:hover { color:#0f172a; }
+		/* Hide browser-native password reveal/clear controls */
+		input[type="password"]::-ms-reveal,
+		input[type="password"]::-ms-clear { display:none; }
+		.input::-ms-reveal, .input::-ms-clear { display:none; }
 	</style>
 </head>
 <body>
@@ -116,12 +124,18 @@
 					<div class="row-two">
 						<div>
 							<label class="label" for="password">PASSWORD</label>
-							<input class="input @error('password') is-invalid @enderror" id="password" name="password" type="password" required>
+							<div class="input-wrap">
+								<input class="input @error('password') is-invalid @enderror" id="password" name="password" type="password" required>
+								<button type="button" class="toggle-pass" data-target="password" aria-label="Toggle password visibility"><i class="fa-regular fa-eye"></i></button>
+							</div>
 							@error('password')<div style="color:#b91c1c;font-size:12px;margin-top:6px;">{{ $message }}</div>@enderror
 						</div>
 						<div>
 							<label class="label" for="password_confirmation">CONFIRM PASSWORD</label>
-							<input class="input @error('password_confirmation') is-invalid @enderror" id="password_confirmation" name="password_confirmation" type="password" required>
+							<div class="input-wrap">
+								<input class="input @error('password_confirmation') is-invalid @enderror" id="password_confirmation" name="password_confirmation" type="password" required>
+								<button type="button" class="toggle-pass" data-target="password_confirmation" aria-label="Toggle password visibility"><i class="fa-regular fa-eye"></i></button>
+							</div>
 							@error('password_confirmation')<div style="color:#b91c1c;font-size:12px;margin-top:6px;">{{ $message }}</div>@enderror
 						</div>
 					</div>
@@ -188,6 +202,18 @@
 				document.getElementById('googleSignupForm').submit();
 			}
 		}
+
+		// Always-visible password toggle
+		document.querySelectorAll('.toggle-pass').forEach(function(btn){
+			btn.addEventListener('click', function(){
+				const targetId = btn.getAttribute('data-target');
+				const input = document.getElementById(targetId);
+				if(!input) return;
+				const isPassword = input.getAttribute('type') === 'password';
+				input.setAttribute('type', isPassword ? 'text' : 'password');
+				btn.innerHTML = isPassword ? '<i class="fa-regular fa-eye-slash"></i>' : '<i class="fa-regular fa-eye"></i>';
+			});
+		});
 	</script>
 </body>
 </html>

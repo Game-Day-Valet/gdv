@@ -77,7 +77,7 @@ class CouponController extends Controller
                 'success' => false,
                 'message' => 'Coupon validation failed',
                 'errors' => [
-                    'promo_code' => ['This coupon is not yet active. Valid from: ' . $coupon->starts_at->format('Y-m-d H:i:s')]
+                    'promo_code' => ['This coupon is not yet active']
                 ]
             ], 422);
         }
@@ -87,7 +87,7 @@ class CouponController extends Controller
                 'success' => false,
                 'message' => 'Coupon validation failed',
                 'errors' => [
-                    'promo_code' => ['This coupon has expired. Expired on: ' . $coupon->expires_at->format('Y-m-d H:i:s')]
+                    'promo_code' => ['This coupon has expired']
                 ]
             ], 422);
         }

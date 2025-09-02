@@ -42,6 +42,13 @@
 		.label { display: block; font-size: 12px; letter-spacing: .14em; color: #94a3b8; margin: 12px 0 8px; font-weight: 800; }
 		.input { width: 100%; border: 1.6px solid var(--border); border-radius: 12px; padding: 12px 14px; font-size: 15px; outline: none; transition: border-color .2s, box-shadow .2s; }
 		.input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgb(201 76 76 / 12%); }
+		.input-wrap { position: relative; }
+		.toggle-pass { position:absolute; right:10px; top:50%; transform:translateY(-50%); border:0; background:transparent; color:#64748b; cursor:pointer; padding:6px; }
+		.toggle-pass:hover { color:#0f172a; }
+		/* Hide browser-native password reveal/clear controls */
+		input[type="password"]::-ms-reveal,
+		input[type="password"]::-ms-clear { display:none; }
+		.input::-ms-reveal, .input::-ms-clear { display:none; }
 		.row-between { display: flex; align-items: center; justify-content: space-between; margin: 10px 0 16px; }
 		.check { width: 18px; height: 18px; accent-color: var(--primary); }
 		.link { color: var(--primary); text-decoration: none; font-weight: 700; }
@@ -114,7 +121,10 @@
 					@error('email')<div style="color:#b91c1c;font-size:12px;margin-top:6px;">{{ $message }}</div>@enderror
 
 					<label class="label" for="password">PASSWORD</label>
-					<input class="input @error('password') is-invalid @enderror" id="password" name="password" type="password" required>
+					<div class="input-wrap">
+						<input class="input @error('password') is-invalid @enderror" id="password" name="password" type="password" required>
+						<button type="button" class="toggle-pass" data-target="password" aria-label="Toggle password visibility"><i class="fa-regular fa-eye"></i></button>
+					</div>
 					@error('password')<div style="color:#b91c1c;font-size:12px;margin-top:6px;">{{ $message }}</div>@enderror
 
 					<div class="row-between">
@@ -177,6 +187,18 @@
 				document.getElementById('googleLoginForm').submit();
 			}
 		}
+
+		// Always-visible password toggle
+		document.querySelectorAll('.toggle-pass').forEach(function(btn){
+			btn.addEventListener('click', function(){
+				const targetId = btn.getAttribute('data-target');
+				const input = document.getElementById(targetId);
+				if(!input) return;
+				const isPassword = input.getAttribute('type') === 'password';
+				input.setAttribute('type', isPassword ? 'text' : 'password');
+				btn.innerHTML = isPassword ? '<i class="fa-regular fa-eye-slash"></i>' : '<i class="fa-regular fa-eye"></i>';
+			});
+		});
 	</script>
 </body>
 </html>
