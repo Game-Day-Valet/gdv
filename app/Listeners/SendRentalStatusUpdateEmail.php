@@ -91,7 +91,7 @@ class SendRentalStatusUpdateEmail implements ShouldQueue
                 // Use the existing full booking email template; only first paragraph is dynamic
                 Mail::send('emails.rental-booking', $emailData, function ($message) use ($rental, $toEmail, $toName, $statusLabel) {
                     $message->to($toEmail, $toName)
-                        ->subject('Rental #' . $rental->id . ' Status Updated: ' . $statusLabel);
+                        ->subject('Rental Status: ' . $statusLabel);
                 });
                 Log::info('Rental status update email sent', [
                     'rental_id' => $rental->id,

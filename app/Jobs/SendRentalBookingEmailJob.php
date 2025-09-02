@@ -76,7 +76,7 @@ class SendRentalBookingEmailJob implements ShouldQueue
 
             Mail::send('emails.rental-booking', $emailData, function ($message) use ($rental) {
                 $message->to($rental->user->email, $rental->user->name)
-                        ->subject('Booking Confirmation - Rental #' . $rental->id);
+                        ->subject('Booking Confirmation');
             });
 
             // Send SMS via Twilio if phone number is present and service is enabled
