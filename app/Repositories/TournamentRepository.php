@@ -16,6 +16,38 @@ class TournamentRepository implements TournamentRepositoryInterface
     //         ->get();
     // }
 
+    // public function getAllActive($search = null, $pagination = false, $limit = 10)
+    // {
+    //     $query = Tournament::where('status', TournamentStatus::ACTIVE->value)
+    //         ->with('sport');
+
+    //     if ($search) {
+    //         $searchTerms = preg_split('/\s+/', trim($search));
+
+    //         $query->where(function ($q) use ($searchTerms) {
+    //             foreach ($searchTerms as $term) {
+    //                 // Check if term looks like a date (YYYY-MM-DD format)
+    //                 if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $term)) {
+    //                     $q->where(function ($dateQuery) use ($term) {
+    //                         $dateQuery->whereDate('start_date', $term)
+    //                             ->orWhereDate('end_date', $term)
+    //                             ->orWhere(function ($between) use ($term) {
+    //                                 $between->whereDate('start_date', '<=', $term)
+    //                                     ->whereDate('end_date', '>=', $term);
+    //                             });
+    //                     });
+    //                 }
+    //             }
+    //         });
+    //     }
+
+
+    //     if ($pagination === true) {
+    //         return $query->paginate($limit);
+    //     }
+    //     return $query->get();
+    // }
+
     public function getAllActive($search = null, $pagination = false, $limit = 10)
     {
         $query = Tournament::where('status', TournamentStatus::ACTIVE->value)
@@ -28,7 +60,7 @@ class TournamentRepository implements TournamentRepositoryInterface
                 foreach ($searchTerms as $term) {
                     // Check if term looks like a date (YYYY-MM-DD format)
                     if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $term)) {
-                        $q->where(function ($dateQuery) use ($term) {
+                        $q->orWhere(function ($dateQuery) use ($term) {
                             $dateQuery->whereDate('start_date', $term)
                                 ->orWhereDate('end_date', $term)
                                 ->orWhere(function ($between) use ($term) {
@@ -36,17 +68,21 @@ class TournamentRepository implements TournamentRepositoryInterface
                                         ->whereDate('end_date', '>=', $term);
                                 });
                         });
+                    } else {
+                        // Search by name or location (partial match)
+                        $q->orWhere('name', 'LIKE', "%{$term}%")
+                            ->orWhere('location', 'LIKE', "%{$term}%");
                     }
                 }
             });
         }
-
 
         if ($pagination === true) {
             return $query->paginate($limit);
         }
         return $query->get();
     }
+
 
     public function updateSortOrders(array $orders)
     {
