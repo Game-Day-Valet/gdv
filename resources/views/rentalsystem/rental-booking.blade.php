@@ -777,7 +777,7 @@
                 const qty = parseInt(row.querySelector('.qty-val').textContent) || 0;
                 if (qty > 0) hasItems = true;
             });
-            document.querySelectorAll('.item-row[data-type="bundle"]').forEach(row => {
+            document.querySelectorAll('.item-row[data-type="bundle"], .bundle-row[data-type="bundle"]').forEach(row => {
                 const qty = parseInt(row.querySelector('.qty-val').textContent) || 0;
                 if (qty > 0) hasBundles = true;
             });
