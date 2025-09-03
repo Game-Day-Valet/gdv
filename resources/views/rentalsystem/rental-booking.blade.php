@@ -278,7 +278,8 @@
         .bundle-thumb { width:96px; height:96px; background:#fff; border-radius:18px; display:flex; align-items:center; justify-content:center; border:1px solid #fff; box-shadow:0 3px 8px rgba(0,0,0,0.05); overflow:hidden; flex:0 0 auto; }
         .bundle-thumb img.rs-thumb { width:90px; height:90px; border-radius:12px; margin:0; }
         .bundle-info h3 { margin:0; font-size:28px; font-weight:800; color:#ffffff; text-shadow: 0 1px 0 rgba(0,0,0,.08); }
-        .bundle-sub { margin-top:6px; color:#fff; opacity:.9; font-size:18px; }
+        .bundle-desc { color:#fff; opacity:.9; font-size:14px; line-height:1.4; max-height: 2.8em; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+        .bundle-sub { margin-top:6px; color:#fff; opacity:.95; font-size:16px; }
         .bundle-price { color:#fff; font-weight:800; font-size:22px; margin-top:8px; }
         .bundle-qty { display:flex; align-items:center; gap:12px; background: rgba(255,255,255,0.2); border:2px solid #fff; border-radius:14px; padding:10px 14px; }
         .bundle-qty button { width:40px; height:40px; border:0; background:transparent; color:#fff; font-size:28px; line-height:1; cursor:pointer; }
@@ -369,6 +370,9 @@
                                     </div>
                                     <div class="bundle-info">
                                         <h3>{{ $bd->name }}</h3>
+                                        @if(!empty($bd->description))
+                                            <div class="bundle-desc">{!! strip_tags($bd->description) !!}</div>
+                                        @endif
                                         <div class="bundle-sub">
                                             @php
                                                 $itemsDesc = [];
