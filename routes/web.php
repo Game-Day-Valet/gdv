@@ -75,6 +75,9 @@ Route::prefix('')->name('rentalsystem.')->group(function () {
 // Public page: Privacy Policy for rental system (rendered server-side for SEO and reliability)
 Route::get('/privacy-policy', [\App\Http\Controllers\RentalSystem\RentalSystemController::class, 'privacyPolicy'])->name('rentalsystem.privacy-policy');
 
+// Public page: Support
+Route::view('/support', 'rentalsystem.support')->name('rentalsystem.support');
+
 Route::group(['prefix' => 'admin', 'middleware' => ['auth', function($request, $next){
     $user = \Auth::user();
     if (!$user || (!$user->hasRole(\App\Enums\Role::MANAGER) && !$user->hasRole(\App\Enums\Role::SUPER_ADMIN))) {
