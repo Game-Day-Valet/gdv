@@ -105,6 +105,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', function($request, $
 
 	// Sports and Tournaments - Accessible to both manager and admin
 	Route::resource('sport-management', SportController::class);
+	Route::post('sport-management/reorder', [SportController::class, 'reorder'])->middleware('can:super_admin')->name('sport-management.reorder');
 	Route::resource('tournament-management', TournamentController::class);
 	Route::post('tournament-management/reorder', [TournamentController::class, 'reorder'])->middleware('can:super_admin')->name('tournament-management.reorder');
 

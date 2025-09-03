@@ -61,4 +61,19 @@ class SportController extends Controller
             return redirect()->route('sport-management.index')->with('error', 'Failed to delete sport: ' . $e->getMessage());
         }
     }
+
+    public function reorder(Request $request)
+    {
+        $data = $request->validate([
+            'orders' => 'required|array',
+            'orders.*.id' => 'required|integer|exists:sports,id',
+            'orders.*.sort_order' => 'required|integer|min:0',
+        ]);
+        \DB::transaction(function() use ($data) {
+            foreach ($data['orders'] as $o) {
+                \App\Models\Sport::where('id', $o['id'])->update(['sort_order' => (int) $o['sort_order']]);
+            }
+        });
+        return response()->json(['success' => true]);
+    }
 }

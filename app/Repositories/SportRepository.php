@@ -15,7 +15,10 @@ class SportRepository implements SportRepositoryInterface
 
     public function getAllActive()
     {
-        return Sport::where('status', SportStatus::ACTIVE->value)->get();
+        return Sport::where('status', SportStatus::ACTIVE->value)
+            ->orderByRaw('COALESCE(sort_order, 999999) asc')
+            ->orderBy('created_at', 'asc')
+            ->get();
     }
 
     public function find($id)

@@ -38,9 +38,12 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
                 @endif
-                <table id="datatable" class="table table-bordered dt-responsive table-responsive nowrap">
+                <table id="datatable" class="table table-bordered dt-responsive table-responsive nowrap" style="min-width: 1000px;">
                     <thead>
                         <tr>
+                            @can('super_admin')
+                            <th style="width:32px;"></th>
+                            @endcan
                             <th>Image</th>
                             <th>Name</th>
                             <th>Description</th>
@@ -48,9 +51,12 @@
                             <th>Action</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="sportsTbody">
                         @foreach ($sports as $sport)
-                        <tr>
+                        <tr data-id="{{ $sport->id }}">
+                            @can('super_admin')
+                            <td class="drag-handle" style="cursor:move; text-align:center;">⇅</td>
+                            @endcan
                             <td style="width:70px;">
                                 @if($sport->image)
                                     <img src="{{ asset('storage/'.$sport->image) }}" alt="{{ $sport->name }}" style="height:50px;width:50px;object-fit:cover;border-radius:8px;">
@@ -86,6 +92,7 @@
 @section('script')
 @vite(['resources/js/pages/datatable.init.js'])
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.delete-sport-btn').forEach(function(btn) {
@@ -105,6 +112,29 @@
                 });
             });
         });
+        // Drag reorder (super admin only)
+        @can('super_admin')
+        const tbody = document.getElementById('sportsTbody');
+        if(tbody && typeof Sortable !== 'undefined'){
+            const sortable = new Sortable(tbody, {
+                handle: '.drag-handle',
+                animation: 150,
+                onEnd: async function(){
+                    // Only send the moved row delta to avoid touching other rows unnecessarily
+                    const rows = Array.from(tbody.querySelectorAll('tr[data-id]'));
+                    const orders = rows.map((row, idx) => ({ id: parseInt(row.getAttribute('data-id')), sort_order: idx }))
+                                         .filter(o => !isNaN(o.id));
+                    try{
+                        await fetch('{{ route('sport-management.reorder') }}', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                            body: JSON.stringify({ orders })
+                        });
+                    }catch(e){ /* ignore */ }
+                }
+            });
+        }
+        @endcan
     });
 </script>
 @endsection
