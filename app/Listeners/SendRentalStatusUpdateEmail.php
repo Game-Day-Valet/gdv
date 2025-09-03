@@ -66,14 +66,19 @@ class SendRentalStatusUpdateEmail implements ShouldQueue
             } catch (\Throwable $e) { /* ignore */ }
             try {
                 if (!empty($rental->bundles) && is_array($rental->bundles)) {
-                    $bids = collect($rental->bundles)->filter('is_numeric')->unique()->values()->all();
+                    $bids = [];
+                    foreach ($rental->bundles as $b) {
+                        if (is_array($b) && isset($b['bundle_id'])) { $bids[] = $b['bundle_id']; }
+                        elseif (is_numeric($b)) { $bids[] = $b; }
+                    }
+                    $bids = array_values(array_unique($bids));
                     if (!empty($bids)) {
                         $bundleNames = \App\Models\Bundle::whereIn('id', $bids)->pluck('name', 'id')->toArray();
                     }
                 }
             } catch (\Throwable $e) { /* ignore */ }
 
-            // Build email data payload for the Blade template (first paragraph is dynamic)
+            // Build email data payload for the single Blade template (title + dynamic content)
             $emailData = [
                 'rental' => $rental,
                 'user' => $rental->user,
@@ -82,16 +87,33 @@ class SendRentalStatusUpdateEmail implements ShouldQueue
                 'email_content' => (trim($dynamicContent) !== '' ? $dynamicContent : $fallback),
                 'itemNames' => $itemNames,
                 'bundleNames' => $bundleNames,
+                'title' => [
+                    'confirmed' => 'Booking Confirmed',
+                    'out_for_delivery' => 'Out For Delivery',
+                    'delivered' => 'Delivered Successfully',
+                    'cancelled' => 'Booking Cancelled',
+                ][$status] ?? 'Rental Status Update',
             ];
 
             $toEmail = $rental->email ?? optional($rental->user)->email;
             $toName = optional($rental->user)->name ?? 'Customer';
 
             if (!empty($toEmail)) {
-                // Use the existing full booking email template; only first paragraph is dynamic
-                Mail::send('emails.rental-booking', $emailData, function ($message) use ($rental, $toEmail, $toName, $statusLabel) {
+                // Always use the single booking template; only title/content/subject differ
+                $view = 'emails.rental-booking';
+
+                // Better, status-specific subject lines
+                $subjectMap = [
+                    'confirmed' => 'Your rental booking is confirmed',
+                    'out_for_delivery' => 'Your rental is out for delivery',
+                    'delivered' => 'Your rental has been delivered',
+                    'cancelled' => 'Your rental booking has been cancelled',
+                ];
+                $subject = $subjectMap[$status] ?? ('Rental status updated: ' . $statusLabel);
+
+                Mail::send($view, $emailData, function ($message) use ($rental, $toEmail, $toName, $subject) {
                     $message->to($toEmail, $toName)
-                        ->subject('Rental Status: ' . $statusLabel);
+                        ->subject($subject);
                 });
                 Log::info('Rental status update email sent', [
                     'rental_id' => $rental->id,

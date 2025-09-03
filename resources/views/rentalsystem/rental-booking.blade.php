@@ -339,8 +339,42 @@
                         </div>
                     </div>
 
+                    <!-- Bundles first, highlighted as best value -->
+                    <div class="card" style="margin-top:18px;border-width:2px;border-color:#ffc107;background:linear-gradient(0deg,#fff9e6, #ffffff);">
+                        <div class="section-title" style="display:flex;align-items:center;justify-content:center;gap:10px;">
+                            <span style="color:#d39e00;display:inline-flex;align-items:center;gap:6px;font-weight:900;">
+                                <i class="fas fa-star"></i> Best Value Bundles
+                            </span>
+                            <span style="color:#6b7280;font-weight:600;">Save vs. individual pricing</span>
+                        </div>
+                        <div class="items-grid">
+                            @forelse(($availableBundles ?? []) as $bd)
+                            <div class="item-row" data-type="bundle" data-id="{{ $bd->id }}" data-price="{{ (float)($bd->effective_price ?? $bd->price ?? 0) }}">
+                                <div class="item-meta">
+                                    <div class="item-title">
+                                        @if(!empty($bd->image))
+                                        <img src="{{ asset('storage/'.$bd->image) }}" alt="{{ $bd->name }}" style="width:28px;height:28px;object-fit:cover;border-radius:6px;margin-right:8px;vertical-align:middle;">
+                                        @endif
+                                        {{ $bd->name }}
+                                    </div>
+                                    <div class="item-price">${{ number_format((float)($bd->effective_price ?? $bd->price ?? 0), 2) }}</div>
+                                </div>
+                                <div class="qty">
+                                    <button type="button" class="qty-dec">-</button>
+                                    <span class="qty-val">0</span>
+                                    <button type="button" class="qty-inc">+</button>
+                                    <input type="hidden" name="bundles[{{ $bd->id }}]" value="0" class="bundle-input">
+                                </div>
+                            </div>
+                            @empty
+                            <div class="meta">No bundles available</div>
+                            @endforelse
+                        </div>
+                        <div class="text-danger small mt-2" id="bundles-error" style="display: none;">Please select at least one item or bundle</div>
+                    </div>
+
                     <div class="card" style="margin-top:18px;">
-                        <div class="section-title">ITEMS <span class="text-danger">*</span></div>
+                        <div class="section-title">Or choose items individually</div>
                         <div class="items-grid">
                             @forelse(($availableItems ?? []) as $it)
                             <div class="item-row" data-type="item" data-id="{{ $it->id }}" data-price="{{ (float)($it->effective_price ?? $it->price ?? 0) }}">
@@ -365,34 +399,6 @@
                             @endforelse
                         </div>
                         <div class="text-danger small mt-2" id="items-error" style="display: none;">Please select at least one item or bundle</div>
-                    </div>
-
-                    <div class="card" style="margin-top:18px;">
-                        <div class="section-title">BUNDLES <span class="text-danger">*</span></div>
-                        <div class="items-grid">
-                            @forelse(($availableBundles ?? []) as $bd)
-                            <div class="item-row" data-type="bundle" data-id="{{ $bd->id }}" data-price="{{ (float)($bd->effective_price ?? $bd->price ?? 0) }}">
-                                <div class="item-meta">
-                                    <div class="item-title">
-                                        @if(!empty($bd->image))
-                                        <img src="{{ asset('storage/'.$bd->image) }}" alt="{{ $bd->name }}" style="width:28px;height:28px;object-fit:cover;border-radius:6px;margin-right:8px;vertical-align:middle;">
-                                        @endif
-                                        {{ $bd->name }}
-                                    </div>
-                                    <div class="item-price">${{ number_format((float)($bd->effective_price ?? $bd->price ?? 0), 2) }}</div>
-                                </div>
-                                <div class="qty">
-                                    <label style="display:flex;gap:10px;align-items:center;margin:0;">
-                                        <input type="checkbox" name="bundles[{{ $bd->id }}]" value="1" class="bundle-input">
-                                        <span>Select</span>
-                                    </label>
-                                </div>
-                            </div>
-                            @empty
-                            <div class="meta">No bundles available</div>
-                            @endforelse
-                        </div>
-                        <div class="text-danger small mt-2" id="bundles-error" style="display: none;">Please select at least one item or bundle</div>
                     </div>
 
                     <!-- Promo Code - moved here between Bundles and Drop-Off -->
@@ -586,13 +592,11 @@
                 itemsSubtotal += line;
             });
 
-            // Calculate bundles subtotal (checkboxes)
+            // Calculate bundles subtotal using quantity
             document.querySelectorAll('.item-row[data-type="bundle"]').forEach(row => {
                 const price = parseFloat(row.getAttribute('data-price')) || 0;
-                const checkbox = row.querySelector('input[type="checkbox"]');
-                if (checkbox && checkbox.checked) {
-                    bundlesSubtotal += price;
-                }
+                const qty = parseInt(row.querySelector('.qty-val').textContent) || 0;
+                bundlesSubtotal += price * qty;
             });
 
             // Insurance from dynamic radios
@@ -660,9 +664,23 @@
             });
         });
 
-        // Event listeners for bundles (checkboxes)
-        document.querySelectorAll('.item-row[data-type="bundle"] input[type="checkbox"]').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
+        // Event listeners for bundles (quantity buttons)
+        document.querySelectorAll('.item-row[data-type="bundle"]').forEach(row => {
+            const dec = row.querySelector('.qty-dec');
+            const inc = row.querySelector('.qty-inc');
+            const val = row.querySelector('.qty-val');
+            const input = row.querySelector('input[type="hidden"]');
+            dec.addEventListener('click', () => {
+                let q = Math.max(0, (parseInt(val.textContent) || 0) - 1);
+                val.textContent = q;
+                input.value = q;
+                recalc();
+                validateForm();
+            });
+            inc.addEventListener('click', () => {
+                let q = (parseInt(val.textContent) || 0) + 1;
+                val.textContent = q;
+                input.value = q;
                 recalc();
                 validateForm();
             });
@@ -683,8 +701,9 @@
             });
 
             // Check if any bundles are selected
-            document.querySelectorAll('.item-row[data-type="bundle"] input[type="checkbox"]').forEach(checkbox => {
-                if (checkbox.checked) hasBundles = true;
+            document.querySelectorAll('.item-row[data-type="bundle"]').forEach(row => {
+                const qty = parseInt(row.querySelector('.qty-val').textContent) || 0;
+                if (qty > 0) hasBundles = true;
             });
 
             // Show/hide error messages
@@ -722,8 +741,9 @@
                 const qty = parseInt(row.querySelector('.qty-val').textContent) || 0;
                 if (qty > 0) hasItems = true;
             });
-            document.querySelectorAll('.item-row[data-type="bundle"] input[type="checkbox"]').forEach(chk => {
-                if (chk.checked) hasBundles = true;
+            document.querySelectorAll('.item-row[data-type="bundle"]').forEach(row => {
+                const qty = parseInt(row.querySelector('.qty-val').textContent) || 0;
+                if (qty > 0) hasBundles = true;
             });
             if (!hasItems && !hasBundles) {
                 // show existing errors
@@ -833,12 +853,16 @@
                 <div style="color:var(--secondary-color);line-height:1.5;">Sign in to continue booking.</div>
                 <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
                     <a href="{{ route('rentalsystem.signin') }}?redirect=${redirectUrl}" class="btn-primary" style="width:auto;padding:10px 16px;text-decoration:none;">Sign In</a>
-                    <button id="dismissLoginNow" class="btn-primary" style="width:auto;padding:10px 16px;background:#6b7280;">Cancel</button>
+                    <button id="dismissLoginNow" class="btn-primary" style="width:auto;padding:10px 16px;background:#6b7280;">Back</button>
                 </div>
             </div>`;
             document.body.appendChild(loginModal);
             document.getElementById('dismissLoginNow').addEventListener('click', () => {
-                loginModal.remove();
+                if (document.referrer) {
+                    window.history.back();
+                } else {
+                    window.location.href = '{{ route('rentalsystem.sports') }}';
+                }
             });
         })();
         @endif

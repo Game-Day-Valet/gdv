@@ -57,7 +57,12 @@ class SendRentalBookingEmailJob implements ShouldQueue
             } catch (\Throwable $e) { /* ignore */ }
             try {
                 if (!empty($rental->bundles) && is_array($rental->bundles)) {
-                    $bids = collect($rental->bundles)->filter('is_numeric')->unique()->values()->all();
+                    $bids = [];
+                    foreach ($rental->bundles as $b) {
+                        if (is_array($b) && isset($b['bundle_id'])) { $bids[] = $b['bundle_id']; }
+                        elseif (is_numeric($b)) { $bids[] = $b; }
+                    }
+                    $bids = array_values(array_unique($bids));
                     if (!empty($bids)) {
                         $bundleNames = \App\Models\Bundle::whereIn('id', $bids)->pluck('name', 'id')->toArray();
                     }
@@ -76,7 +81,7 @@ class SendRentalBookingEmailJob implements ShouldQueue
 
             Mail::send('emails.rental-booking', $emailData, function ($message) use ($rental) {
                 $message->to($rental->user->email, $rental->user->name)
-                        ->subject('Booking Confirmation');
+                        ->subject('Booking Created Successfully.');
             });
 
             // Send SMS via Twilio if phone number is present and service is enabled

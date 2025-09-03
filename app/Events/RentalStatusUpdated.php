@@ -52,8 +52,12 @@ class RentalStatusUpdated implements ShouldBroadcast
         $imagePaths = null;
         $imageUrls = null;
         $firstImageUrl = null;
-        $estimatedDeliveryTime = $this->rental->estimated_delivery_time ?? null;
-        $formattedEstimatedDeliveryTime = $estimatedDeliveryTime ? \Carbon\Carbon::parse($estimatedDeliveryTime)->format('d M Y H:i') : null;
+        // Estimated delivery time disabled for now
+        $estimatedDeliveryTime = null;
+        $formattedEstimatedDeliveryTime = null;
+        
+        // $estimatedDeliveryTime = $this->rental->estimated_delivery_time ?? null;
+        // $formattedEstimatedDeliveryTime = $estimatedDeliveryTime ? \Carbon\Carbon::parse($estimatedDeliveryTime)->format('d M Y H:i') : null;
 
         // If latest status log is available, enrich payload
         $latestUpdatedByName = null;

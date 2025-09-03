@@ -25,10 +25,13 @@ class RentalRequest extends FormRequest
             'field_number' => 'nullable|string|max:50',
             'items' => 'nullable|array',
             // Accept format: [{"item_id": 1, "quantity": 3}]
-            'items.*.item_id' => 'nullable:items|integer|exists:items,id',
-            'items.*.quantity' => 'nullable:items|integer|min:1',
+            'items.*.item_id' => 'nullable|integer|exists:items,id',
+            'items.*.quantity' => 'nullable|integer|min:1',
             'bundles' => 'nullable|array',
-            'bundles.*' => 'nullable|integer|exists:bundles,id',
+            // Backward compatible: allow either integers or objects {bundle_id, quantity}
+            'bundles.*' => 'nullable',
+            'bundles.*.bundle_id' => 'nullable|integer|exists:bundles,id',
+            'bundles.*.quantity' => 'nullable|integer|min:1',
             'instructions' => 'nullable|string',
             'drop_off_time' => 'nullable|date_format:Y-m-d H:i:s',
             'promo_code' => 'nullable|string|max:50',

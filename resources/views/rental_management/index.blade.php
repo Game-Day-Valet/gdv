@@ -135,9 +135,9 @@
                                     
                                     <th>Total Amount</th>
                                     <th>Payment Status</th>
-                                    <th>Booking Days</th>
+                                    <!-- <th>Booking Days</th> -->
                                     <th>Status</th>
-                                    <th>Estimated Delivery</th>
+                                    <!-- <th>Estimated Delivery</th> -->
                                     <th>Assigned Manager</th>
                                     <th>Created At</th>
                                     <th>Action</th>
@@ -179,13 +179,13 @@
                                                 {{ ucfirst($rental->payment_status ?? 'pending') }}
                                             </span>
                                         </td>
-                                        <td>
+                                        <!-- <td>
                                             @if($rental->booking_days)
                                                 {{ $rental->booking_days }}
                                             @else
                                                 <span class="text-muted">N/A</span>
                                             @endif
-                                        </td>
+                                        </td> -->
                                         <td>
                                             @php
                                                 $statusClass = match($rental->status) {
@@ -210,13 +210,13 @@
                                                 {{ ucfirst(str_replace('_', ' ', $rental->status ?? 'pending')) }}
                                             </span>
                                         </td>
-                                        <td>
+                                        <!-- <td>
                                             @if($rental->estimated_delivery_time)
                                                 {{ \Carbon\Carbon::parse($rental->estimated_delivery_time)->format('d M Y H:i') }}
                                             @else
                                                 <span class="text-muted">Not set</span>
                                             @endif
-                                        </td>
+                                        </td> -->
                                         <td>
                                             @if($rental->assignedManager)
                                                 <div>
@@ -269,11 +269,7 @@
 
                         <!-- Confirmed Status Fields -->
                         <div id="confirmedFields" class="status-field">
-                            <div class="mb-3">
-                                <label for="estimated_delivery_time" class="form-label">Estimated Delivery Time <span class="text-danger">*</span></label>
-                                <input type="datetime-local" name="estimated_delivery_time" id="estimated_delivery_time" class="form-control" required>
-                                <small class="text-muted">Estimated delivery time is required when confirming a rental</small>
-                            </div>
+                            <!-- Estimated delivery time disabled -->
                             <div class="mb-3">
                                 <label for="assigned_manager_id" class="form-label">Assign Manager <span class="text-danger">*</span></label>
                                 <select name="assigned_manager_id" id="assigned_manager_id" class="form-select" required>
@@ -378,7 +374,7 @@
                     clearImagePreviews();
 
                     // Reset required attributes
-                    document.getElementById('estimated_delivery_time').required = false;
+                    // Estimated delivery disabled
                     document.getElementById('assigned_manager_id').required = false;
                     document.getElementById('cancellation_notes').required = false;
 
@@ -408,14 +404,13 @@
                 hideAllStatusFields();
 
                 // Reset required attributes
-                document.getElementById('estimated_delivery_time').required = false;
+                // Estimated delivery disabled
                 document.getElementById('assigned_manager_id').required = false;
                 document.getElementById('cancellation_notes').required = false;
 
                 if (selectedStatus === 'confirmed') {
                     console.log('Showing confirmed fields');
                     document.getElementById('confirmedFields').classList.add('show');
-                    document.getElementById('estimated_delivery_time').required = true;
                     document.getElementById('assigned_manager_id').required = true;
                 } else if (selectedStatus === 'delivered') {
                     console.log('Showing delivered fields');
@@ -444,7 +439,7 @@
             document.getElementById('saveStatusBtn').addEventListener('click', function() {
                 const status = document.getElementById('status').value;
                 const notes = document.getElementById('notes').value;
-                const estimatedDeliveryTime = document.getElementById('estimated_delivery_time').value;
+                // const estimatedDeliveryTime = null; // disabled
                 const assignedManagerId = document.getElementById('assigned_manager_id').value;
                 const cancellationNotes = document.getElementById('cancellation_notes').value;
                 const deliveryImages = document.getElementById('delivery_images').files;
@@ -455,10 +450,7 @@
                 }
 
                 // Validate required fields based on status
-                if (status === 'confirmed' && !estimatedDeliveryTime) {
-                    Swal.fire('Error!', 'Please provide estimated delivery time', 'error');
-                    return;
-                }
+                // No estimated delivery validation
 
                 if (status === 'confirmed' && !assignedManagerId) {
                     Swal.fire('Error!', 'Please select a manager', 'error');
@@ -475,7 +467,6 @@
                 formData.append('notes', notes);
 
                 if (status === 'confirmed') {
-                    formData.append('estimated_delivery_time', estimatedDeliveryTime);
                     if (assignedManagerId) {
                         formData.append('assigned_manager_id', assignedManagerId);
                     }

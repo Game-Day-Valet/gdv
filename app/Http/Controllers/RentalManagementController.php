@@ -66,10 +66,28 @@ class RentalManagementController extends Controller
             $rental->items_with_data = $items;
         }
 
-        // Load bundles data if bundles exist
+        // Load bundles data if bundles exist (supports new structure with quantities)
         if ($rental->bundles) {
-            $bundles = \App\Models\Bundle::whereIn('id', $rental->bundles)->get();
+            $bundleIds = [];
+            $bundleQtyMap = [];
+            if (is_array($rental->bundles)) {
+                foreach ($rental->bundles as $b) {
+                    if (is_array($b) && isset($b['bundle_id'])) {
+                        $bid = (int) $b['bundle_id'];
+                        $qty = isset($b['quantity']) ? (int) $b['quantity'] : 1;
+                        $bundleIds[] = $bid;
+                        $bundleQtyMap[$bid] = ($bundleQtyMap[$bid] ?? 0) + max(1, $qty);
+                    } elseif (is_numeric($b)) {
+                        $bid = (int) $b;
+                        $bundleIds[] = $bid;
+                        $bundleQtyMap[$bid] = ($bundleQtyMap[$bid] ?? 0) + 1;
+                    }
+                }
+            }
+            $bundleIds = array_values(array_unique($bundleIds));
+            $bundles = \App\Models\Bundle::whereIn('id', $bundleIds)->get()->keyBy('id');
             $rental->bundles_with_data = $bundles;
+            $rental->bundle_quantities = $bundleQtyMap;
         }
 
         return view('rental_management.show', compact('rental'));
@@ -84,7 +102,7 @@ class RentalManagementController extends Controller
             'status' => 'required|in:pending,confirmed,out_for_delivery,delivered,cancelled',
             'notes' => 'nullable|string|max:500',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max per image
-            'estimated_delivery_time' => 'nullable|date',
+            // 'estimated_delivery_time' => 'nullable|date', // disabled for now
             'assigned_manager_id' => 'nullable|exists:users,id',
         ]);
 
@@ -101,14 +119,8 @@ class RentalManagementController extends Controller
                 ], 400);
             }
 
-            // Additional validation for confirmed status
+            // Additional validation for confirmed status (estimated time disabled)
             if ($request->status === 'confirmed') {
-                if (empty($request->estimated_delivery_time)) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Estimated delivery time is required when confirming a rental.'
-                    ], 400);
-                }
                 if (empty($request->assigned_manager_id)) {
                     return response()->json([
                         'success' => false,
@@ -117,22 +129,13 @@ class RentalManagementController extends Controller
                 }
             }
 
-            // Check if user can update this rental
-            $user = Auth::user();
-            if ($user->hasRole(Role::MANAGER) && $rental->assigned_manager_id !== $user->id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You can only update rentals assigned to you.'
-                ], 403);
-            }
-
             $this->rentalRepository->updateStatus(
                 $id,
                 $request->status,
                 $request->notes,
-                $user->id,
+                $user->id ?? Auth::id(),
                 $request->file('images'),
-                $request->estimated_delivery_time,
+                null, // estimated delivery time disabled
                 $request->assigned_manager_id
             );
 
@@ -140,7 +143,7 @@ class RentalManagementController extends Controller
             $rental->refresh();
 
             // Dispatch the event for real-time updates
-            event(new RentalStatusUpdated($rental, $oldStatus, $request->status, $user->id));
+            event(new RentalStatusUpdated($rental, $oldStatus, $request->status, Auth::id()));
 
             return response()->json([
                 'success' => true,

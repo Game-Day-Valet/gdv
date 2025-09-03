@@ -147,10 +147,10 @@
                                         <div class="col-4"><strong>Rental Email:</strong></div>
                                         <div class="col-8">{{ $rental->email ?? 'N/A' }}</div>
                                     </div>
-                                    <div class="row mb-2">
+                                    <!-- <div class="row mb-2">
                                         <div class="col-4"><strong>Booking Days:</strong></div>
                                         <div class="col-8">{{ $rental->booking_days ?? 'N/A' }}</div>
-                                    </div>
+                                    </div> -->
                                     <div class="row mb-2">
                                         <div class="col-4"><strong>Coach:</strong></div>
                                         <div class="col-8">{{ $rental->coach_name }}</div>
@@ -257,7 +257,7 @@
                                             </span>
                                         </div>
                                     </div>
-                                    <div class="row mb-2">
+                                    <!-- <div class="row mb-2">
                                         <div class="col-4"><strong>Estimated Delivery:</strong></div>
                                         <div class="col-8">
                                             @if($rental->estimated_delivery_time)
@@ -266,7 +266,7 @@
                                                 <span class="text-muted">Not set</span>
                                             @endif
                                         </div>
-                                    </div>
+                                    </div> -->
                                     <div class="row mb-2">
                                         <div class="col-4"><strong>Assigned Manager:</strong></div>
                                         <div class="col-8">
@@ -284,10 +284,6 @@
                                     <div class="row mb-2">
                                         <div class="col-4"><strong>Created:</strong></div>
                                         <div class="col-8">{{ \Carbon\Carbon::parse($rental->created_at)->format('d M Y H:i') }}</div>
-                                    </div>
-                                    <div class="row mb-2">
-                                        <div class="col-4"><strong>Updated:</strong></div>
-                                        <div class="col-8">{{ \Carbon\Carbon::parse($rental->updated_at)->format('d M Y H:i') }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -353,19 +349,22 @@
                                     @if($rental->bundles && count($rental->bundles) > 0)
                                         <h6 class="mt-3">Bundles:</h6>
                                         <ul class="list-unstyled">
-                                            @foreach($rental->bundles as $bundleId)
+                                            @foreach($rental->bundles as $b)
                                                 @php
-                                                    $bundle = $rental->bundles_with_data->firstWhere('id', $bundleId);
+                                                    $bundleId = is_array($b) && isset($b['bundle_id']) ? (int) $b['bundle_id'] : (int) $b;
+                                                    $qty = is_array($b) && isset($b['quantity']) ? (int) $b['quantity'] : 1;
+                                                    $bundle = optional($rental->bundles_with_data) ? $rental->bundles_with_data->get($bundleId) : null;
                                                 @endphp
                                                 @if($bundle)
                                                     <li class="mb-2 p-2 border rounded">
                                                         <div class="d-flex justify-content-between align-items-center">
                                                             <div>
                                                                 <strong>{{ $bundle->name }}</strong><br>
-                                                                <small class="text-muted">{{ $bundle->description }}</small>
                                                             </div>
                                                             <div class="text-end">
-                                                                <span class="badge bg-success">${{ number_format($bundle->price, 2) }}</span>
+                                                                <span class="badge bg-primary">Qty: {{ $qty }}</span>
+                                                                <br>
+                                                                <span class="badge bg-success">${{ number_format($bundle->price * max(1, $qty), 2) }}</span>
                                                             </div>
                                                         </div>
                                                     </li>

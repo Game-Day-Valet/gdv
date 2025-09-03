@@ -479,15 +479,17 @@ class RentalSystemController extends Controller
             }
         }
 
-        // Process bundles - store as [10,4] (just IDs, no quantities), only if associated with tournament
+        // Process bundles - store as [{"bundle_id":"ID","quantity":N}]
         foreach ($bundlesInput as $bundleId => $qty) {
             $quantity = max(0, (int) $qty);
             if ($quantity > 0) {
                 if (array_key_exists($bundleId, $bundlePrices)) {
                     $price = (float) $bundlePrices[$bundleId];
                     $bundlesSubtotal += $price * $quantity;
-                    // Store just the bundle ID, no quantity needed
-                    $selectedBundles[] = (int) $bundleId;
+                    $selectedBundles[] = [
+                        'bundle_id' => (string) $bundleId,
+                        'quantity' => $quantity,
+                    ];
                 }
             }
         }
@@ -652,15 +654,25 @@ class RentalSystemController extends Controller
                 }
             }
 
-            // Process bundles - get actual bundle names from database
+            // Process bundles - support new structure with quantities and fallback to legacy array of IDs
             if (is_array($r->bundles)) {
-                foreach ($r->bundles as $bundleId) {
-                    if (is_numeric($bundleId)) {
+                foreach ($r->bundles as $b) {
+                    if (is_array($b) && isset($b['bundle_id'])) {
+                        $bundleId = $b['bundle_id'];
+                        $qty = isset($b['quantity']) ? (int) $b['quantity'] : 1;
                         $bundle = $this->bundles->find($bundleId);
                         if ($bundle) {
                             $bundlesArray[] = [
                                 'name' => $bundle->name,
-                                'quantity' => 1 // Bundles don't have quantities
+                                'quantity' => $qty,
+                            ];
+                        }
+                    } elseif (is_numeric($b)) {
+                        $bundle = $this->bundles->find($b);
+                        if ($bundle) {
+                            $bundlesArray[] = [
+                                'name' => $bundle->name,
+                                'quantity' => 1,
                             ];
                         }
                     }

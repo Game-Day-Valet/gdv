@@ -251,7 +251,7 @@
         <div class="email-header">
             <!-- <img src="{{ asset('images/gdv-logo.png') }}" alt="Game Day Valet" class="logo"> -->
             <img src="https://drive.google.com/uc?export=download&id=1k0Ud895vW8x-xSzLKUZmtBFcU3I6j6P2" alt="Game Day Valet" class="logo">
-            <h1 class="header-title">{{ $title ?? 'Booking Created Successfully' }}</h1>
+            <h1 class="header-title">Booking Created Successfully</h1>
             <p class="header-subtitle">Thank you for choosing Game Day Valet</p>
         </div>
 
@@ -286,10 +286,6 @@
                 <div class="detail-row">
                     <span class="detail-label">Team Name:</span>
                     <span class="detail-value">{{ $rental->team_name_with_age_group ?? 'N/A' }}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Coach Name:</span>
-                    <span class="detail-value">{{ $rental->coach_name ?? 'N/A' }}</span>
                 </div>
 
             </div>

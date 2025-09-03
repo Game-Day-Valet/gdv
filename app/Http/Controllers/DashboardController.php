@@ -117,12 +117,21 @@ class DashboardController extends Controller
         $bundleCounts = [];
         foreach ($rentals as $rental) {
             if (is_array($rental->bundles)) {
-                foreach ($rental->bundles as $bundleId) {
+                foreach ($rental->bundles as $b) {
+                    $bundleId = null;
+                    $qty = 1;
+                    if (is_array($b) && isset($b['bundle_id'])) {
+                        $bundleId = $b['bundle_id'];
+                        $qty = isset($b['quantity']) ? (int) $b['quantity'] : 1;
+                    } elseif (is_numeric($b)) {
+                        $bundleId = $b;
+                        $qty = 1;
+                    }
                     if ($bundleId) {
                         if (!isset($bundleCounts[$bundleId])) {
                             $bundleCounts[$bundleId] = 0;
                         }
-                        $bundleCounts[$bundleId] += 1;
+                        $bundleCounts[$bundleId] += $qty;
                     }
                 }
             }

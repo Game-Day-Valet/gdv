@@ -48,10 +48,7 @@ class SendFcmRentalNotification implements ShouldQueue
         $title = 'Rental Status Updated';
         $body = "Your rental #{$event->rental->id} is now {$statusLabel}.";
 
-        if ($event->newStatus === 'confirmed' && $event->rental->estimated_delivery_time) {
-            $formattedTime = \Carbon\Carbon::parse($event->rental->estimated_delivery_time)->format('d M Y H:i');
-            $body .= " Estimated delivery: {$formattedTime}.";
-        }
+        // Estimated delivery time messaging disabled for now
 
         if ($hasFcm) {
             $notification = Notification::create($title, $body);

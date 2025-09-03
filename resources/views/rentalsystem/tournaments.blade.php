@@ -67,9 +67,9 @@
         .search-form button { border:0; padding:12px 16px; border-radius:12px; background:var(--primary-color); color:#fff; font-weight:800; cursor:pointer; }
 
         .list { display:grid; gap:22px; grid-template-columns:1fr; }
-        @media (min-width:860px){ .list { grid-template-columns:1fr 1fr; } }
+        @media (min-width:860px){ .list { grid-template-columns:1fr 1fr 1fr; } }
 
-        .card { background:#fff; border:1.6px solid var(--border-color); border-radius:18px; overflow:hidden; box-shadow:0 1px 0 rgba(0,0,0,.02); }
+        .card { background:#fff; border:1.6px solid var(--border-color); border-radius:18px; overflow:hidden; box-shadow:0 1px 0 rgba(0,0,0,.02); transform: translateY(10px); opacity: 0; animation: fadeUp .5s ease forwards; }
         .media { position:relative; background:#f3f4f6; width:100%; }
         /* 16:9 ratio fallback for broader browser support */
         .media::before { content:""; display:block; padding-top:56.25%; }
@@ -107,6 +107,12 @@
 
         .btn-close-white {
             filter: brightness(0) invert(1);
+        }
+
+        /* subtle appear animation */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>

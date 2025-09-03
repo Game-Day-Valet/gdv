@@ -86,20 +86,37 @@ class RentalController extends Controller
                 }
                 $data['items'] = !empty($normalizedItems) ? $normalizedItems : null;
 
-                // Normalize bundles: accept [10,4] or {"10":1, "4":1}
+                // Normalize bundles: accept [{bundle_id, quantity}], [id], or {id: qty}
                 $normalizedBundles = [];
                 if (!empty($data['bundles']) && is_array($data['bundles'])) {
                     foreach ($data['bundles'] as $key => $value) {
-                        if (is_numeric($value)) {
-                            // array of ids
-                            $normalizedBundles[] = (int) $value;
-                        } elseif (is_numeric($key) && (int)$value > 0) {
-                            // legacy object map where value is qty
-                            $normalizedBundles[] = (int) $key;
+                        if (is_array($value) && isset($value['bundle_id'])) {
+                            $qty = max(0, (int) ($value['quantity'] ?? 1));
+                            if ($qty > 0) {
+                                $normalizedBundles[] = [
+                                    'bundle_id' => (string) $value['bundle_id'],
+                                    'quantity' => $qty,
+                                ];
+                            }
+                        } elseif (!is_array($value) && is_numeric($key)) {
+                            // legacy: {"10": 2}
+                            $qty = max(0, (int) $value);
+                            if ($qty > 0) {
+                                $normalizedBundles[] = [
+                                    'bundle_id' => (string) $key,
+                                    'quantity' => $qty,
+                                ];
+                            }
+                        } elseif (is_numeric($value)) {
+                            // legacy array of ids [10,4]
+                            $normalizedBundles[] = [
+                                'bundle_id' => (string) $value,
+                                'quantity' => 1,
+                            ];
                         }
                     }
                 }
-                $data['bundles'] = !empty($normalizedBundles) ? array_values(array_unique($normalizedBundles)) : null;
+                $data['bundles'] = !empty($normalizedBundles) ? $normalizedBundles : null;
 
                 // Standardize damage_waiver price
                 $damageWaiverAmount = 0.0;
@@ -132,10 +149,12 @@ class RentalController extends Controller
                     }
                 }
                 if (!empty($data['bundles']) && is_array($data['bundles'])) {
-                    foreach ($data['bundles'] as $bundleId) {
-                        $bundleModel = \App\Models\Bundle::find($bundleId);
-                        if ($bundleModel) {
-                            $calculatedTotal += (float) ($bundleModel->price ?? 0);
+                    foreach ($data['bundles'] as $bundle) {
+                        if (isset($bundle['bundle_id'])) {
+                            $bundleModel = \App\Models\Bundle::find($bundle['bundle_id']);
+                            if ($bundleModel) {
+                                $calculatedTotal += (float) ($bundleModel->price ?? 0) * (int) ($bundle['quantity'] ?? 1);
+                            }
                         }
                     }
                 }
