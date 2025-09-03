@@ -188,8 +188,9 @@
             justify-content: space-between;
             align-items: center;
             gap: 14px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
         }
+        @media (max-width: 680px) { .item-row { flex-wrap: wrap; } }
 
         .item-meta {
             display: flex;
@@ -201,6 +202,7 @@
         .item-title {
             font-weight: 700;
         }
+        .rs-thumb { width:48px; height:48px; object-fit:cover; border-radius:8px; margin-right:10px; vertical-align:middle; cursor:pointer; }
 
         .item-price {
             color: var(--primary-color);
@@ -353,7 +355,7 @@
                                 <div class="item-meta">
                                     <div class="item-title">
                                         @if(!empty($bd->image))
-                                        <img src="{{ asset('storage/'.$bd->image) }}" alt="{{ $bd->name }}" style="width:28px;height:28px;object-fit:cover;border-radius:6px;margin-right:8px;vertical-align:middle;">
+                                        <img class="rs-thumb" src="{{ asset('storage/'.$bd->image) }}" data-full="{{ asset('storage/'.$bd->image) }}" alt="{{ $bd->name }}">
                                         @endif
                                         {{ $bd->name }}
                                     </div>
@@ -381,7 +383,7 @@
                                 <div class="item-meta">
                                     <div class="item-title">
                                         @if(!empty($it->image_url))
-                                        <img src="{{ $it->image_url }}" alt="{{ $it->name }}" style="width:28px;height:28px;object-fit:cover;border-radius:6px;margin-right:8px;vertical-align:middle;">
+                                        <img class="rs-thumb" src="{{ $it->image_url }}" data-full="{{ $it->image_url }}" alt="{{ $it->name }}">
                                         @endif
                                         {{ $it->name }}
                                     </div>
@@ -822,7 +824,7 @@
         });
 
         loadBookingSettings();
-        // Image modal for tournament image
+        // Image modal for tournament and item/bundle images
         (function(){
             const img = document.getElementById('tournamentImg');
             const modal = document.getElementById('imageModal');
@@ -838,6 +840,14 @@
                 modal.addEventListener('click', function(e){ if(e.target === modal) hide(); });
                 if(closeBtn){ closeBtn.addEventListener('click', hide); }
             }
+            // Click-to-zoom for item and bundle thumbnails
+            document.querySelectorAll('.rs-thumb').forEach(function(el){
+                el.addEventListener('click', function(){
+                    const full = el.getAttribute('data-full') || el.src;
+                    modalImg.src = full;
+                    modal.style.display = 'flex';
+                });
+            });
         })();
         validateForm();
 
