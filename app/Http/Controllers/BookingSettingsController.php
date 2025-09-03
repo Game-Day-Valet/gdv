@@ -9,7 +9,10 @@ class BookingSettingsController extends Controller
 {
     public function index()
     {
-        $options = BookingOption::orderBy('type')->orderByRaw('COALESCE(sort_order, 999999) asc')->get();
+        $options = BookingOption::whereIn('type', ['insurance','damage_waiver'])
+            ->orderBy('type')
+            ->orderByRaw('COALESCE(sort_order, 999999) asc')
+            ->get();
         $emailContent = BookingOption::where('type', 'email_content')->value('description');
         $chatInitial = BookingOption::where('type', 'chat_initial_message')->value('description');
         $smsBooking = BookingOption::where('type', 'sms_booking_confirmation')->value('description');
