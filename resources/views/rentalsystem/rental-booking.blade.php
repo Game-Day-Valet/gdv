@@ -268,6 +268,21 @@
         .btn-primary:hover {
             filter: brightness(.95);
         }
+
+        /* Bundles new UI */
+        .bundle-section { background: linear-gradient(180deg, #ffe08a 0%, #ffb835 100%); border-radius: 16px; border: 1px solid #ffd166; padding: 16px; }
+        .bundle-header { display:flex; align-items:center; gap:10px; font-weight:900; color:#7a4b00; font-size:22px; margin-bottom:12px; }
+        .bundle-header i { color:#ffb300; }
+        .bundle-row { display:flex; align-items:center; justify-content:space-between; background: rgba(255,255,255,0.25); border-radius:14px; padding:14px; border:1px solid rgba(255,255,255,0.4); margin-bottom:12px; }
+        .bundle-left { display:flex; align-items:center; gap:16px; min-width:0; }
+        .bundle-thumb { width:96px; height:96px; background:#fff; border-radius:18px; display:flex; align-items:center; justify-content:center; border:1px solid #fff; box-shadow:0 3px 8px rgba(0,0,0,0.05); overflow:hidden; flex:0 0 auto; }
+        .bundle-thumb img.rs-thumb { width:90px; height:90px; border-radius:12px; margin:0; }
+        .bundle-info h3 { margin:0; font-size:28px; font-weight:800; color:#ffffff; text-shadow: 0 1px 0 rgba(0,0,0,.08); }
+        .bundle-sub { margin-top:6px; color:#fff; opacity:.9; font-size:18px; }
+        .bundle-price { color:#fff; font-weight:800; font-size:22px; margin-top:8px; }
+        .bundle-qty { display:flex; align-items:center; gap:12px; background: rgba(255,255,255,0.2); border:2px solid #fff; border-radius:14px; padding:10px 14px; }
+        .bundle-qty button { width:40px; height:40px; border:0; background:transparent; color:#fff; font-size:28px; line-height:1; cursor:pointer; }
+        .bundle-qty .qty-val { font-size:28px; color:#fff; width:36px; text-align:center; }
     </style>
 </head>
 
@@ -342,36 +357,51 @@
                     </div>
 
                     <!-- Bundles first, highlighted as best value -->
-                    <div class="card" style="margin-top:18px;border-width:2px;border-color:#ffc107;background:linear-gradient(0deg,#fff9e6, #ffffff);">
-                        <div class="section-title" style="display:flex;align-items:center;justify-content:center;gap:10px;">
-                            <span style="color:#d39e00;display:inline-flex;align-items:center;gap:6px;font-weight:900;">
-                                <i class="fas fa-star"></i> Best Value Bundles
-                            </span>
-                            <span style="color:#6b7280;font-weight:600;">Save vs. individual pricing</span>
-                        </div>
-                        <div class="items-grid">
-                            @forelse(($availableBundles ?? []) as $bd)
-                            <div class="item-row" data-type="bundle" data-id="{{ $bd->id }}" data-price="{{ (float)($bd->effective_price ?? $bd->price ?? 0) }}">
-                                <div class="item-meta">
-                                    <div class="item-title">
+                    <div class="bundle-section" style="margin-top:18px;">
+                        <div class="bundle-header"><i class="fas fa-star"></i> Best Value Bundles</div>
+                        @forelse(($availableBundles ?? []) as $bd)
+                            <div class="bundle-row" data-type="bundle" data-id="{{ $bd->id }}" data-price="{{ (float)($bd->effective_price ?? $bd->price ?? 0) }}">
+                                <div class="bundle-left">
+                                    <div class="bundle-thumb">
                                         @if(!empty($bd->image))
-                                        <img class="rs-thumb" src="{{ asset('storage/'.$bd->image) }}" data-full="{{ asset('storage/'.$bd->image) }}" alt="{{ $bd->name }}">
+                                            <img class="rs-thumb" src="{{ asset('storage/'.$bd->image) }}" data-full="{{ asset('storage/'.$bd->image) }}" alt="{{ $bd->name }}">
                                         @endif
-                                        {{ $bd->name }}
                                     </div>
-                                    <div class="item-price">${{ number_format((float)($bd->effective_price ?? $bd->price ?? 0), 2) }}</div>
+                                    <div class="bundle-info">
+                                        <h3>{{ $bd->name }}</h3>
+                                        <div class="bundle-sub">
+                                            @php
+                                                $itemsDesc = [];
+                                                $bundleItems = $bd->items ?? [];
+                                            @endphp
+                                            @if(!empty($bundleItems))
+                                                @foreach($bundleItems as $bi)
+                                                    @php
+                                                        $iname = is_array($bi) ? ($bi['name'] ?? '') : ($bi->name ?? '');
+                                                        $iqty = 1;
+                                                        if (is_object($bi) && isset($bi->pivot)) { $iqty = $bi->pivot->quantity ?? 1; }
+                                                        elseif (is_array($bi)) { $iqty = (int)($bi['quantity'] ?? 1); }
+                                                        if(!empty($iname)) { $itemsDesc[] = $iqty . ' x ' . $iname; }
+                                                    @endphp
+                                                @endforeach
+                                                Total Items: {{ implode(', ', $itemsDesc) }}
+                                            @else
+                                                Total Items: 1 x {{ $bd->name }}
+                                            @endif
+                                        </div>
+                                        <div class="bundle-price">${{ number_format((float)($bd->effective_price ?? $bd->price ?? 0), 2) }}</div>
+                                    </div>
                                 </div>
-                                <div class="qty">
-                                    <button type="button" class="qty-dec">-</button>
+                                <div class="bundle-qty">
+                                    <button type="button" class="qty-dec">−</button>
                                     <span class="qty-val">0</span>
                                     <button type="button" class="qty-inc">+</button>
                                     <input type="hidden" name="bundles[{{ $bd->id }}]" value="0" class="bundle-input">
                                 </div>
                             </div>
-                            @empty
+                        @empty
                             <div class="meta">No bundles available</div>
-                            @endforelse
-                        </div>
+                        @endforelse
                         <div class="text-danger small mt-2" id="bundles-error" style="display: none;">Please select at least one item or bundle</div>
                     </div>
 
@@ -594,8 +624,8 @@
                 itemsSubtotal += line;
             });
 
-            // Calculate bundles subtotal using quantity
-            document.querySelectorAll('.item-row[data-type="bundle"]').forEach(row => {
+            // Calculate bundles subtotal using quantity (supports old and new bundle rows)
+            document.querySelectorAll('.item-row[data-type="bundle"], .bundle-row[data-type="bundle"]').forEach(row => {
                 const price = parseFloat(row.getAttribute('data-price')) || 0;
                 const qty = parseInt(row.querySelector('.qty-val').textContent) || 0;
                 bundlesSubtotal += price * qty;
@@ -666,8 +696,8 @@
             });
         });
 
-        // Event listeners for bundles (quantity buttons)
-        document.querySelectorAll('.item-row[data-type="bundle"]').forEach(row => {
+        // Event listeners for bundles (quantity buttons) — supports new bundle-row UI
+        document.querySelectorAll('.item-row[data-type="bundle"], .bundle-row[data-type="bundle"]').forEach(row => {
             const dec = row.querySelector('.qty-dec');
             const inc = row.querySelector('.qty-inc');
             const val = row.querySelector('.qty-val');
@@ -702,8 +732,8 @@
                 if (qty > 0) hasItems = true;
             });
 
-            // Check if any bundles are selected
-            document.querySelectorAll('.item-row[data-type="bundle"]').forEach(row => {
+            // Check if any bundles are selected (supports new bundle-row UI)
+            document.querySelectorAll('.item-row[data-type="bundle"], .bundle-row[data-type="bundle"]').forEach(row => {
                 const qty = parseInt(row.querySelector('.qty-val').textContent) || 0;
                 if (qty > 0) hasBundles = true;
             });
