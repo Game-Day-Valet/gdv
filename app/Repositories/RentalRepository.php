@@ -11,7 +11,19 @@ class RentalRepository implements RentalRepositoryInterface
 {
     public function getAll()
     {
-        return Rental::with(['user', 'tournament'])->get();
+        // First 15 should always be most recently created
+        $recentIds = Rental::orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i)=>(int)$i)->toArray();
+        $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
+
+        return Rental::with(['user', 'tournament'])
+            // Group A: recent ids; Group B: others
+            ->orderByRaw("CASE WHEN id IN ($inList) THEN 0 ELSE 1 END ASC")
+            // For recent, keep newest first
+            ->orderBy('created_at', 'desc')
+            // For others, respect manual order first, then recency
+            ->orderByRaw("CASE WHEN sort_order IS NULL THEN 1 ELSE 0 END ASC")
+            ->orderByRaw('sort_order ASC')
+            ->get();
     }
 
     public function getAllPaginated($perPage = 15)
@@ -191,9 +203,16 @@ class RentalRepository implements RentalRepositoryInterface
 
     public function getByManager($managerId, $perPage = 15)
     {
+        $recentIds = Rental::where('assigned_manager_id', $managerId)
+            ->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i)=>(int)$i)->toArray();
+        $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
+
         $query = Rental::with(['user', 'tournament'])
             ->where('assigned_manager_id', $managerId)
-            ->orderBy('created_at', 'desc');
+            ->orderByRaw("CASE WHEN id IN ($inList) THEN 0 ELSE 1 END ASC")
+            ->orderBy('created_at', 'desc')
+            ->orderByRaw("CASE WHEN sort_order IS NULL THEN 1 ELSE 0 END ASC")
+            ->orderByRaw('sort_order ASC');
  
         $result = $query->paginate($perPage);
         
