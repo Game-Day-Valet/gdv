@@ -22,6 +22,7 @@ use App\Repositories\TournamentRepositoryInterface;
 use App\Repositories\ItemRepositoryInterface;
 use App\Repositories\BundleRepositoryInterface;
 use App\Repositories\RentalRepositoryInterface;
+use App\Repositories\PrivacyPolicyRepositoryInterface;
 use Stripe\Stripe;
 use Stripe\Checkout\Session as StripeCheckoutSession;
 use Illuminate\Support\Str;
@@ -39,6 +40,7 @@ class RentalSystemController extends Controller
     protected $items;
     protected $bundles;
     protected $rentals;
+    protected $privacyPolicies;
 
     public function __construct(
         ReferralService $referralService,
@@ -47,6 +49,7 @@ class RentalSystemController extends Controller
         ItemRepositoryInterface $items,
         BundleRepositoryInterface $bundles,
         RentalRepositoryInterface $rentals,
+        PrivacyPolicyRepositoryInterface $privacyPolicies,
     ) {
         $this->referralService = $referralService;
         $this->sports = $sports;
@@ -54,6 +57,7 @@ class RentalSystemController extends Controller
         $this->items = $items;
         $this->bundles = $bundles;
         $this->rentals = $rentals;
+        $this->privacyPolicies = $privacyPolicies;
     }
 
     public function showSignup()
@@ -305,6 +309,14 @@ class RentalSystemController extends Controller
             return redirect()->route('rentalsystem.forgot-password')->with('error', 'Please verify the code sent to your email first.');
         }
         return view('rentalsystem.reset-password', ['email' => $email]);
+    }
+
+    public function privacyPolicy()
+    {
+        $policies = collect($this->privacyPolicies->getAll() ?? [])->filter(function($it){
+            return (bool) (is_array($it) ? ($it['status'] ?? true) : ($it->status ?? true)) === true;
+        });
+        return view('rentalsystem.privacy-policy', ['policies' => $policies]);
     }
 
     public function resetPassword(Request $request)
