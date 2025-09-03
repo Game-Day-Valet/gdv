@@ -830,10 +830,10 @@
             loginModal.innerHTML = `
             <div style="background:#fff;border-radius:14px;min-width:300px;max-width:460px;padding:20px;border:1px solid var(--border-color);box-shadow:0 20px 40px rgba(0,0,0,.18);">
                 <div style="font-weight:800;font-size:16px;margin-bottom:8px;color:var(--dark-color);">Login Recommended</div>
-                <div style="color:var(--secondary-color);line-height:1.5;">Sign in to save your booking to your account and track it. You can also continue as a guest.</div>
+                <div style="color:var(--secondary-color);line-height:1.5;">Sign in to continue booking.</div>
                 <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
                     <a href="{{ route('rentalsystem.signin') }}?redirect=${redirectUrl}" class="btn-primary" style="width:auto;padding:10px 16px;text-decoration:none;">Sign In</a>
-                    <button id="dismissLoginNow" class="btn-primary" style="width:auto;padding:10px 16px;background:#6b7280;">Continue as guest</button>
+                    <button id="dismissLoginNow" class="btn-primary" style="width:auto;padding:10px 16px;background:#6b7280;">Cancel</button>
                 </div>
             </div>`;
             document.body.appendChild(loginModal);

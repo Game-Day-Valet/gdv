@@ -72,7 +72,13 @@ Route::prefix('')->name('rentalsystem.')->group(function () {
 	});
 });
 
-Route::group(['prefix' => 'admin', 'middleware' => 'auth'], function () {
+Route::group(['prefix' => 'admin', 'middleware' => ['auth', function($request, $next){
+    $user = \Auth::user();
+    if (!$user || (!$user->hasRole(\App\Enums\Role::MANAGER) && !$user->hasRole(\App\Enums\Role::SUPER_ADMIN))) {
+        return redirect()->route('rentalsystem.signin')->with('error', 'Access denied: Admin panel is restricted to managers and administrators.');
+    }
+    return $next($request);
+}]], function () {
 	// Route::get('', [RoutingController::class, 'index'])->name('root');
 	Route::get('/profile', [RegisteredUserController::class, 'profile'])->name('profile');
 	Route::post('/profile/update', [RegisteredUserController::class, 'updateProfile'])->name('profile.update');

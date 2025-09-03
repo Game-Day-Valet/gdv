@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Enums\Role;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -32,6 +33,14 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+
+        $user = Auth::user();
+        if (!$user || (!$user->hasRole(Role::MANAGER) && !$user->hasRole(Role::SUPER_ADMIN))) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return redirect()->route('rentalsystem.signin')->with('error', 'Access denied: Admin panel is restricted to managers and administrators. Please sign in to the rental site.');
+        }
 
         return redirect()->route('home');
     }

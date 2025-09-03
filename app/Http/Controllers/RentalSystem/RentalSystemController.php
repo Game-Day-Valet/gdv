@@ -116,6 +116,14 @@ class RentalSystemController extends Controller
 
     public function showSignin(Request $request)
     {
+        if (Auth::check()) {
+            // Already signed in on rental site; do not show sign-in page again
+            $intended = Session::pull('url.intended');
+            if ($intended) {
+                return redirect()->to($intended);
+            }
+            return redirect()->route('rentalsystem.sports')->with('info', 'You are already signed in.');
+        }
         if ($request->filled('redirect')) {
             Session::put('url.intended', $request->query('redirect'));
         }
