@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use App\Models\EmailLog;
+use App\Models\SettingNotification;
 
 class SendRentalStatusUpdateEmail implements ShouldQueue
 {
@@ -107,6 +108,10 @@ class SendRentalStatusUpdateEmail implements ShouldQueue
             }
 
             if ($canEmail && !empty($toEmail)) {
+                if (!SettingNotification::current()->email_enabled) {
+                    Log::info('Global email disabled; skipping status email', ['rental_id' => $rental->id, 'status' => $status]);
+                    return;
+                }
                 // Always use the single booking template; only title/content/subject differ
                 $view = 'emails.rental-booking';
 

@@ -13,6 +13,7 @@ use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification as FcmNotification;
 use Illuminate\Support\Facades\Cache;
+use App\Models\SettingNotification;
 
 class RentalBookingConfirmationNotification extends Notification implements ShouldQueue
 {
@@ -62,6 +63,15 @@ class RentalBookingConfirmationNotification extends Notification implements Shou
 
     public function toFcm($notifiable)
     {
+        // Respect global switch
+        if (!SettingNotification::current()->fcm_enabled) {
+            Log::info('Global FCM disabled, skipping FCM notification', [
+                'rental_id' => $this->rental->id,
+                'user_id' => $notifiable->id,
+            ]);
+            return null;
+        }
+
         if (!$notifiable->fcm_token || $notifiable->fcm_notification === false) {
             Log::info('User has no FCM token, skipping FCM notification', [
                 'rental_id' => $this->rental->id,

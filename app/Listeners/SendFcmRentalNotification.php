@@ -10,6 +10,7 @@ use Kreait\Firebase\Messaging\Notification;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 // use Illuminate\Support\Facades\Mail; // email sending moved to SendRentalStatusUpdateEmail listener
+use App\Models\SettingNotification;
 
 class SendFcmRentalNotification implements ShouldQueue
 {
@@ -19,7 +20,8 @@ class SendFcmRentalNotification implements ShouldQueue
     {
         $user = $event->rental->user;
 
-        $hasFcm = $user && $user->fcm_token && $user->fcm_notification !== false;
+        $globalFcm = (bool) \App\Models\SettingNotification::current()->fcm_enabled;
+        $hasFcm = $globalFcm && $user && $user->fcm_token && $user->fcm_notification !== false;
 
         // Prevent duplicate notifications using atomic lock or cache-add
         $cacheKey = 'fcm_notification_rental_' . $event->rental->id . '_' . $event->newStatus . '_' . $user->id;
@@ -83,7 +85,8 @@ class SendFcmRentalNotification implements ShouldQueue
         $sid = config('services.twilio.sid');
         $token = config('services.twilio.token');
         $from = config('services.twilio.from');
-        $enabled = (bool) config('services.twilio.enabled', true);
+        $globalSms = (bool) \App\Models\SettingNotification::current()->sms_enabled;
+        $enabled = $globalSms && (bool) config('services.twilio.enabled', true);
         // if ($enabled && $to && $sid && $token && $from) {
         $canText = true;
         if ($user) {

@@ -70,6 +70,41 @@
 
 <div class="card mt-4">
     <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Notification Settings</h5>
+    </div>
+    <div class="card-body">
+        <form id="notifForm">
+            @csrf
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label d-block">Email Notifications</label>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="email_enabled" {{ ($notif->email_enabled ?? true) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="email_enabled">Enable/Disable all system emails</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label d-block">Twilio SMS Notifications</label>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="sms_enabled" {{ ($notif->sms_enabled ?? true) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="sms_enabled">Enable/Disable all SMS messages</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label d-block">Mobile Push (FCM)</label>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="fcm_enabled" {{ ($notif->fcm_enabled ?? true) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="fcm_enabled">Enable/Disable all mobile push notifications</label>
+                    </div>
+                </div>
+            </div>
+            <button type="button" id="saveNotif" class="btn btn-primary mt-3">Save</button>
+        </form>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="card-title mb-0">Rental Booking Email Content</h5>
     </div>
     <div class="card-body">
@@ -157,5 +192,65 @@
         }
     });
  });
+
+  // Save global notifications
+  const saveBtn = document.getElementById('saveNotif');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', async function(){
+      const payload = {
+        email_enabled: document.getElementById('email_enabled').checked,
+        sms_enabled: document.getElementById('sms_enabled').checked,
+        fcm_enabled: document.getElementById('fcm_enabled').checked,
+      };
+      try{
+        const resp = await fetch('{{ route('booking-settings.save-notifications') }}', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+          body: JSON.stringify(payload)
+        });
+        const ok = resp.ok;
+        const modalId = 'notifModal';
+        let modal = document.getElementById(modalId);
+        if(!modal){
+          modal = document.createElement('div');
+          modal.id = modalId;
+          modal.className = 'modal fade';
+          modal.tabIndex = -1;
+          modal.innerHTML = `
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Notification Settings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <p id="notifModalMsg"></p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>`;
+          document.body.appendChild(modal);
+        }
+        const msg = ok ? 'Settings saved successfully.' : 'Failed to save settings.';
+        document.getElementById('notifModalMsg').textContent = msg;
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+      }catch(e){
+        let modal = document.getElementById('notifModal');
+        if(!modal){
+          modal = document.createElement('div');
+          modal.id = 'notifModal';
+          modal.className = 'modal fade';
+          modal.tabIndex = -1;
+          modal.innerHTML = '<div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Notification Settings</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><p id="notifModalMsg"></p></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button></div></div></div>';
+          document.body.appendChild(modal);
+        }
+        document.getElementById('notifModalMsg').textContent = 'Failed to save settings.';
+        (new bootstrap.Modal(modal)).show();
+      }
+    });
+  }
 </script>
 @endsection 

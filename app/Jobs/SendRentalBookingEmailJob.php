@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Twilio\Rest\Client as TwilioClient;
 use Illuminate\Support\Str;
 use App\Models\EmailLog;
+use App\Models\SettingNotification;
 
 class SendRentalBookingEmailJob implements ShouldQueue
 {
@@ -88,6 +89,11 @@ class SendRentalBookingEmailJob implements ShouldQueue
             }
             
             if ($canEmail) {
+                // Global email toggle
+                if (!SettingNotification::current()->email_enabled) {
+                    Log::info('Global email disabled; skipping booking email', ['rental_id' => $rental->id]);
+                    return;
+                }
                 $toEmail = $rental->user->email;
                 $toName = optional($rental->user)->name ?? 'Customer';
                 if (!empty($toEmail)) {

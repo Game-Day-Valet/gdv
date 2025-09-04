@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BookingOption;
 use Illuminate\Http\Request;
+use App\Models\SettingNotification;
 
 class BookingSettingsController extends Controller
 {
@@ -20,7 +21,23 @@ class BookingSettingsController extends Controller
         $smsOutForDelivery = BookingOption::where('type', 'sms_status_out_for_delivery')->value('description');
         $smsDelivered = BookingOption::where('type', 'sms_status_delivered')->value('description');
         $smsCancelled = BookingOption::where('type', 'sms_status_cancelled')->value('description');
-        return view('booking_settings.index', compact('options', 'emailContent', 'chatInitial', 'smsBooking', 'smsConfirmed', 'smsOutForDelivery', 'smsDelivered', 'smsCancelled'));
+        $notif = SettingNotification::current();
+        return view('booking_settings.index', compact('options', 'emailContent', 'chatInitial', 'smsBooking', 'smsConfirmed', 'smsOutForDelivery', 'smsDelivered', 'smsCancelled','notif'));
+    }
+
+    public function saveNotifications(Request $request)
+    {
+        $data = $request->validate([
+            'email_enabled' => 'required|boolean',
+            'sms_enabled' => 'required|boolean',
+            'fcm_enabled' => 'required|boolean',
+        ]);
+        $row = SettingNotification::query()->orderBy('id','asc')->first();
+        if (!$row) { $row = new SettingNotification(); }
+        $row->fill($data);
+        $row->save();
+        $row->refreshCache();
+        return response()->json(['success' => true]);
     }
 
     public function create()
