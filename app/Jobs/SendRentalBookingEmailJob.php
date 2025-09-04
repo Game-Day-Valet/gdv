@@ -9,6 +9,8 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Twilio\Rest\Client as TwilioClient;
+use Illuminate\Support\Str;
+use App\Models\EmailLog;
 
 class SendRentalBookingEmailJob implements ShouldQueue
 {
@@ -89,10 +91,39 @@ class SendRentalBookingEmailJob implements ShouldQueue
                 $toEmail = $rental->user->email;
                 $toName = optional($rental->user)->name ?? 'Customer';
                 if (!empty($toEmail)) {
-                    Mail::send('emails.rental-booking', $emailData, function ($message) use ($toEmail, $toName) {
-                        $message->to($toEmail, $toName)
-                                ->subject('Booking Created Successfully.');
-                    });
+                    $subject = 'Booking Created Successfully.';
+                    
+
+                    $emailLog = EmailLog::create([
+                        'to_email' => $toEmail,
+                        'subject' => $subject,
+                        'body_preview' => (string) ($dynamicContent ?? ''),
+                        'status' => 'queued',
+                        'meta' => ['context' => 'booking_confirmation', 'rental_id' => $rental->id],
+                    ]);
+
+                    $smtpReady = (bool) (config('mail.mailers.smtp.host') && config('mail.mailers.smtp.username') && config('mail.mailers.smtp.password') && config('mail.from.address'));
+                    if (!$smtpReady) {
+                        $emailLog->update(['status' => 'failed', 'error_reason' => 'Email not sent: SMTP configuration incomplete.']);
+                        Log::warning('Booking email skipped due to incomplete SMTP config', ['rental_id' => $rental->id, 'to' => $toEmail]);
+                        return;
+                    }
+                    try {
+                        Mail::send('emails.rental-booking', $emailData, function ($message) use ($toEmail, $toName, $subject) {
+                            $message->to($toEmail, $toName)
+                                    ->subject($subject);
+                        });
+                        $emailLog->update(['status' => 'sent', 'sent_at' => now()]);
+                    } catch (\Throwable $mailErr) {
+                        $short = collect(preg_split("/\r?\n/", (string) $mailErr->getMessage()))->filter()->take(3)->implode(" \n");
+                        $emailLog->update(['status' => 'failed', 'error_reason' => $short]);
+                        Log::error('Booking email send failed', [
+                            'rental_id' => $rental->id,
+                            'to' => $toEmail,
+                            'error' => $mailErr->getMessage(),
+                        ]);
+                        return; // do not bubble up transport errors
+                    }
                 }
             }
 

@@ -8,6 +8,8 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
+use App\Models\EmailLog;
 
 class SendRentalStatusUpdateEmail implements ShouldQueue
 {
@@ -95,7 +97,7 @@ class SendRentalStatusUpdateEmail implements ShouldQueue
                 ][$status] ?? 'Rental Status Update',
             ];
 
-            $toEmail = $rental->email ?? optional($rental->user)->email;
+            $toEmail = $rental->user->email;
             $toName = optional($rental->user)->name ?? 'Customer';
 
             // Respect user's email notification preference when user exists
@@ -117,10 +119,37 @@ class SendRentalStatusUpdateEmail implements ShouldQueue
                 ];
                 $subject = $subjectMap[$status] ?? ('Rental status updated: ' . $statusLabel);
 
-                Mail::send($view, $emailData, function ($message) use ($rental, $toEmail, $toName, $subject) {
-                    $message->to($toEmail, $toName)
-                        ->subject($subject);
-                });
+                $emailLog = EmailLog::create([
+                    'to_email' => $toEmail,
+                    'subject' => $subject,
+                    'status' => 'queued',
+                    'body_preview' => (string) ($dynamicContent ?? ''),
+                    'meta' => ['context' => 'status_update', 'rental_id' => $rental->id, 'status' => $status],
+                ]);
+
+                $smtpReady = (bool) (config('mail.mailers.smtp.host') && config('mail.mailers.smtp.username') && config('mail.mailers.smtp.password') && config('mail.from.address'));
+                if (!$smtpReady) {
+                    $emailLog->update(['status' => 'failed', 'error_reason' => 'Email not sent: SMTP configuration incomplete.']);
+                    Log::warning('Status email skipped due to incomplete SMTP config', ['rental_id' => $rental->id, 'status' => $status, 'to' => $toEmail]);
+                    return;
+                }
+                try {
+                    Mail::send($view, $emailData, function ($message) use ($rental, $toEmail, $toName, $subject) {
+                        $message->to($toEmail, $toName)
+                            ->subject($subject);
+                    });
+                    $emailLog->update(['status' => 'sent', 'sent_at' => now()]);
+                } catch (\Throwable $mailErr) {
+                    $short = collect(preg_split("/\r?\n/", (string) $mailErr->getMessage()))->filter()->take(3)->implode(" \n");
+                    $emailLog->update(['status' => 'failed', 'error_reason' => $short]);
+                    Log::error('Status update email send failed', [
+                        'rental_id' => $rental->id,
+                        'status' => $status,
+                        'to' => $toEmail,
+                        'error' => $mailErr->getMessage(),
+                    ]);
+                    return; // swallow transport errors to avoid breaking flow
+                }
                 Log::info('Rental status update email sent', [
                     'rental_id' => $rental->id,
                     'status' => $status,

@@ -216,6 +216,12 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ route('email.logs') }}">
+                        <i class="fas fa-envelope-open-text"></i>
+                        <span>Email Logs</span>
+                    </a>
+                </li>
+                <li>
                     <a href="{{ route('booking-settings.index') }}">
                         <i class="fas fa-cog"></i>
                         <span>Settings</span>

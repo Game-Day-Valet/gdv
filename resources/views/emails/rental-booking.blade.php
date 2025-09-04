@@ -257,7 +257,7 @@
 
         <!-- Content Section -->
         <div class="email-content">
-            <h2 class="welcome-text">Hello {{ $user->name ?? 'User' }}!</h2>
+            <h2 class="welcome-text">Hello {{ optional($user)->name ?? 'User' }}!</h2>
 
             <p class="verification-text">
                 {{ $email_content ?? "Great news! Your rental booking has been confirmed successfully. We're excited to provide you with the equipment you need for your upcoming event." }}
@@ -275,12 +275,12 @@
 
                 <div class="detail-row">
                     <span class="detail-label">Tournament:</span>
-                    <span class="detail-value">{{ $tournament->name ?? 'N/A' }}</span>
+                    <span class="detail-value">{{ optional($tournament)->name ?? 'N/A' }}</span>
                 </div>
 
                 <div class="detail-row">
                     <span class="detail-label">Sport:</span>
-                    <span class="detail-value">{{ $sport->name ?? 'N/A' }}</span>
+                    <span class="detail-value">{{ optional($sport)->name ?? 'N/A' }}</span>
                 </div>
 
                 <div class="detail-row">

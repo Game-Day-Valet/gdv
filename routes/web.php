@@ -131,6 +131,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', function($request, $
 		Route::post('booking-settings/save-chat-initial', [\App\Http\Controllers\BookingSettingsController::class, 'saveChatInitialMessage'])->name('booking-settings.save-chat-initial');
 		Route::post('booking-settings/save-sms-templates', [\App\Http\Controllers\BookingSettingsController::class, 'saveSmsTemplates'])->name('booking-settings.save-sms-templates');
 		Route::get('twilio/logs', [\App\Http\Controllers\TwilioLogsController::class, 'index'])->name('twilio.logs');
+		Route::get('email/logs', [\App\Http\Controllers\EmailLogsController::class, 'index'])->name('email.logs');
 		Route::resource('user-management', UserController::class);
 		Route::resource('role-management', RoleController::class);
 		Route::resource('item-management', ItemController::class);
