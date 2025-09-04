@@ -12,14 +12,17 @@ class NotificationController extends Controller
     {
         $user = Auth::user();
     
-        $perPage = (int) max(1, min(100, (int) $request->query('per_page', 20)));
+        $perPage = (int) max(1, min(100, (int) $request->query('per_page', 5)));
+    
+        $page = (int) max(1, (int) $request->query('page', 1));
+    
         $unreadOnly = (bool) $request->boolean('unread_only', false);
     
         $query = $unreadOnly ? $user->unreadNotifications() : $user->notifications();
     
         $notifications = $query
             ->orderBy('created_at', 'desc')
-            ->paginate($perPage);
+            ->paginate($perPage, ['*'], 'page', $page);
     
         $items = $notifications->getCollection()->map(function ($n) {
             $payload = $n->data;
@@ -50,15 +53,16 @@ class NotificationController extends Controller
         return response()->json([
             'data' => $items,
             'pagination' => [
-                'current_page' => $notifications->currentPage(),
-                'per_page' => $notifications->perPage(),
-                'total' => $notifications->total(),
-                'last_page' => $notifications->lastPage(),
-                'next_page_url' => $notifications->nextPageUrl(),
-                'prev_page_url' => $notifications->previousPageUrl(),
+                'current_page'   => $notifications->currentPage(),
+                'per_page'       => $notifications->perPage(),
+                'total'          => $notifications->total(),
+                'last_page'      => $notifications->lastPage(),
+                'next_page_url'  => $notifications->nextPageUrl(),
+                'prev_page_url'  => $notifications->previousPageUrl(),
             ],
         ]);
     }
+    
     
 
     public function setFcm(Request $request)
