@@ -501,6 +501,7 @@
                 <div class="content-tabs">
                     <button class="tab-button active" onclick="showTab('profile')">Profile</button>
                     <button class="tab-button" onclick="showTab('rentals')">Rental History</button>
+                    <button class="tab-button" onclick="showTab('settings')">Settings</button>
                 </div>
 
                 <div id="profile-tab" class="tab-content active">
@@ -549,6 +550,51 @@
 
                         <button type="submit" class="btn-primary">Update Profile</button>
                     </form>
+                </div>
+
+                <div id="settings-tab" class="tab-content">
+                    <h3>Settings</h3>
+                    <div class="settings-card" style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:18px;">
+                        <div class="setting-row" style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;">
+                            <div style="display:flex;gap:12px;align-items:center;">
+                                <i class="fas fa-bell" style="color:#ef4444;"></i>
+                                <div>
+                                    <div style="font-weight:600;color:#111827;">Push Notifications (FCM)</div>
+                                    <div style="font-size:13px;color:#6b7280;">Receive app push alerts for booking and status updates.</div>
+                                </div>
+                            </div>
+                            <label class="switch">
+                                <input id="toggleFcm" type="checkbox" {{ $user->fcm_notification ? 'checked' : '' }}>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div class="setting-row" style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;">
+                            <div style="display:flex;gap:12px;align-items:center;">
+                                <i class="fas fa-envelope" style="color:#ef4444;"></i>
+                                <div>
+                                    <div style="font-weight:600;color:#111827;">Email Notifications</div>
+                                    <div style="font-size:13px;color:#6b7280;">Get booking confirmations and status updates by email.</div>
+                                </div>
+                            </div>
+                            <label class="switch">
+                                <input id="toggleEmail" type="checkbox" {{ ($user->email_notification ?? true) ? 'checked' : '' }}>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div class="setting-row" style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;">
+                            <div style="display:flex;gap:12px;align-items:center;">
+                                <i class="fas fa-sms" style="color:#ef4444;"></i>
+                                <div>
+                                    <div style="font-weight:600;color:#111827;">SMS Notifications</div>
+                                    <div style="font-size:13px;color:#6b7280;">Receive important updates by text message.</div>
+                                </div>
+                            </div>
+                            <label class="switch">
+                                <input id="toggleSms" type="checkbox" {{ ($user->text_notification ?? true) ? 'checked' : '' }}>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="rentals-tab" class="tab-content">
@@ -647,7 +693,8 @@
             tabButtons.forEach(button => button.classList.remove('active'));
 
             // Show selected tab content
-            document.getElementById(tabName + '-tab').classList.add('active');
+            const target = document.getElementById(tabName + '-tab');
+            if (target) { target.classList.add('active'); }
 
             // Add active class to clicked button
             event.target.classList.add('active');
@@ -681,6 +728,40 @@
                 });
             }
         });
+
+        // Simple switch styles
+        (function(){
+            const style = document.createElement('style');
+            style.textContent = `
+            .switch{position:relative;display:inline-block;width:52px;height:28px}
+            .switch input{opacity:0;width:0;height:0}
+            .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#d1d5db;transition:.2s;border-radius:999px}
+            .slider:before{position:absolute;content:"";height:22px;width:22px;left:3px;top:3px;background:white;transition:.2s;border-radius:999px;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+            input:checked + .slider{background:#ef4444}
+            input:checked + .slider:before{transform:translateX(24px)}
+            `;
+            document.head.appendChild(style);
+        })();
+
+        // Toggle handlers → hit a light web endpoint that updates the user flags
+        const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        async function setPref(type, enabled){
+            try{
+                const resp = await fetch('{{ route('rentalsystem.profile.notifications') }}',{
+                    method:'POST',
+                    headers:{'X-CSRF-TOKEN': csrf,'Accept':'application/json','Content-Type':'application/json'},
+                    body: JSON.stringify({type, enabled})
+                });
+                if(!resp.ok){ throw new Error('Failed'); }
+            }catch(e){ /* revert on failure */ return false; }
+            return true;
+        }
+        const fcm = document.getElementById('toggleFcm');
+        const email = document.getElementById('toggleEmail');
+        const sms = document.getElementById('toggleSms');
+        if(fcm){ fcm.addEventListener('change', async ()=>{ const ok = await setPref('fcm', fcm.checked); if(!ok){ fcm.checked = !fcm.checked; } }); }
+        if(email){ email.addEventListener('change', async ()=>{ const ok = await setPref('email', email.checked); if(!ok){ email.checked = !email.checked; } }); }
+        if(sms){ sms.addEventListener('change', async ()=>{ const ok = await setPref('sms', sms.checked); if(!ok){ sms.checked = !sms.checked; } }); }
     </script>
 </body>
 </html>

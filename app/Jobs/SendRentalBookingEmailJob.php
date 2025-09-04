@@ -78,21 +78,39 @@ class SendRentalBookingEmailJob implements ShouldQueue
                 'itemNames' => $itemNames,
                 'bundleNames' => $bundleNames,
             ];
-
-            Mail::send('emails.rental-booking', $emailData, function ($message) use ($rental) {
-                $message->to($rental->user->email, $rental->user->name)
-                        ->subject('Booking Created Successfully.');
-            });
+            
+            // Respect user's email notification preference if a user exists
+            $canEmail = true;
+            if ($rental->user) {
+                $canEmail = $rental->user->email_notification !== false;
+            }
+            
+            if ($canEmail) {
+                $toEmail = $rental->user->email;
+                $toName = optional($rental->user)->name ?? 'Customer';
+                if (!empty($toEmail)) {
+                    Mail::send('emails.rental-booking', $emailData, function ($message) use ($toEmail, $toName) {
+                        $message->to($toEmail, $toName)
+                                ->subject('Booking Created Successfully.');
+                    });
+                }
+            }
 
             // Send SMS via Twilio if phone number is present and service is enabled
             // Original destination pulled from rental record (temporarily overridden per request)
             $originalTo = $rental->phone_number;
-            $to = '+18777804236';
+            // $to = '+18777804236';
             $sid = config('services.twilio.sid');
             $token = config('services.twilio.token');
             $from = config('services.twilio.from');
             $enabled = (bool) config('services.twilio.enabled', true);
-            if ($enabled && !empty($to) && $sid && $token && $from) {
+            // Respect user's text notification preference if a user exists
+            $canText = true;
+            if ($rental->user) {
+                $canText = $rental->user->text_notification !== false;
+            }
+
+            if ($canText && $enabled && !empty($originalTo) && $sid && $token && $from) {
                 try {
                     $twilio = new TwilioClient($sid, $token);
                     $rawBody = (string) (\App\Models\BookingOption::where('type', 'sms_booking_confirmation')->value('description') ?? '');
@@ -100,17 +118,18 @@ class SendRentalBookingEmailJob implements ShouldQueue
                     if ($body === '') {
                         $body = 'Your rental booking has been received. We will notify you with updates.';
                     }
-                    $twilio->messages->create($to, ['from' => $from, 'body' => $body]);
+                    // Respect user SMS preference if such a flag is ever added; for now SMS independent of email flag
+                    $twilio->messages->create($originalTo, ['from' => $from, 'body' => $body]);
                     Log::info('Twilio SMS sent for rental booking', [
                         'rental_id' => $rental->id,
-                        'to' => $to,
+                        'to' => $originalTo,
                         'original_to' => $originalTo,
                         'used_fallback' => trim($rawBody) === '',
                     ]);
                 } catch (\Throwable $e) {
                     Log::error('Twilio SMS failed', [
                         'rental_id' => $rental->id,
-                        'to' => $to,
+                        'to' => $originalTo,
                         'original_to' => $originalTo,
                         'error' => $e->getMessage(),
                         'hint' => 'Ensure server has internet/DNS, correct Twilio credentials, phone in E.164 format.'

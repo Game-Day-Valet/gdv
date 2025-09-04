@@ -720,6 +720,33 @@ class RentalSystemController extends Controller
         return redirect()->route('rentalsystem.profile');
     }
 
+    public function updateNotifications(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $request->validate([
+            'type' => 'required|string|in:fcm,email,sms',
+            'enabled' => 'required|boolean',
+        ]);
+
+        $user = Auth::user();
+        $map = [
+            'fcm' => 'fcm_notification',
+            'email' => 'email_notification',
+            'sms' => 'text_notification',
+        ];
+        $field = $map[$request->input('type')];
+        $user->{$field} = (bool) $request->boolean('enabled');
+        $user->save();
+
+        return response()->json([
+            'message' => ucfirst($request->input('type')) . ' preference updated',
+            'enabled' => (bool) $user->{$field},
+        ]);
+    }
+
     public function logout()
     {
         Auth::logout();

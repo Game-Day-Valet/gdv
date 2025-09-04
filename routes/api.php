@@ -65,6 +65,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile', [ProfileController::class, 'update']);
     Route::post('/notifications/fcm/set', [NotificationController::class, 'setFcm']);
     Route::post('/notifications/fcm/toggle', [NotificationController::class, 'toggleFcm']);
+    Route::post('/notifications/email/set', [NotificationController::class, 'setEmail']);
+    Route::post('/notifications/email/toggle', [NotificationController::class, 'toggleEmail']);
+    Route::post('/notifications/sms/set', [NotificationController::class, 'setText']);
+    Route::post('/notifications/sms/toggle', [NotificationController::class, 'toggleText']);
     Route::get('/notifications', [NotificationController::class, 'list']);
 
     // Tournaments Module

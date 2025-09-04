@@ -76,15 +76,20 @@ class SendFcmRentalNotification implements ShouldQueue
             Log::info('FCM skipped (no token); proceeding with SMS for rental ID ' . $event->rental->id);
         }
 
-        // Always attempt SMS regardless of FCM
+        // Always attempt SMS regardless of FCM, but honor user text preference
         // Original destination pulled from rental record (temporarily overridden per request)
         $originalTo = $event->rental->phone_number;
-        $to = '+18777804236';
+        // $to = '+18777804236';
         $sid = config('services.twilio.sid');
         $token = config('services.twilio.token');
         $from = config('services.twilio.from');
         $enabled = (bool) config('services.twilio.enabled', true);
-        if ($enabled && $to && $sid && $token && $from) {
+        // if ($enabled && $to && $sid && $token && $from) {
+        $canText = true;
+        if ($user) {
+            $canText = $user->text_notification !== false;
+        }
+        if ($canText && $enabled && $originalTo && $sid && $token && $from) {
             try {
                 $twilio = new \Twilio\Rest\Client($sid, $token);
                 $typeMap = [
@@ -106,11 +111,12 @@ class SendFcmRentalNotification implements ShouldQueue
                         ];
                         $body = $fallbackByStatus[$event->newStatus] ?? 'Your rental status has been updated.';
                     }
-                    $twilio->messages->create($to, ['from' => $from, 'body' => $body]);
+                    
+                    $twilio->messages->create($originalTo, ['from' => $from, 'body' => $body]);
                     Log::info('Twilio SMS sent for rental status update', [
                         'rental_id' => $event->rental->id,
                         'status' => $event->newStatus,
-                        'to' => $to,
+                        'to' => $originalTo,
                         'original_to' => $originalTo,
                         'used_fallback' => $rawBody === null || trim($rawBody) === '',
                     ]);
@@ -119,7 +125,7 @@ class SendFcmRentalNotification implements ShouldQueue
                 Log::error('Twilio SMS failed for rental status update', [
                     'rental_id' => $event->rental->id,
                     'status' => $event->newStatus,
-                    'to' => $to,
+                    'to' => $originalTo,
                     'error' => $e->getMessage(),
                 ]);
             }

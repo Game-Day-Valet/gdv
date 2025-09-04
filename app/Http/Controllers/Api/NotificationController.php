@@ -94,6 +94,64 @@ class NotificationController extends Controller
         ]);
     }
     
+    public function setEmail(Request $request)
+    {
+        $request->validate(['enabled' => 'required|boolean']);
+
+        $user = Auth::user();
+        $user->email_notification = $request->boolean('enabled');
+        $user->save();
+
+        return response()->json([
+            'message' => 'Email notifications updated',
+            'enabled' => (bool) $user->email_notification,
+        ]);
+    }
+
+    public function toggleEmail()
+    {
+        $user = Auth::user();
+
+        $user->email_notification = !(bool) $user->email_notification;
+        $user->save();
+
+        $status = $user->email_notification ? 'enabled' : 'disabled';
+
+        return response()->json([
+            'message' => "Email notifications {$status}.",
+            'enabled' => (bool) $user->email_notification,
+        ]);
+    }
+
+    public function setText(Request $request)
+    {
+        $request->validate(['enabled' => 'required|boolean']);
+
+        $user = Auth::user();
+        $user->text_notification = $request->boolean('enabled');
+        $user->save();
+
+        return response()->json([
+            'message' => 'SMS notifications updated',
+            'enabled' => (bool) $user->text_notification,
+        ]);
+    }
+
+    public function toggleText()
+    {
+        $user = Auth::user();
+
+        $user->text_notification = !(bool) $user->text_notification;
+        $user->save();
+
+        $status = $user->text_notification ? 'enabled' : 'disabled';
+
+        return response()->json([
+            'message' => "SMS notifications {$status}.",
+            'enabled' => (bool) $user->text_notification,
+        ]);
+    }
+    
 }
 
 

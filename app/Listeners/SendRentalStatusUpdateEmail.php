@@ -98,7 +98,13 @@ class SendRentalStatusUpdateEmail implements ShouldQueue
             $toEmail = $rental->email ?? optional($rental->user)->email;
             $toName = optional($rental->user)->name ?? 'Customer';
 
-            if (!empty($toEmail)) {
+            // Respect user's email notification preference when user exists
+            $canEmail = true;
+            if ($rental->user) {
+                $canEmail = $rental->user->email_notification !== false;
+            }
+
+            if ($canEmail && !empty($toEmail)) {
                 // Always use the single booking template; only title/content/subject differ
                 $view = 'emails.rental-booking';
 

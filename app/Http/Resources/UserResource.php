@@ -17,6 +17,8 @@ class UserResource extends JsonResource
             'profile_image' => $this->profile_image,
             'email_verified_at' => $this->email_verified_at,
             'is_notification' => (bool) $this->fcm_notification,
+            'is_email_notification' => (bool) ($this->email_notification ?? true),
+            'is_sms_notification' => (bool) ($this->text_notification ?? true),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

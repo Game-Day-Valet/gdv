@@ -20,6 +20,8 @@ class ProfileController extends Controller
             'address' => 'nullable|string|max:255',
             'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'fcm_notification' => 'nullable|boolean',
+            'email_notification' => 'nullable|boolean',
+            'text_notification' => 'nullable|boolean',
         ]);
 
         if ($request->has('name')) {
@@ -41,6 +43,12 @@ class ProfileController extends Controller
 
         if ($request->has('fcm_notification')) {
             $user->fcm_notification = (bool) $request->boolean('fcm_notification');
+        }
+        if ($request->has('email_notification')) {
+            $user->email_notification = (bool) $request->boolean('email_notification');
+        }
+        if ($request->has('text_notification')) {
+            $user->text_notification = (bool) $request->boolean('text_notification');
         }
 
         $user->save();
