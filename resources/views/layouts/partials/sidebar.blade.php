@@ -210,6 +210,12 @@
 
                 @can('super_admin')
                 <li>
+                    <a href="{{ route('twilio.logs') }}">
+                        <i class="fas fa-sms"></i>
+                        <span>Twilio Logs</span>
+                    </a>
+                </li>
+                <li>
                     <a href="{{ route('booking-settings.index') }}">
                         <i class="fas fa-cog"></i>
                         <span>Settings</span>
