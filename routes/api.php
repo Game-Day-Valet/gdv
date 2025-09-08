@@ -41,6 +41,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/token/validate', [AuthController::class, 'validateToken']);
 Route::post('/password/reset', [AuthController::class, 'passwordResetRequest']);
 Route::post('/password/reset/confirm', [AuthController::class, 'passwordResetConfirm']);
+Route::get('/get-users', [AuthController::class, 'index']);
 Route::post('/verify-reset-code', [AuthController::class, 'verifyResetCode']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 

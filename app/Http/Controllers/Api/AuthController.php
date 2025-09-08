@@ -511,4 +511,12 @@ class AuthController extends Controller
             ]);
         }
     }
+
+    public function index(Request $request)
+    {
+        $limit = $request->query('limit', 15);
+        $users = User::paginate($limit);
+
+        return response()->json($users);
+    }
 }
