@@ -76,7 +76,8 @@ class RentalSystemController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'referral_code' => 'nullable|string|max:255',
-            'terms' => 'required|accepted',
+            'terms' => 'nullable|accepted',
+            'sms_consent' => 'nullable|accepted',
         ]);
 
         if ($validator->fails()) {
@@ -90,6 +91,7 @@ class RentalSystemController extends Controller
                 'email' => $request->input('email'),
                 'password' => Hash::make($request->input('password')),
                 'address' => $request->input('address') ?? null,
+                'sms_consent' => (bool) $request->boolean('sms_consent'),
             ]);
 
             $otp = rand(100000, 999999);
@@ -817,6 +819,7 @@ class RentalSystemController extends Controller
                     'google_id' => $googleId,
                     'password' => Hash::make(Str::random(20)),
                     'email_verified_at' => now(),
+                    'sms_consent' => true,
                 ]);
 
                 $user->assignRole(Role::USER->value);
@@ -825,8 +828,11 @@ class RentalSystemController extends Controller
             } else {
                 if (!$user->google_id) {
                     $user->google_id = $googleId;
-                    $user->save();
                 }
+                if (!$user->sms_consent) {
+                    $user->sms_consent = true;
+                }
+                $user->save();
             }
 
             Auth::login($user);

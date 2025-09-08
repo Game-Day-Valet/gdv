@@ -30,7 +30,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'contact_number',
         'profile_image',
         'fcm_token',
-        'fcm_notification'
+        'fcm_notification',
+        'sms_consent'
     ];
 
     protected $hidden = [
@@ -42,6 +43,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'fcm_notification' => 'boolean',
+        'sms_consent' => 'boolean',
     ];
 
     public function sendEmailVerificationNotification()

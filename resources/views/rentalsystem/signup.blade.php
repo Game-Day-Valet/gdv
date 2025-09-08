@@ -150,6 +150,12 @@
 						@error('terms')<div style="color:#b91c1c;font-size:12px;margin-left:8px;">{{ $message }}</div>@enderror
 					</div>
 
+					<div class="inline" style="margin:0 0 16px;">
+						<input class="check @error('sms_consent') is-invalid @enderror" id="sms_consent" name="sms_consent" type="checkbox" value="1" required>
+						<label for="sms_consent">I consent to receive SMS text messages about my bookings and updates.</label>
+						@error('sms_consent')<div style="color:#b91c1c;font-size:12px;margin-left:8px;">{{ $message }}</div>@enderror
+					</div>
+
 					<button class="btn-primary" type="submit" id="signupBtn">
 						<span id="btnText">Create account</span>
 						<span id="btnSpinner" style="display:none"><i class="fa-solid fa-spinner fa-spin"></i></span>
