@@ -135,6 +135,8 @@
 						<a class="link" href="{{ route('rentalsystem.forgot-password') }}">Forgot password</a>
 					</div>
 
+					<p class="small" style="margin-top:10px;">By continuing, you agree to our <a class="link" href="{{ route('rentalsystem.privacy-policy') }}" target="_blank">Privacy Policy</a> and <a class="link" href="{{ url('/terms') }}" target="_blank">Terms & Conditions</a>.</p>
+
 					<button class="btn-primary" id="signinBtn" type="submit">
 						<span id="btnText">Sign in</span>
 						<span id="btnSpinner" style="display:none"><i class="fa-solid fa-spinner fa-spin"></i></span>

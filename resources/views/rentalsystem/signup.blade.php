@@ -146,7 +146,7 @@
 
 					<div class="inline" style="margin:14px 0 16px;">
 						<input class="check @error('terms') is-invalid @enderror" id="terms" name="terms" type="checkbox" required>
-						<label for="terms">I agree to the <a class="link" href="#">Terms</a> and <a class="link" href="#">Conditions</a></label>
+						<label for="terms">I agree to the <a class="link" href="{{ route('rentalsystem.privacy-policy') }}" target="_blank">Privacy Policy</a> and <a class="link" href="{{ url('/terms') }}" target="_blank">Terms & Conditions</a></label>
 						@error('terms')<div style="color:#b91c1c;font-size:12px;margin-left:8px;">{{ $message }}</div>@enderror
 					</div>
 

@@ -23,6 +23,7 @@ use App\Repositories\ItemRepositoryInterface;
 use App\Repositories\BundleRepositoryInterface;
 use App\Repositories\RentalRepositoryInterface;
 use App\Repositories\PrivacyPolicyRepositoryInterface;
+use App\Repositories\TermsConditionRepositoryInterface;
 use Stripe\Stripe;
 use Stripe\Checkout\Session as StripeCheckoutSession;
 use Illuminate\Support\Str;
@@ -41,6 +42,7 @@ class RentalSystemController extends Controller
     protected $bundles;
     protected $rentals;
     protected $privacyPolicies;
+    protected $termsConditions;
 
     public function __construct(
         ReferralService $referralService,
@@ -50,6 +52,7 @@ class RentalSystemController extends Controller
         BundleRepositoryInterface $bundles,
         RentalRepositoryInterface $rentals,
         PrivacyPolicyRepositoryInterface $privacyPolicies,
+        TermsConditionRepositoryInterface $termsConditions,
     ) {
         $this->referralService = $referralService;
         $this->sports = $sports;
@@ -58,6 +61,7 @@ class RentalSystemController extends Controller
         $this->bundles = $bundles;
         $this->rentals = $rentals;
         $this->privacyPolicies = $privacyPolicies;
+        $this->termsConditions = $termsConditions;
     }
 
     public function showSignup()
@@ -317,6 +321,14 @@ class RentalSystemController extends Controller
             return (bool) (is_array($it) ? ($it['status'] ?? true) : ($it->status ?? true)) === true;
         });
         return view('rentalsystem.privacy-policy', ['policies' => $policies]);
+    }
+
+    public function terms()
+    {
+        $terms = collect($this->termsConditions->getAll() ?? [])->filter(function($it){
+            return (bool) (is_array($it) ? ($it['status'] ?? true) : ($it->status ?? true)) === true;
+        });
+        return view('rentalsystem.terms', ['terms' => $terms]);
     }
 
     public function resetPassword(Request $request)
