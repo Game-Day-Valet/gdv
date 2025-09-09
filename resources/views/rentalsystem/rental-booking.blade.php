@@ -44,8 +44,8 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 20px;
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
             align-items: center;
         }
 
@@ -59,6 +59,17 @@
             align-items: center;
             gap: 20px;
         }
+
+        .logo { justify-self: start; }
+        .header-center { text-align:center; font-weight:900; letter-spacing:.4px; justify-self:center; font-size:18px; }
+        .user-menu { justify-self: end; }
+
+        /* Right side policy card */
+        .policy-card { background:#f9fafb; border:1px solid var(--border-color); border-radius:16px; padding:14px 16px; }
+        .policy-card .policy-title { font-weight:800; text-align:center; margin-bottom:8px; }
+        .policy-card ul { list-style:none; padding-left:0; margin:8px 0 0; }
+        .policy-card li { display:flex; align-items:center; gap:8px; color:var(--secondary-color); margin:6px 0; }
+        .policy-card li i { color:var(--primary-color); }
 
         .user-name {
             color: #fff;
@@ -291,6 +302,7 @@
     <header class="header">
         <div class="header-content">
             <div class="logo"><i class="fas fa-trophy"></i> Rental System</div>
+            <div class="header-center">Game Day Valet (GDV)</div>
             <div class="user-menu">
                 @if(Auth::check())
                 <span class="user-name">{{ Auth::user()->name }}</span>
@@ -347,7 +359,7 @@
                             <div>
                                 <label class="label">PHONE NUMBER <span class="text-danger">*</span></label>
                                 <input class="input" type="tel" name="phone_number" placeholder="e.g., +1 555 123 4567" value="{{ Auth::check() ? (Auth::user()->contact_number ?? '') : '' }}" required>
-                                <small class="text-muted">We’ll use this to send booking text updates.</small>
+                                <small class="text-muted" style="display:block;line-height:1.4;">By entering your number you agree to receive rental SMS from GDV (updates & support). Msg & data rates may apply. Reply STOP to opt out, HELP for help.</small>
                             </div>
                             <div>
                                 <label class="label">EMAIL <span class="text-danger">*</span></label>
@@ -411,6 +423,7 @@
 
                     <div class="card" style="margin-top:18px;">
                         <div class="section-title">Or choose items individually</div>
+                        <div style="color:#b91c1c;font-weight:800;margin:-6px 0 10px;font-size:18px;">**Prices are for the full tournament weekend**</div>
                         <div class="items-grid">
                             @forelse(($availableItems ?? []) as $it)
                             <div class="item-row" data-type="item" data-id="{{ $it->id }}" data-price="{{ (float)($it->effective_price ?? $it->price ?? 0) }}">
@@ -510,6 +523,14 @@
                         <div class="sum-total sum-row"><span>Total</span><span id="totalAmount">$0.00</span></div>
                         <div style="height:10px"></div>
                         <button type="submit" class="btn-primary">Confirm Booking</button>
+                    </div>
+                    <div class="policy-card" style="margin-top:12px;">
+                        <div class="policy-title">Policies</div>
+                        <p class="small" style="margin:0;color:#6b7280;">By placing your order you agree to Game Day Valet’s terms.</p>
+                        <ul>
+                            <li><i class="fas fa-file-contract"></i><a href="{{ route('rentalsystem.terms') }}" target="_blank">Terms & Conditions</a></li>
+                            <li><i class="fas fa-shield-alt"></i><a href="{{ route('rentalsystem.privacy-policy') }}" target="_blank">Privacy Policy</a></li>
+                        </ul>
                     </div>
                 </div>
             </div>
