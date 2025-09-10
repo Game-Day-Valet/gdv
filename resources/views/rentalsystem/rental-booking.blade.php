@@ -498,7 +498,7 @@
 
                 <div class="summary">
                     <div class="card">
-                        <div class="section-title" style="text-align:center;">Summary</div>
+                        <div class="section-title" style="text-align:center;font-size:16px;">Summary</div>
                         <div class="sum-row"><span>Items Subtotal</span><span id="itemsSubtotal">$0.00</span></div>
                         <div class="sum-row"><span>Bundles Subtotal</span><span id="bundlesSubtotal">$0.00</span></div>
                         <div class="sum-row"><span>Insurance</span><span id="insuranceAmount">$0.00</span></div>
