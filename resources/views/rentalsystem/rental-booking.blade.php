@@ -359,7 +359,10 @@
                             <div>
                                 <label class="label">PHONE NUMBER <span class="text-danger">*</span></label>
                                 <input class="input" type="tel" name="phone_number" placeholder="e.g., +1 555 123 4567" value="{{ Auth::check() ? (Auth::user()->contact_number ?? '') : '' }}" required>
-                                <small class="text-muted" style="display:block;line-height:1.4;">By entering your mobile number and placing your order, you agree to receive SMS from Game Day Valet (GDV) about your rental (two-way customer support and order updates). Message frequency varies; msg & data rates may apply. Reply STOP to opt out, HELP for help. See Terms & Privacy.</small>
+                                <label style="display:flex;gap:10px;align-items:flex-start;margin-top:10px;">
+                                    <input id="sms_opt_in" type="checkbox" name="sms_opt_in" required>
+                                    <span>I agree to receive important text notifications about my rental (confirmations, delivery updates, event-day notices). Msg & data rates may apply. Reply STOP to opt out.</span>
+                                </label>
                             </div>
                             <div>
                                 <label class="label">EMAIL <span class="text-danger">*</span></label>
@@ -765,6 +768,11 @@
             e.preventDefault(); // Prevent default form submission
             if (!validateForm()) {
                 showModal('Please select at least one item or bundle before proceeding.');
+                return false;
+            }
+            const smsOptIn = document.getElementById('sms_opt_in');
+            if (smsOptIn && !smsOptIn.checked) {
+                showModal('Please agree to receive important text notifications to proceed.');
                 return false;
             }
             // Check if user is logged in
