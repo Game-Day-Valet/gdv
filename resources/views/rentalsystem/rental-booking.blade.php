@@ -359,7 +359,7 @@
                             <div>
                                 <label class="label">PHONE NUMBER <span class="text-danger">*</span></label>
                                 <input class="input" type="tel" name="phone_number" placeholder="e.g., +1 555 123 4567" value="{{ Auth::check() ? (Auth::user()->contact_number ?? '') : '' }}" required>
-                                <small class="text-muted" style="display:block;line-height:1.4;">By entering your number you agree to receive rental SMS from GDV (updates & support). Msg & data rates may apply. Reply STOP to opt out, HELP for help.</small>
+                                <small class="text-muted" style="display:block;line-height:1.4;">By entering your mobile number and placing your order, you agree to receive SMS from Game Day Valet (GDV) about your rental (two-way customer support and order updates). Message frequency varies; msg & data rates may apply. Reply STOP to opt out, HELP for help. See Terms & Privacy.</small>
                             </div>
                             <div>
                                 <label class="label">EMAIL <span class="text-danger">*</span></label>
@@ -449,25 +449,6 @@
                         </div>
                         <div class="text-danger small mt-2" id="items-error" style="display: none;">Please select at least one item or bundle</div>
                     </div>
-
-                    <!-- Promo Code - moved here between Bundles and Drop-Off -->
-                    <!-- <div class="card" style="margin-top:18px;">
-
-                        <div class="section-title">BOOKING DAYS<span class="text-danger">*</span></div>
-
-                        <div class="row-two">
-                            <div>
-                                <label class="label">Select Days</label>
-                                <select class="select" name="booking_days" required>
-                                    @for($i=1; $i<=7; $i++)
-                                        <option value="{{ $i }}">{{ $i }} day{{ $i>1? 's':'' }}</option>
-                                        @endfor
-                                </select>
-                            </div>
-                        </div>
-
-                    </div> -->
-
 
                     <!-- Promo Code - moved here between Bundles and Drop-Off -->
                     <div class="card" style="margin-top:18px;">
@@ -779,14 +760,36 @@
             return isValid;
         }
 
-        // Form submission validation
+        // Form submission validation with login check
         document.getElementById('bookingForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent default form submission
             if (!validateForm()) {
-                e.preventDefault();
                 showModal('Please select at least one item or bundle before proceeding.');
                 return false;
             }
-            // ensure promo_code input remains set
+            // Check if user is logged in
+            @if(!Auth::check())
+            // Show login modal if not logged in
+            const loginModal = document.createElement('div');
+            loginModal.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:10000;';
+            const redirectUrl = encodeURIComponent(window.location.href);
+            loginModal.innerHTML = `
+            <div style="background:#fff;border-radius:14px;min-width:300px;max-width:460px;padding:20px;border:1px solid var(--border-color);box-shadow:0 20px 40px rgba(0,0,0,.18);">
+                <div style="font-weight:800;font-size:16px;margin-bottom:8px;color:var(--dark-color);">Login Required</div>
+                <div style="color:var(--secondary-color);line-height:1.5;">Please sign in to confirm your booking.</div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+                    <a href="{{ route('rentalsystem.signin') }}?redirect=${redirectUrl}" class="btn-primary" style="width:auto;padding:10px 16px;text-decoration:none;">Sign In</a>
+                    <button id="dismissLoginNow" class="btn-primary" style="width:auto;padding:10px 16px;background:#6b7280;">Cancel</button>
+                </div>
+            </div>`;
+            document.body.appendChild(loginModal);
+            document.getElementById('dismissLoginNow').addEventListener('click', () => {
+                loginModal.remove();
+            });
+            @else
+            // If logged in, submit the form
+            this.submit();
+            @endif
         });
 
         // Validate coupon via API and apply discount on frontend only
@@ -905,34 +908,6 @@
             });
         })();
         validateForm();
-
-        // If user is not logged in, immediately invite to sign in and return back here
-        @if(!Auth::check())
-        (function(){
-            const loginModal = document.createElement('div');
-            loginModal.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:10000;';
-            const redirectUrl = encodeURIComponent(window.location.href);
-            loginModal.innerHTML = `
-            <div style="background:#fff;border-radius:14px;min-width:300px;max-width:460px;padding:20px;border:1px solid var(--border-color);box-shadow:0 20px 40px rgba(0,0,0,.18);">
-                <div style="font-weight:800;font-size:16px;margin-bottom:8px;color:var(--dark-color);">Login Recommended</div>
-                <div style="color:var(--secondary-color);line-height:1.5;">Sign in to continue booking.</div>
-                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
-                    <a href="{{ route('rentalsystem.signin') }}?redirect=${redirectUrl}" class="btn-primary" style="width:auto;padding:10px 16px;text-decoration:none;">Sign In</a>
-                    <button id="dismissLoginNow" class="btn-primary" style="width:auto;padding:10px 16px;background:#6b7280;">Back</button>
-                </div>
-            </div>`;
-            document.body.appendChild(loginModal);
-            document.getElementById('dismissLoginNow').addEventListener('click', () => {
-                if (document.referrer) {
-                    window.history.back();
-                } else {
-                    window.location.href = '{{ route('rentalsystem.sports') }}';
-                }
-            });
-        })();
-        @endif
-
-        // Removed old conditional login modal (now shown immediately on page load for guests)
     </script>
 </body>
 
