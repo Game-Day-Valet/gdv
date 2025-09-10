@@ -140,6 +140,8 @@
             margin: 6px 0 12px;
         }
 
+        .summary .section-title { font-size: 16px; }
+
         .row-two {
             display: grid;
             grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
