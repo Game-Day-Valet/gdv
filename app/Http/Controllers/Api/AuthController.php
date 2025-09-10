@@ -238,6 +238,32 @@ class AuthController extends Controller
         ], 200);
     }
 
+    public function deleteAccount(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // Revoke all tokens first
+        try {
+            $user->tokens()->delete();
+        } catch (\Throwable $e) {
+            // proceed even if token revocation fails
+        }
+
+        // Clean up simple relations if applicable
+        if (method_exists($user, 'cart_items')) {
+            $user->cart_items()->delete();
+        }
+
+        // Delete the user account
+        $user->delete();
+
+        return response()->json(['message' => 'Account deleted successfully'], 200);
+    }
+
     public function passwordResetRequest(PasswordResetRequest $request)
     {
         $user = User::where('email', $request->input('email'))->first();

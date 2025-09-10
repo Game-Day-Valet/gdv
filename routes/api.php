@@ -62,6 +62,7 @@ Route::get('/tournaments/details/{id}', [TournamentController::class, 'details']
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::get('/user/referral-code', [AuthController::class, 'getReferralCode']);
+    Route::delete('/account/delete', [AuthController::class, 'deleteAccount']);
     
     Route::post('/profile', [ProfileController::class, 'update']);
     Route::post('/notifications/fcm/set', [NotificationController::class, 'setFcm']);
