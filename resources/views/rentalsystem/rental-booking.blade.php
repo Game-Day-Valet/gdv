@@ -363,7 +363,7 @@
                                 <input class="input" type="tel" name="phone_number" placeholder="e.g., +1 555 123 4567" value="{{ Auth::check() ? (Auth::user()->contact_number ?? '') : '' }}" required>
                                 <label style="display:flex;gap:10px;align-items:flex-start;margin-top:10px;">
                                     <input id="sms_opt_in" type="checkbox" name="sms_opt_in" required>
-                                    <span>I agree to receive important text notifications about my rental (confirmations, delivery updates, event-day notices). Msg & data rates may apply. Reply STOP to opt out.</span>
+                                    <span>I agree to receive important text notifications about my rental (confirmations, delivery updates, event-day notices). Message frequency may vary; msg & data rates may apply. Reply STOP to opt out, HELP for help.</span>
                                 </label>
                             </div>
                             <div>
@@ -518,7 +518,7 @@
                             <li><i class="fas fa-shield-alt"></i><a href="{{ route('rentalsystem.privacy-policy') }}" target="_blank">Privacy Policy</a></li>
                         </ul>
                         <div class="small" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border-color);color:#6b7280;line-height:1.5;font-size:12.5px;">
-                            By entering your mobile number and placing your order, you agree to receive important text notifications from Game Day Valet (GDV) about your rental (booking confirmations, delivery updates, and event-day notices). Msg & data rates may apply. Reply STOP to opt out, HELP for help. See our <a href="{{ route('rentalsystem.terms') }}" target="_blank">Terms</a>
+                            By entering your mobile number and placing your order, you agree to receive important text notifications from Game Day Valet (GDV) about your rental (booking confirmations, delivery updates, and event-day notices). Message frequency may vary; msg & data rates may apply. Reply STOP to opt out, HELP for help. See our <a href="{{ route('rentalsystem.terms') }}" target="_blank">Terms</a>
                             &amp; <a href="{{ route('rentalsystem.privacy-policy') }}" target="_blank">Privacy Policy</a>. Consent to receive text notifications is not required to complete your booking.
                         </div>
                     </div>
