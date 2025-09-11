@@ -59,13 +59,14 @@ return [
         'enabled' => env('TWILIO_ENABLED', true),
     ],
 
+
     'apple' => [
-        'client_id' => env('APPLE_CLIENT_ID'),
-        'client_secret' => env('APPLE_CLIENT_SECRET'),
-        'team_id' => env('APPLE_TEAM_ID'),
-        'key_id' => env('APPLE_KEY_ID'),
-        'private_key' => str_replace('\n', "\n", env('APPLE_PRIVATE_KEY')),
-        'redirect' => env('APPLE_REDIRECT_URI', 'http://your-api-domain.com/api/auth/apple/callback'),
+        'team_id' => env('APPLE_TEAM_ID', 'G2Y86RN2UA'),
+        'client_id' => env('APPLE_CLIENT_ID', 'com.gdv.gameDayValet'),
+        'key_id' => env('APPLE_KEY_ID', 'PJ6NRA2SUB'),
+        'private_key_path' => env('APPLE_PRIVATE_KEY_PATH', storage_path('apple/AuthKey_PJ6NRA2SUB.p8')),
+        'redirect' => env('APPLE_REDIRECT_URI', 'https://gdv.devop360.com/rental-system/apple/callback'),
     ],
+
 
 ];

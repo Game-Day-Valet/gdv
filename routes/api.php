@@ -156,9 +156,5 @@ Route::middleware('auth:sanctum')->group(function () {
 // Route::get('/auth/google/callback', [AuthController::class, 'googleCallback']);
 // Route::post('/auth/google/login', [AuthController::class, 'googleLogin']);
 Route::post('/auth/google/login', [AuthController::class, 'googleLogin']);
+Route::post('/auth/apple/login', [AuthController::class, 'appleSignIn']);
 
-
-// Sign in with Apple
-Route::get('/auth/apple/redirect', [AuthController::class, 'appleRedirect']);
-Route::get('/auth/apple/callback', [AuthController::class, 'appleCallback']);
-Route::post('/auth/apple/login', [AuthController::class, 'appleLogin']);

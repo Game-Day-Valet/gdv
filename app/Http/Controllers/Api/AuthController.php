@@ -453,87 +453,113 @@ class AuthController extends Controller
         }
     }
 
-    public function appleRedirect()
+    public function appleSignIn(Request $request)
     {
+        $request->validate([
+            'id_token' => 'required|string',
+            'fcm_token' => 'nullable|string',
+        ]);
 
-        $url = Socialite::driver('apple')->stateless()->redirect()->getTargetUrl();
 
-        // $url = Socialite::driver('apple')
-        //     ->stateless()
-        //     ->redirectUrl(config('services.apple.redirect'))
-        //     ->redirect()
-        //     ->getTargetUrl();
+        $clientId = config('services.apple.client_id');
+        $idToken = $request->input('id_token');
 
-        return response()->json([
-            'url' => $url,
-        ], 200);
-    }
+        $payload = $this->verifyAppleIdToken($idToken, $clientId);
 
-    public function appleCallback(Request $request)
-    {
-        try {
-            $appleUser = Socialite::driver('apple')->stateless()->user();
+        $email = $payload['email'] ?? null;
+        $name = $payload['name'] ?? 'No Name'; // Apple doesn't always provide name
+        $appleId = $payload['sub'];
 
-            $user = User::updateOrCreate(
-                ['email' => $appleUser->email],
-                [
-                    'name' => $appleUser->name ?? 'Apple User',
-                    'apple_id' => $appleUser->id,
-                    'password' => Hash::make(Str::random(20)),
-                ]
-            );
+        // Try to find by email first (if present), else by apple_id
+        $user = $email ? User::where('email', $email)->first() : User::where('apple_id', $appleId)->first();
+        $isNewUser = false;
 
-            $user->referral_code = strtoupper('GDV' . Str::random(4));
+        if (!$user && $email) {
+            $user = User::create([
+                'name' => $name,
+                'email' => $email,
+                'apple_id' => $appleId,
+                'password' => Hash::make(Str::random(20)),
+                'email_verified_at' => now(),
+            ]);
+
+            $user->assignRole(Role::USER->value);
+
+            $generatedCode = $this->referralService->generateCode($user->id);
             $user->save();
 
-            $token = $user->createToken('auth_token')->plainTextToken;
-
-            return response()->json([
-                'message' => 'Apple login successful',
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'referral_code' => $user->referral_code,
-                ],
-                'token' => $token,
-            ], 200);
-        } catch (\Exception $e) {
-            throw ValidationException::withMessages([
-                'apple' => ['Apple authentication failed.'],
+            $isNewUser = true;
+        } elseif ($user && !$user->apple_id) {
+            $user->apple_id = $appleId;
+            $user->save();
+        } elseif (!$user) {
+            // If Apple did not share email, create a placeholder email to satisfy DB constraints
+            $placeholderEmail = 'apple_' . $appleId . '@apple.local';
+            $user = User::create([
+                'name' => $name,
+                'email' => $placeholderEmail,
+                'apple_id' => $appleId,
+                'password' => Hash::make(Str::random(20)),
+                'email_verified_at' => now(),
             ]);
+
+            $user->assignRole(Role::USER->value);
+
+            $generatedCode = $this->referralService->generateCode($user->id);
+            $user->save();
+
+            $isNewUser = true;
         }
+
+        // Store FCM token if provided
+        if ($request->has('fcm_token')) {
+            $user->update(['fcm_token' => $request->input('fcm_token')]);
+        }
+        Log::info($user);
+
+        $token = $user->createToken('apple')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Apple login successful.',
+            'user' => new UserResource($user),
+            'token' => $token,
+            'fcm_token' => $user->fcm_token,
+        ]);
     }
 
-    public function appleLogin(Request $request)
+    public function verifyAppleIdToken(string $idToken, string $clientId): array
     {
+        $jwk = cache()->remember('apple_jwk_raw', now()->addHours(24), function () {
+            $jwkUrl = 'https://appleid.apple.com/auth/keys';
+            return Http::get($jwkUrl)->json();
+        });
+
+        $keys = JWK::parseKeySet($jwk);
+
         try {
-            $appleUser = Socialite::driver('apple')->stateless()->userFromToken($request->input('access_token'));
+            // Apple uses RS256
+            $decoded = JWT::decode($idToken, $keys);
 
-            $user = User::updateOrCreate(
-                ['email' => $appleUser->email],
-                [
-                    'name' => $appleUser->name ?? 'Apple User',
-                    'apple_id' => $appleUser->id,
-                    'password' => Hash::make(Str::random(20)),
-                ]
-            );
+            $payload = (array) $decoded;
 
-            $token = $user->createToken('auth_token')->plainTextToken;
+            // aud can be array or string depending on app setup; support both
+            $aud = $payload['aud'] ?? null;
+            $audValid = is_array($aud) ? in_array($clientId, $aud, true) : ($aud === $clientId);
+            if (!$audValid) {
+                throw new \Exception('Invalid audience');
+            }
 
-            return response()->json([
-                'message' => 'Apple login successful',
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'referral_code' => $user->referral_code,
-                ],
-                'token' => $token,
-            ], 200);
-        } catch (\Exception $e) {
+            if ($payload['iss'] !== 'https://appleid.apple.com') {
+                throw new \Exception('Invalid issuer');
+            }
+
+            return $payload;
+        } catch (\Throwable $e) {
+            Log::error('Apple sign-in verification failed', [
+                'error' => $e->getMessage(),
+            ]);
             throw ValidationException::withMessages([
-                'apple' => ['Apple authentication failed.'],
+                'apple' => ['Apple Verification Failed.'],
             ]);
         }
     }
