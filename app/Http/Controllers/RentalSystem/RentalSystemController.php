@@ -792,7 +792,7 @@ class RentalSystemController extends Controller
 
             return response()->json(['success' => true, 'redirect' => route('rentalsystem.signin')]);
         } catch (\Throwable $e) {
-            \Log::error('Delete account (web) failed', ['user_id' => $user->id ?? null, 'error' => $e->getMessage()]);
+            Log::error('Delete account (web) failed', ['user_id' => $user->id ?? null, 'error' => $e->getMessage()]);
             return response()->json(['success' => false, 'message' => 'Unable to delete account. Please try again.'], 500);
         }
     }
