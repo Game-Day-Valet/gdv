@@ -69,6 +69,7 @@ Route::prefix('')->name('rentalsystem.')->group(function () {
 		Route::get('/profile', [RentalSystemController::class, 'showProfile'])->name('profile');
 		Route::post('/profile', [RentalSystemController::class, 'updateProfile'])->name('profile.update');
 		Route::post('/profile/notifications', [RentalSystemController::class, 'updateNotifications'])->name('profile.notifications');
+		Route::delete('/profile/delete-account', [RentalSystemController::class, 'deleteAccountWeb'])->name('profile.delete');
 		Route::get('/logout', [RentalSystemController::class, 'logout'])->name('logout');
 	});
 });

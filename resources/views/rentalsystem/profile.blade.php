@@ -594,6 +594,16 @@
                                 <span class="slider round"></span>
                             </label>
                         </div>
+                        <div class="setting-row" style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;">
+                            <div style="display:flex;gap:12px;align-items:center;">
+                                <i class="fas fa-user-slash" style="color:#ef4444;"></i>
+                                <div>
+                                    <div style="font-weight:600;color:#111827;">Delete Account</div>
+                                    <div style="font-size:13px;color:#6b7280;">Permanently delete your GDV account and data.</div>
+                                </div>
+                            </div>
+                            <button id="deleteAccountBtn" class="btn-primary" style="width:auto;background:#dc2626;">Delete</button>
+                        </div>
                     </div>
                 </div>
 
@@ -762,6 +772,42 @@
         if(fcm){ fcm.addEventListener('change', async ()=>{ const ok = await setPref('fcm', fcm.checked); if(!ok){ fcm.checked = !fcm.checked; } }); }
         if(email){ email.addEventListener('change', async ()=>{ const ok = await setPref('email', email.checked); if(!ok){ email.checked = !email.checked; } }); }
         if(sms){ sms.addEventListener('change', async ()=>{ const ok = await setPref('sms', sms.checked); if(!ok){ sms.checked = !sms.checked; } }); }
+
+        // Delete account flow
+        const delBtn = document.getElementById('deleteAccountBtn');
+        if (delBtn) {
+            delBtn.addEventListener('click', async function(){
+                const wrap = document.createElement('div');
+                wrap.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:10000;';
+                wrap.innerHTML = `
+                <div style="background:#fff;border-radius:14px;min-width:300px;max-width:460px;padding:20px;border:1px solid #e5e7eb;box-shadow:0 20px 40px rgba(0,0,0,.18);">
+                    <div style="font-weight:800;font-size:16px;margin-bottom:6px;">Delete Account</div>
+                    <div style="color:#6b7280;">This action is permanent and cannot be undone. Are you sure?</div>
+                    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+                        <button id="cancelDelete" class="btn-primary" style="width:auto;background:#6b7280;">Cancel</button>
+                        <button id="confirmDelete" class="btn-primary" style="width:auto;background:#dc2626;">Delete</button>
+                    </div>
+                </div>`;
+                document.body.appendChild(wrap);
+                document.getElementById('cancelDelete').addEventListener('click', ()=>wrap.remove());
+                document.getElementById('confirmDelete').addEventListener('click', async ()=>{
+                    try{
+                        const resp = await fetch('{{ route('rentalsystem.profile.delete') }}', { method:'DELETE', headers:{ 'Accept':'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
+                        const data = await resp.json().catch(()=>({}));
+                        if(resp.ok && data && data.success){ window.location.href = (data.redirect || '{{ route('rentalsystem.signin') }}'); }
+                        else{ wrap.remove(); showInlineModal(data?.message || 'Failed to delete account.'); }
+                    }catch(e){ wrap.remove(); showInlineModal('Failed to delete account.'); }
+                });
+            });
+        }
+
+        function showInlineModal(message){
+            const m = document.createElement('div');
+            m.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:10001;';
+            m.innerHTML = `<div style="background:#fff;border-radius:14px;min-width:280px;max-width:420px;padding:18px;border:1px solid #e5e7eb;box-shadow:0 20px 40px rgba(0,0,0,.18);"><div style="font-weight:800;font-size:16px;margin-bottom:8px;">Notice</div><div style="color:#6b7280;">${message}</div><div style="display:flex;justify-content:flex-end;margin-top:16px;"><button id="inlineOk" class="btn-primary" style="width:auto;padding:10px 16px;">OK</button></div></div>`;
+            document.body.appendChild(m);
+            m.querySelector('#inlineOk').addEventListener('click', ()=>m.remove());
+        }
     </script>
 </body>
 </html>

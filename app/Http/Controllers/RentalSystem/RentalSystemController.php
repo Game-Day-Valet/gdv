@@ -769,6 +769,34 @@ class RentalSystemController extends Controller
         return redirect()->route('rentalsystem.signin')->with('success', 'You have been logged out successfully.');
     }
 
+    public function deleteAccountWeb(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $user = Auth::user();
+        try {
+            // Revoke tokens if any (mobile/web API tokens)
+            try { if (method_exists($user, 'tokens')) { $user->tokens()->delete(); } } catch (\Throwable $e) { /* ignore */ }
+
+            // Clean simple relations if available
+            try { if (method_exists($user, 'cart_items')) { $user->cart_items()->delete(); } } catch (\Throwable $e) { /* ignore */ }
+
+            // Delete the user
+            $userId = $user->id;
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            $user->delete();
+
+            return response()->json(['success' => true, 'redirect' => route('rentalsystem.signin')]);
+        } catch (\Throwable $e) {
+            \Log::error('Delete account (web) failed', ['user_id' => $user->id ?? null, 'error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Unable to delete account. Please try again.'], 500);
+        }
+    }
+
     public function resendVerificationCode(Request $request)
     {
         $email = $request->query('email', Session::get('pending_email'));
@@ -832,7 +860,7 @@ class RentalSystemController extends Controller
                 if (!$user->sms_consent) {
                     $user->sms_consent = true;
                 }
-                $user->save();
+                    $user->save();
             }
 
             Auth::login($user);
