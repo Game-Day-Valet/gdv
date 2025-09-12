@@ -922,6 +922,27 @@
             });
         })();
         validateForm();
+
+        // Immediately prompt sign-in for guests (with return to this page)
+        @if(!Auth::check())
+        (function(){
+            if(document.getElementById('guestLoginPrompt')) return; // avoid duplicates
+            const loginModal = document.createElement('div');
+            loginModal.id = 'guestLoginPrompt';
+            loginModal.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:10000;';
+            const redirectUrl = encodeURIComponent(window.location.href);
+            loginModal.innerHTML = `
+            <div style=\"background:#fff;border-radius:14px;min-width:300px;max-width:460px;padding:20px;border:1px solid var(--border-color);box-shadow:0 20px 40px rgba(0,0,0,.18);\">\n                <div style=\"font-weight:800;font-size:16px;margin-bottom:8px;color:var(--dark-color);\">Sign In Required</div>\n                <div style=\"color:var(--secondary-color);line-height:1.5;\">Sign in to continue booking this tournament. You'll be returned here after sign-in.</div>\n                <div style=\"display:flex;gap:10px;justify-content:flex-end;margin-top:16px;\">\n                    <a href=\"{{ route('rentalsystem.signin') }}?redirect=${redirectUrl}\" class=\"btn-primary\" style=\"width:auto;padding:10px 16px;text-decoration:none;\">Sign In</a>\n                    <button id=\"dismissLoginPrompt\" class=\"btn-primary\" style=\"width:auto;padding:10px 16px;background:#6b7280;\">Back</button>\n                </div>\n            </div>`;
+            document.body.appendChild(loginModal);
+            document.getElementById('dismissLoginPrompt').addEventListener('click', () => {
+                if (document.referrer) {
+                    window.history.back();
+                } else {
+                    loginModal.remove();
+                }
+            });
+        })();
+        @endif
     </script>
 </body>
 
