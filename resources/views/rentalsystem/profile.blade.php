@@ -599,7 +599,7 @@
                                 <i class="fas fa-user-slash" style="color:#ef4444;"></i>
                                 <div>
                                     <div style="font-weight:600;color:#111827;">Delete Account</div>
-                                    <div style="font-size:13px;color:#6b7280;">Permanently delete your GDV account and data.</div>
+                                    <div style="font-size:13px;color:#6b7280;">Permanently delete your GDV account and data. <a href="{{ route('rentalsystem.account-delete-policy') }}" target="_blank">View policy</a></div>
                                 </div>
                             </div>
                             <button id="deleteAccountBtn" class="btn-primary" style="width:auto;background:#dc2626;">Delete</button>

@@ -81,6 +81,8 @@ Route::get('/privacy-policy', [\App\Http\Controllers\RentalSystem\RentalSystemCo
 Route::view('/support', 'rentalsystem.support')->name('rentalsystem.support');
 // Public page: Terms & Conditions
 Route::get('/terms', [\App\Http\Controllers\RentalSystem\RentalSystemController::class, 'terms'])->name('rentalsystem.terms');
+// Public page: Account Delete Policy
+Route::view('/account-delete-policy', 'rentalsystem.account-delete-policy')->name('rentalsystem.account-delete-policy');
 
 Route::group(['prefix' => 'admin', 'middleware' => ['auth', function($request, $next){
     $user = \Auth::user();
