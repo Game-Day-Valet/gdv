@@ -22,7 +22,13 @@ class TournamentController extends Controller
 
     public function index()
     {
-        $tournaments = $this->tournamentRepository->getAllActive();
+        // In admin, show ALL tournaments (active and inactive)
+        if (method_exists($this->tournamentRepository, 'getAll')) {
+            $tournaments = $this->tournamentRepository->getAll();
+        } else {
+            // fallback if repository lacks getAll: query directly
+            $tournaments = \App\Models\Tournament::with('sport')->get();
+        }
         return view('tournament_management.index', compact('tournaments'));
     }
 
