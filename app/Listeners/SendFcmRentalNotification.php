@@ -89,6 +89,10 @@ class SendFcmRentalNotification implements ShouldQueue
         $enabled = $globalSms && (bool) config('services.twilio.enabled', true);
         // if ($enabled && $to && $sid && $token && $from) {
         $canText = true;
+        // Per requirement: do NOT send SMS for confirmed or out_for_delivery
+        if (in_array($event->newStatus, ['confirmed', 'out_for_delivery'], true)) {
+            $canText = false;
+        }
         if ($user) {
             $canText = $user->text_notification !== false;
         }

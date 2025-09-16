@@ -148,6 +148,8 @@
                 <label class="form-label" for="sms_booking_confirmation">Booking Confirmation SMS</label>
                 <textarea name="sms_booking_confirmation" id="sms_booking_confirmation" class="form-control" rows="2" placeholder="Type the exact SMS text to send">{{ old('sms_booking_confirmation', $smsBooking) }}</textarea>
             </div>
+            {{-- Hidden per requirement: no SMS for Confirmed and Out For Delivery --}}
+            {{--
             <div class="mb-3">
                 <label class="form-label" for="sms_status_confirmed">Status: Confirmed</label>
                 <textarea name="sms_status_confirmed" id="sms_status_confirmed" class="form-control" rows="2" placeholder="Type the exact SMS text to send">{{ old('sms_status_confirmed', $smsConfirmed) }}</textarea>
@@ -156,6 +158,7 @@
                 <label class="form-label" for="sms_status_out_for_delivery">Status: Out For Delivery</label>
                 <textarea name="sms_status_out_for_delivery" id="sms_status_out_for_delivery" class="form-control" rows="2" placeholder="Type the exact SMS text to send">{{ old('sms_status_out_for_delivery', $smsOutForDelivery) }}</textarea>
             </div>
+            --}}
             <div class="mb-3">
                 <label class="form-label" for="sms_status_delivered">Status: Delivered</label>
                 <textarea name="sms_status_delivered" id="sms_status_delivered" class="form-control" rows="2" placeholder="Type the exact SMS text to send">{{ old('sms_status_delivered', $smsDelivered) }}</textarea>

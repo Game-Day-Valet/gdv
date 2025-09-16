@@ -24,6 +24,15 @@ class SendRentalStatusUpdateEmail implements ShouldQueue
             $status = (string) $event->newStatus;
             $statusLabel = ucfirst(str_replace('_', ' ', $status));
 
+            // Skip sending emails for confirmed and out_for_delivery per requirement
+            if (in_array($status, ['confirmed', 'out_for_delivery'], true)) {
+                Log::info('Skipping status email per rule', [
+                    'rental_id' => $rental->id,
+                    'status' => $status,
+                ]);
+                return;
+            }
+
             // De-dupe: avoid sending twice for same rental/status in a short window
             $cacheKey = 'email_status_rental_' . $rental->id . '_' . $status . '_' . optional($rental->updated_at)->timestamp;
             if (!Cache::add($cacheKey, true, now()->addMinutes(2))) {
