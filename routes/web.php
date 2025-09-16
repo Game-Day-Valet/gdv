@@ -100,14 +100,14 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', function($request, $
 	// Route::get('{first}/{second}', [RoutingController::class, 'secondLevel'])->name('second');
 	// Route::get('{any}', [RoutingController::class, 'root'])->name('any');
 
-	// Chat Management Routes
-	Route::get('/chat-management', [ChatManagementController::class, 'index'])->name('chat-management.index');
-	Route::get('/chat-management/{id}', [ChatManagementController::class, 'show'])->name('chat-management.show');
-	Route::post('/chat-management/{id}/send', [ChatManagementController::class, 'sendMessage'])->name('chat-management.send');
-	Route::get('/chat-management/{id}/messages', [ChatManagementController::class, 'getMessages'])->name('chat-management.messages');
-	Route::post('/chat-management/{id}/mark-read', [ChatManagementController::class, 'markAsRead'])->name('chat-management.mark-read');
-	Route::post('/chat-management/{id}/close', [ChatManagementController::class, 'closeConversation'])->name('chat-management.close');
-	Route::get('/chat-management/unassigned/list', [ChatManagementController::class, 'getUnassignedConversations'])->name('chat-management.unassigned');
+	// Chat Management Routes (disabled)
+	// Route::get('/chat-management', [ChatManagementController::class, 'index'])->name('chat-management.index');
+	// Route::get('/chat-management/{id}', [ChatManagementController::class, 'show'])->name('chat-management.show');
+	// Route::post('/chat-management/{id}/send', [ChatManagementController::class, 'sendMessage'])->name('chat-management.send');
+	// Route::get('/chat-management/{id}/messages', [ChatManagementController::class, 'getMessages'])->name('chat-management.messages');
+	// Route::post('/chat-management/{id}/mark-read', [ChatManagementController::class, 'markAsRead'])->name('chat-management.mark-read');
+	// Route::post('/chat-management/{id}/close', [ChatManagementController::class, 'closeConversation'])->name('chat-management.close');
+	// Route::get('/chat-management/unassigned/list', [ChatManagementController::class, 'getUnassignedConversations'])->name('chat-management.unassigned');
 
 	// Sports and Tournaments - Accessible to both manager and admin
 	Route::resource('sport-management', SportController::class);

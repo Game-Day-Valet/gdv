@@ -137,15 +137,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/terms-and-conditions', [TermsConditionController::class, 'index']);
 
 
-    // Chat Module
-    Route::post('/chat/send', [ChatController::class, 'sendMessage']);
-    Route::post('/chat/reply/{conversationId}', [ChatController::class, 'replyToMessage']);
-    Route::get('/chat/conversations', [ChatController::class, 'getConversations']);
-    Route::get('/chat/conversations/messages/{conversationId}', [ChatController::class, 'getMessages']);
-    Route::post('/chat/conversations/mark-read/{conversationId}', [ChatController::class, 'markAsRead']);
-    Route::post('/chat/conversations/close/{conversationId}', [ChatController::class, 'closeConversation']);
-    Route::get('/chat/conversations/details/{conversationId}', [ChatController::class, 'getConversationDetails']);
-    Route::get('/chat/unassigned', [ChatController::class, 'getUnassignedConversations']);
+    // Chat Module (disabled)
+    // Route::post('/chat/send', [ChatController::class, 'sendMessage']);
+    // Route::post('/chat/reply/{conversationId}', [ChatController::class, 'replyToMessage']);
+    // Route::get('/chat/conversations', [ChatController::class, 'getConversations']);
+    // Route::get('/chat/conversations/messages/{conversationId}', [ChatController::class, 'getMessages']);
+    // Route::post('/chat/conversations/mark-read/{conversationId}', [ChatController::class, 'markAsRead']);
+    // Route::post('/chat/conversations/close/{conversationId}', [ChatController::class, 'closeConversation']);
+    // Route::get('/chat/conversations/details/{conversationId}', [ChatController::class, 'getConversationDetails']);
+    // Route::get('/chat/unassigned', [ChatController::class, 'getUnassignedConversations']);
 
     Route::post('/create-payment-intent', [StripeController::class, 'createPaymentIntent']);
 });
