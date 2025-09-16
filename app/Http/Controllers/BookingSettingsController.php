@@ -21,8 +21,12 @@ class BookingSettingsController extends Controller
         $smsOutForDelivery = BookingOption::where('type', 'sms_status_out_for_delivery')->value('description');
         $smsDelivered = BookingOption::where('type', 'sms_status_delivered')->value('description');
         $smsCancelled = BookingOption::where('type', 'sms_status_cancelled')->value('description');
+        $emailPreEndReminder = BookingOption::where('type', 'email_pre_end_reminder')->value('description');
+        $smsPreEndReminder = BookingOption::where('type', 'sms_pre_end_reminder')->value('description');
+        $emailEndDayMorning = BookingOption::where('type', 'email_end_day_morning')->value('description');
+        $smsEndDayMorning = BookingOption::where('type', 'sms_end_day_morning')->value('description');
         $notif = SettingNotification::current();
-        return view('booking_settings.index', compact('options', 'emailContent', 'chatInitial', 'smsBooking', 'smsConfirmed', 'smsOutForDelivery', 'smsDelivered', 'smsCancelled','notif'));
+        return view('booking_settings.index', compact('options', 'emailContent', 'chatInitial', 'smsBooking', 'smsConfirmed', 'smsOutForDelivery', 'smsDelivered', 'smsCancelled','notif','emailPreEndReminder','smsPreEndReminder','emailEndDayMorning','smsEndDayMorning'));
     }
 
     public function saveNotifications(Request $request)
@@ -173,5 +177,63 @@ class BookingSettingsController extends Controller
         }
 
         return redirect()->route('booking-settings.index')->with('success', 'Twilio SMS templates updated.');
+    }
+
+    public function savePreEndReminders(Request $request)
+    {
+        $data = $request->validate([
+            'email_pre_end_reminder' => 'nullable|string',
+            'sms_pre_end_reminder' => 'nullable|string',
+        ]);
+
+        $map = [
+            'email_pre_end_reminder' => 'Email: Pre-End Reminder',
+            'sms_pre_end_reminder' => 'SMS: Pre-End Reminder',
+        ];
+
+        foreach ($map as $type => $label) {
+            if (array_key_exists($type, $data)) {
+                BookingOption::updateOrCreate(
+                    ['type' => $type],
+                    [
+                        'label' => $label,
+                        'description' => $data[$type] ?? null,
+                        'price' => 0,
+                        'enabled' => true,
+                    ]
+                );
+            }
+        }
+
+        return redirect()->route('booking-settings.index')->with('success', 'Pre-end reminder templates saved.');
+    }
+
+    public function saveEndDayMorning(Request $request)
+    {
+        $data = $request->validate([
+            'email_end_day_morning' => 'nullable|string',
+            'sms_end_day_morning' => 'nullable|string',
+        ]);
+
+        $map = [
+            'email_end_day_morning' => 'Email: End-Day Morning Reminder',
+            'sms_end_day_morning' => 'SMS: End-Day Morning Reminder',
+        ];
+
+        foreach ($map as $type => $label) {
+            if (array_key_exists($type, $data)) {
+                BookingOption::updateOrCreate(
+                    ['type' => $type],
+                    [
+                        'label' => $label,
+                        'description' => $data[$type] ?? null,
+                        'price' => 0,
+                        'enabled' => true,
+                    ]
+                );
+            }
+        }
+
+        return redirect()->route('booking-settings.index')->with('success', 'End-day morning templates saved.');
     }
 } 

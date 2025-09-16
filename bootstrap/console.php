@@ -1,6 +1,7 @@
 <?php
 
 use App\Console\Commands\RebroadcastUnassignedConversations;
+use App\Console\Commands\ScheduleTournamentEndReminders;
 
 return [
 
@@ -16,6 +17,7 @@ return [
 
     'commands' => [
         RebroadcastUnassignedConversations::class,
+        ScheduleTournamentEndReminders::class,
     ],
 
 ];

@@ -139,6 +139,49 @@
 
 <div class="card mt-4">
     <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Pre-End Reminder Templates</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ route('booking-settings.save-pre-end-reminders') }}">
+            @csrf
+            <div class="mb-3">
+                <label class="form-label" for="email_pre_end_reminder">Email: One Day Before Tournament Ends</label>
+                <textarea name="email_pre_end_reminder" id="email_pre_end_reminder" class="form-control" rows="3" placeholder="Friendly reminder: Wraps up tomorrow. Please plan returns.">{{ old('email_pre_end_reminder', $emailPreEndReminder) }}</textarea>
+                <small class="form-text text-muted">Tournament name is added automatically. This content renders inside the standard booking email template.</small>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="sms_pre_end_reminder">SMS: One Day Before Tournament Ends</label>
+                <textarea name="sms_pre_end_reminder" id="sms_pre_end_reminder" class="form-control" rows="2" placeholder="Reminder: Ends tomorrow. Please prepare rental returns.">{{ old('sms_pre_end_reminder', $smsPreEndReminder) }}</textarea>
+                <small class="form-text text-muted">Tournament name is added automatically by the system.</small>
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+        </form>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">End-Day Morning Reminder Templates</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ route('booking-settings.save-end-day-morning') }}">
+            @csrf
+            <div class="mb-3">
+                <label class="form-label" for="email_end_day_morning">Email: Morning (Ends Today)</label>
+                <textarea name="email_end_day_morning" id="email_end_day_morning" class="form-control" rows="3" placeholder="Reminder: Ends today. Please follow return instructions.">{{ old('email_end_day_morning', $emailEndDayMorning) }}</textarea>
+                <small class="form-text text-muted">Tournament name is added automatically.</small>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="sms_end_day_morning">SMS: Morning (Ends Today)</label>
+                <textarea name="sms_end_day_morning" id="sms_end_day_morning" class="form-control" rows="2" placeholder="Reminder: Ends today. Please prepare rental returns.">{{ old('sms_end_day_morning', $smsEndDayMorning) }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+        </form>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="card-title mb-0">Twilio SMS Templates</h5>
     </div>
     <div class="card-body">
