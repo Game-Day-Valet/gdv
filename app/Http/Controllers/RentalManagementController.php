@@ -33,14 +33,32 @@ class RentalManagementController extends Controller
     {
         $user = Auth::user();
 
-        // If user is a manager, show only their assigned rentals
+        // Default index shows only PAID/COMPLETED rentals
         if ($user->hasRole(Role::MANAGER)) {
-            $rentals = $this->rentalRepository->getByManager($user->id, 15);
+            $rentals = $this->rentalRepository->getByManagerPaid($user->id, 15);
         } else {
-            $rentals = $this->rentalRepository->getAll();
+            $rentals = $this->rentalRepository->getPaid();
         }
 
         // Get all managers for the dropdown
+        $managers = User::role(Role::MANAGER)->get();
+
+        return view('rental_management.index', compact('rentals', 'managers'));
+    }
+
+    /**
+     * Display pending payment rentals.
+     */
+    public function pending()
+    {
+        $user = Auth::user();
+
+        if ($user->hasRole(Role::MANAGER)) {
+            $rentals = $this->rentalRepository->getByManagerPending($user->id, 15);
+        } else {
+            $rentals = $this->rentalRepository->getPending();
+        }
+
         $managers = User::role(Role::MANAGER)->get();
 
         return view('rental_management.index', compact('rentals', 'managers'));
@@ -110,6 +128,14 @@ class RentalManagementController extends Controller
             // Get the current rental to capture old status
             $rental = $this->rentalRepository->find($id);
             $oldStatus = $rental->status;
+
+            // Block updates if payment is pending
+            if (strtolower((string)($rental->payment_status ?? 'pending')) === 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Not allowed until payment completed'
+                ], 400);
+            }
 
             // Validate status progression
             if (!$this->isValidStatusProgression($oldStatus, $request->status)) {

@@ -26,6 +26,36 @@ class RentalRepository implements RentalRepositoryInterface
             ->get();
     }
 
+    public function getPaid()
+    {
+        $recentIds = Rental::whereIn('payment_status', ['paid', 'completed'])
+            ->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i)=>(int)$i)->toArray();
+        $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
+
+        return Rental::with(['user', 'tournament'])
+            ->whereIn('payment_status', ['paid', 'completed'])
+            ->orderByRaw("CASE WHEN id IN ($inList) THEN 0 ELSE 1 END ASC")
+            ->orderBy('created_at', 'desc')
+            ->orderByRaw("CASE WHEN sort_order IS NULL THEN 1 ELSE 0 END ASC")
+            ->orderByRaw('sort_order ASC')
+            ->get();
+    }
+
+    public function getPending()
+    {
+        $recentIds = Rental::where('payment_status', 'pending')
+            ->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i)=>(int)$i)->toArray();
+        $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
+
+        return Rental::with(['user', 'tournament'])
+            ->where('payment_status', 'pending')
+            ->orderByRaw("CASE WHEN id IN ($inList) THEN 0 ELSE 1 END ASC")
+            ->orderBy('created_at', 'desc')
+            ->orderByRaw("CASE WHEN sort_order IS NULL THEN 1 ELSE 0 END ASC")
+            ->orderByRaw('sort_order ASC')
+            ->get();
+    }
+
     public function getAllPaginated($perPage = 15)
     {
         $query = Rental::with(['user', 'tournament']);
@@ -217,5 +247,41 @@ class RentalRepository implements RentalRepositoryInterface
         $result = $query->paginate($perPage);
         
         return $result;
+    }
+
+    public function getByManagerPaid($managerId, $perPage = 15)
+    {
+        $recentIds = Rental::where('assigned_manager_id', $managerId)
+            ->whereIn('payment_status', ['paid', 'completed'])
+            ->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i)=>(int)$i)->toArray();
+        $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
+
+        $query = Rental::with(['user', 'tournament'])
+            ->where('assigned_manager_id', $managerId)
+            ->whereIn('payment_status', ['paid', 'completed'])
+            ->orderByRaw("CASE WHEN id IN ($inList) THEN 0 ELSE 1 END ASC")
+            ->orderBy('created_at', 'desc')
+            ->orderByRaw("CASE WHEN sort_order IS NULL THEN 1 ELSE 0 END ASC")
+            ->orderByRaw('sort_order ASC');
+
+        return $query->paginate($perPage);
+    }
+
+    public function getByManagerPending($managerId, $perPage = 15)
+    {
+        $recentIds = Rental::where('assigned_manager_id', $managerId)
+            ->where('payment_status', 'pending')
+            ->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i)=>(int)$i)->toArray();
+        $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
+
+        $query = Rental::with(['user', 'tournament'])
+            ->where('assigned_manager_id', $managerId)
+            ->where('payment_status', 'pending')
+            ->orderByRaw("CASE WHEN id IN ($inList) THEN 0 ELSE 1 END ASC")
+            ->orderBy('created_at', 'desc')
+            ->orderByRaw("CASE WHEN sort_order IS NULL THEN 1 ELSE 0 END ASC")
+            ->orderByRaw('sort_order ASC');
+
+        return $query->paginate($perPage);
     }
 }

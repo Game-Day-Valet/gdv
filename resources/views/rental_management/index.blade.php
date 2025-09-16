@@ -94,11 +94,20 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Rental List</h5>
-                    @if(auth()->user()->hasRole('manager'))
-                        <small class="text-muted">Showing only rentals assigned to you</small>
-                    @endif
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <div>
+                        <h5 class="card-title mb-0">Rental List</h5>
+                        @if(auth()->user()->hasRole('manager'))
+                            <small class="text-muted">Showing only rentals assigned to you</small>
+                        @endif
+                    </div>
+                    <div class="d-flex gap-2">
+                        @if(request()->routeIs('rental-management.pending'))
+                            <a href="{{ route('rental-management.index') }}" class="btn btn-sm btn-success">Show Paid</a>
+                        @else
+                            <a href="{{ route('rental-management.pending') }}" class="btn btn-sm btn-warning">Show Pending</a>
+                        @endif
+                    </div>
                 </div>
                 <div class="card-body">
                     @if (session('success'))
@@ -197,15 +206,19 @@
                                                     default => 'badge bg-secondary'
                                                 };
 
-                                                $isClickable = !in_array($rental->status, ['delivered', 'cancelled']);
-                                                $cursorStyle = $isClickable ? 'cursor: pointer;' : 'cursor: default;';
-                                                $title = $isClickable ? 'Click to update rental status' : 'Status cannot be changed';
+                                                $paymentAllows = in_array($rental->payment_status, ['paid', 'completed']);
+                                                $isClickable = $paymentAllows && !in_array($rental->status, ['delivered', 'cancelled']);
+                                                $cursorStyle = $isClickable ? 'cursor: pointer;' : 'cursor: not-allowed;';
+                                                $title = $paymentAllows
+                                                    ? ($isClickable ? 'Click to update rental status' : 'Status cannot be changed')
+                                                    : 'Not allowed until payment completed';
                                             @endphp
                                             <span class="{{ $statusClass }} {{ $isClickable ? 'update-status-badge' : 'status-badge-non-clickable' }}"
                                                   style="{{ $cursorStyle }}"
                                                   data-rental-id="{{ $rental->id }}"
                                                   data-current-status="{{ $rental->status ?? 'pending' }}"
                                                   data-clickable="{{ $isClickable ? 'true' : 'false' }}"
+                                                  data-payment-status="{{ $rental->payment_status ?? 'pending' }}"
                                                   title="{{ $title }}">
                                                 {{ ucfirst(str_replace('_', ' ', $rental->status ?? 'pending')) }}
                                             </span>
@@ -356,8 +369,16 @@
                     console.log('Data attributes:', {
                         rentalId: this.getAttribute('data-rental-id'),
                         currentStatus: this.getAttribute('data-current-status'),
-                        clickable: this.getAttribute('data-clickable')
+                        clickable: this.getAttribute('data-clickable'),
+                        paymentStatus: this.getAttribute('data-payment-status')
                     });
+
+                    // Block if payment is pending
+                    const paymentStatus = this.getAttribute('data-payment-status');
+                    if (paymentStatus && paymentStatus.toLowerCase() === 'pending') {
+                        Swal.fire('Not allowed', 'Not allowed until payment completed', 'warning');
+                        return;
+                    }
 
                     // Check if status is clickable
                     if (this.getAttribute('data-clickable') === 'false') {

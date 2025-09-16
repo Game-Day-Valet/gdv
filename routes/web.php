@@ -116,13 +116,14 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', function($request, $
 	Route::post('tournament-management/reorder', [TournamentController::class, 'reorder'])->middleware('can:super_admin')->name('tournament-management.reorder');
 
 	// Rental Management - Accessible to both manager and admin
+	Route::get('rental-management/pending', [RentalManagementController::class, 'pending'])->name('rental-management.pending');
 	Route::resource('rental-management', RentalManagementController::class)->except(['create', 'store', 'edit', 'update', 'destroy']);
 	Route::post('/rental-management/{id}/update-status', [RentalManagementController::class, 'updateStatus'])->name('rental-management.update-status');
 	Route::post('/rental-management/{id}/update-payment-status', [RentalManagementController::class, 'updatePaymentStatus'])->name('rental-management.update-payment-status');
 	Route::get('/rental-management/{id}/available-statuses', [RentalManagementController::class, 'getAvailableStatuses'])->name('rental-management.available-statuses');
 	Route::post('rental-management/reorder', [RentalManagementController::class, function(\Illuminate\Http\Request $request){
 		$validated = $request->validate(['orders' => 'required|array', 'orders.*.id' => 'required|integer|exists:rentals,id', 'orders.*.sort_order' => 'required|integer|min:0']);
-		\DB::transaction(function() use ($validated){
+		DB::transaction(function() use ($validated){
 			foreach ($validated['orders'] as $o) { \App\Models\Rental::where('id', $o['id'])->update(['sort_order' => (int)$o['sort_order']]); }
 		});
 		return response()->json(['success' => true]);
@@ -143,7 +144,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', function($request, $
 		Route::resource('item-management', ItemController::class);
 		Route::post('item-management/reorder', [ItemController::class, function(\Illuminate\Http\Request $request) {
 			$validated = $request->validate(['orders' => 'required|array', 'orders.*.id' => 'required|integer|exists:items,id', 'orders.*.sort_order' => 'required|integer|min:0']);
-			\DB::transaction(function() use ($validated){
+			DB::transaction(function() use ($validated){
 				foreach ($validated['orders'] as $o) { \App\Models\Item::where('id', $o['id'])->update(['sort_order' => (int)$o['sort_order']]); }
 			});
 			return response()->json(['success' => true]);
