@@ -114,10 +114,6 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', function ($request, 
 	Route::post('sport-management/reorder', [SportController::class, 'reorder'])->middleware('can:super_admin')->name('sport-management.reorder');
 	Route::resource('tournament-management', TournamentController::class);
 	Route::post('tournament-management/reorder', [TournamentController::class, 'reorder'])->middleware('can:super_admin')->name('tournament-management.reorder');
-	// Twilio Chat
-	Route::get('/twilio/chat', [\App\Http\Controllers\TwilioChatController::class, 'index'])->name('twilio.chat');
-	Route::get('/twilio/chat/messages', [\App\Http\Controllers\TwilioChatController::class, 'messages'])->name('twilio.chat.messages');
-	Route::post('/twilio/chat/send', [\App\Http\Controllers\TwilioChatController::class, 'send'])->name('twilio.chat.send');
 
 
 
@@ -139,6 +135,14 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', function ($request, 
 
 	// User Management - Admin only
 	Route::group(['middleware' => ['can:super_admin']], function () {
+
+		
+	// Twilio Chat
+	Route::get('/twilio/chat', [\App\Http\Controllers\TwilioChatController::class, 'index'])->name('twilio.chat');
+	Route::get('/twilio/chat/messages', [\App\Http\Controllers\TwilioChatController::class, 'messages'])->name('twilio.chat.messages');
+	Route::post('/twilio/chat/send', [\App\Http\Controllers\TwilioChatController::class, 'send'])->name('twilio.chat.send');
+
+	
 		Route::resource('booking-settings', \App\Http\Controllers\BookingSettingsController::class)->except(['show']);
 		Route::post('booking-settings/reorder', [\App\Http\Controllers\BookingSettingsController::class, 'reorder'])->name('booking-settings.reorder');
 		Route::post('booking-settings/save-email-content', [\App\Http\Controllers\BookingSettingsController::class, 'saveEmailContent'])->name('booking-settings.save-email-content');
