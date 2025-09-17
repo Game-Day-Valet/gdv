@@ -566,32 +566,7 @@ class RentalSystemController extends Controller
         ]);
 
 
-        // Dispatch event for booking confirmation email
-        try {
-            // Check if we've already fired an event for this rental in this request
-            $eventKey = "event_fired_{$rental->id}";
-            if (session()->has($eventKey)) {
-                Log::warning('Event already fired for this rental in this request, skipping duplicate', [
-                    'rental_id' => $rental->id,
-                    'user_id' => $user->id,
-                    'controller' => 'RentalSystem\RentalSystemController',
-                    'method' => 'createRental',
-                    'timestamp' => now()->toISOString()
-                ]);
-            } else {
-                // Mark that we've fired an event for this rental
-                session()->put($eventKey, true);
-
-                event(new RentalBookingCreated($rental));
-            }
-        } catch (\Exception $e) {
-            Log::error('Failed to dispatch RentalBookingCreated event from website', [
-                'rental_id' => $rental->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'timestamp' => now()->toISOString()
-            ]);
-        }
+        // Do NOT send confirmation on creation. Email/SMS will be sent on payment completed (Stripe webhook or success fallback)
 
         // Start Stripe Checkout session
         try {
@@ -635,7 +610,15 @@ class RentalSystemController extends Controller
             $session = \Stripe\Checkout\Session::retrieve($sessionId);
             $rentalId = $session->metadata->rental_id ?? null;
             if ($session->payment_status === 'paid' && $rentalId) {
-                $this->rentals->update($rentalId, ['payment_status' => 'completed']);
+                $rental = $this->rentals->update($rentalId, ['payment_status' => 'completed']);
+                try {
+                    // After payment: send all booking confirmations (email/SMS/FCM) via existing event + notification
+                    $user = auth()->user();
+                    if ($user) {
+                        $user->notify(new \App\Notifications\RentalBookingConfirmationNotification($rental, $user));
+                    }
+                    event(new \App\Events\RentalBookingCreated($rental));
+                } catch (\Throwable $e) { /* log silently */ }
                 return redirect()->route('rentalsystem.profile')->with('success', 'Booking confirmed. Payment completed.');
             }
             return redirect()->route('rentalsystem.profile')->with('info', 'Payment not completed yet.');

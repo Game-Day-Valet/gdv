@@ -158,7 +158,13 @@ class RentalBookingConfirmationNotification extends Notification implements Shou
                 'code' => $e->getCode(),
             ]);
 
-            if (strpos(strtolower($e->getMessage()), 'invalid') !== false || strpos(strtolower($e->getMessage()), 'not registered') !== false) {
+            $msg = strtolower($e->getMessage() ?? '');
+            if (
+                str_contains($msg, 'invalid') ||
+                str_contains($msg, 'not registered') ||
+                str_contains($msg, 'requested entity was not found') ||
+                str_contains($msg, 'requested entity not found')
+            ) {
                 $notifiable->update(['fcm_token' => null]);
                 Log::info('Cleared invalid FCM token for user', ['user_id' => $notifiable->id]);
             }

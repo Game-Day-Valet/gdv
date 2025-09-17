@@ -183,50 +183,8 @@ class RentalController extends Controller
                     }
                 }
 
+                // For mobile/API: do NOT send confirmation on create. Payment confirmation will be handled on update when payment_status becomes completed
                 $rental = $this->rentalRepository->create($data);
-
-                // Notify user about booking confirmation
-                $user->notify(new RentalBookingConfirmationNotification($rental, $user));
-
-                // Dispatch event for booking confirmation email
-                try {
-                    // Check if we've already fired an event for this rental in this request
-                    $eventKey = "event_fired_{$rental->id}";
-                    if (cache()->has($eventKey)) {
-                        Log::warning('Event already fired for this rental in this request, skipping duplicate', [
-                            'rental_id' => $rental->id,
-                            'user_id' => $user->id,
-                            'controller' => 'Api\RentalController',
-                            'method' => 'store',
-                            'timestamp' => now()->toISOString()
-                        ]);
-                    } else {
-                        // Mark that we've fired an event for this rental (cache for 1 minute)
-                        cache()->put($eventKey, true, now()->addMinute());
-
-                        Log::info('Dispatching RentalBookingCreated event from API RentalController', [
-                            'rental_id' => $rental->id,
-                            'user_id' => $user->id,
-                            'controller' => 'Api\RentalController',
-                            'method' => 'store',
-                            'timestamp' => now()->toISOString()
-                        ]);
-
-                        event(new RentalBookingCreated($rental));
-
-                        Log::info('RentalBookingCreated event dispatched successfully from API RentalController', [
-                            'rental_id' => $rental->id,
-                            'timestamp' => now()->toISOString()
-                        ]);
-                    }
-                } catch (\Exception $e) {
-                    Log::error('Failed to dispatch RentalBookingCreated event from API', [
-                        'rental_id' => $rental->id,
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                        'timestamp' => now()->toISOString()
-                    ]);
-                }
 
                 return new RentalResource($rental);
             }
@@ -245,7 +203,29 @@ class RentalController extends Controller
                 if (!isset($data['user_id'])) {
                     $data['user_id'] = $user->id;
                 }
+                // Capture pre-update payment status
+                $existing = Rental::findOrFail($id);
+                $beforePayment = (string) ($existing->payment_status ?? 'pending');
+
                 $rental = $this->rentalRepository->update($id, $data);
+
+                // If payment_status moved to completed, send confirmation now
+                $afterPayment = (string) ($rental->payment_status ?? 'pending');
+                if ($beforePayment !== 'completed' && $afterPayment === 'completed') {
+                    try {
+                        $eventKey = "rental_payment_completed_{$rental->id}";
+                        if (!cache()->has($eventKey)) {
+                            cache()->put($eventKey, true, now()->addMinutes(5));
+                            // Send in-app notification for mobile
+                            $user->notify(new RentalBookingConfirmationNotification($rental, $user));
+                            // Dispatch email/SMS job via existing listener/job using the same template
+                            event(new RentalBookingCreated($rental));
+                        }
+                    } catch (\Throwable $e) {
+                        Log::error('Failed to queue booking confirmation after payment', ['rental_id' => $rental->id, 'error' => $e->getMessage()]);
+                    }
+                }
+
                 return new RentalResource($rental);
             }
             throw new Exception('Unauthorized');
