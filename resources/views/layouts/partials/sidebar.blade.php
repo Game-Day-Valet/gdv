@@ -216,6 +216,12 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ route('twilio.chat') }}">
+                        <i class="fas fa-comments"></i>
+                        <span>Twilio Chat</span>
+                    </a>
+                </li>
+                <li>
                     <a href="{{ route('email.logs') }}">
                         <i class="fas fa-envelope-open-text"></i>
                         <span>Email Logs</span>

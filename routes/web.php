@@ -45,7 +45,7 @@ Route::prefix('')->name('rentalsystem.')->group(function () {
 	// Allow anonymous to open booking page and submit; controller will enforce login on submit
 	Route::get('/tournaments/{tournamentId}/rental', [RentalSystemController::class, 'showRentalBooking'])->name('rental-booking');
 	Route::post('/rentals', [RentalSystemController::class, 'createRental'])->name('rental.create');
-	
+
 	// Authentication routes
 	Route::get('/signup', [RentalSystemController::class, 'showSignup'])->name('signup');
 	Route::post('/signup', [RentalSystemController::class, 'signup'])->name('signup.submit');
@@ -84,12 +84,12 @@ Route::get('/terms', [\App\Http\Controllers\RentalSystem\RentalSystemController:
 // Public page: Account Delete Policy
 Route::view('/account-delete-policy', 'rentalsystem.account-delete-policy')->name('rentalsystem.account-delete-policy');
 
-Route::group(['prefix' => 'admin', 'middleware' => ['auth', function($request, $next){
-    $user = \Auth::user();
-    if (!$user || (!$user->hasRole(\App\Enums\Role::MANAGER) && !$user->hasRole(\App\Enums\Role::SUPER_ADMIN))) {
-        return redirect()->route('rentalsystem.signin')->with('error', 'Access denied: Admin panel is restricted to managers and administrators.');
-    }
-    return $next($request);
+Route::group(['prefix' => 'admin', 'middleware' => ['auth', function ($request, $next) {
+	$user = \Auth::user();
+	if (!$user || (!$user->hasRole(\App\Enums\Role::MANAGER) && !$user->hasRole(\App\Enums\Role::SUPER_ADMIN))) {
+		return redirect()->route('rentalsystem.signin')->with('error', 'Access denied: Admin panel is restricted to managers and administrators.');
+	}
+	return $next($request);
 }]], function () {
 	// Route::get('', [RoutingController::class, 'index'])->name('root');
 	Route::get('/profile', [RegisteredUserController::class, 'profile'])->name('profile');
@@ -114,6 +114,12 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', function($request, $
 	Route::post('sport-management/reorder', [SportController::class, 'reorder'])->middleware('can:super_admin')->name('sport-management.reorder');
 	Route::resource('tournament-management', TournamentController::class);
 	Route::post('tournament-management/reorder', [TournamentController::class, 'reorder'])->middleware('can:super_admin')->name('tournament-management.reorder');
+	// Twilio Chat
+	Route::get('/twilio/chat', [\App\Http\Controllers\TwilioChatController::class, 'index'])->name('twilio.chat');
+	Route::get('/twilio/chat/messages', [\App\Http\Controllers\TwilioChatController::class, 'messages'])->name('twilio.chat.messages');
+	Route::post('/twilio/chat/send', [\App\Http\Controllers\TwilioChatController::class, 'send'])->name('twilio.chat.send');
+
+
 
 	// Rental Management - Accessible to both manager and admin
 	Route::get('rental-management/pending', [RentalManagementController::class, 'pending'])->name('rental-management.pending');
@@ -121,10 +127,12 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', function($request, $
 	Route::post('/rental-management/{id}/update-status', [RentalManagementController::class, 'updateStatus'])->name('rental-management.update-status');
 	Route::post('/rental-management/{id}/update-payment-status', [RentalManagementController::class, 'updatePaymentStatus'])->name('rental-management.update-payment-status');
 	Route::get('/rental-management/{id}/available-statuses', [RentalManagementController::class, 'getAvailableStatuses'])->name('rental-management.available-statuses');
-	Route::post('rental-management/reorder', [RentalManagementController::class, function(\Illuminate\Http\Request $request){
+	Route::post('rental-management/reorder', [RentalManagementController::class, function (\Illuminate\Http\Request $request) {
 		$validated = $request->validate(['orders' => 'required|array', 'orders.*.id' => 'required|integer|exists:rentals,id', 'orders.*.sort_order' => 'required|integer|min:0']);
-		DB::transaction(function() use ($validated){
-			foreach ($validated['orders'] as $o) { \App\Models\Rental::where('id', $o['id'])->update(['sort_order' => (int)$o['sort_order']]); }
+		DB::transaction(function () use ($validated) {
+			foreach ($validated['orders'] as $o) {
+				\App\Models\Rental::where('id', $o['id'])->update(['sort_order' => (int)$o['sort_order']]);
+			}
 		});
 		return response()->json(['success' => true]);
 	}])->middleware('can:super_admin')->name('rental-management.reorder');
@@ -144,10 +152,12 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', function($request, $
 		Route::resource('user-management', UserController::class);
 		Route::resource('role-management', RoleController::class);
 		Route::resource('item-management', ItemController::class);
-		Route::post('item-management/reorder', [ItemController::class, function(\Illuminate\Http\Request $request) {
+		Route::post('item-management/reorder', [ItemController::class, function (\Illuminate\Http\Request $request) {
 			$validated = $request->validate(['orders' => 'required|array', 'orders.*.id' => 'required|integer|exists:items,id', 'orders.*.sort_order' => 'required|integer|min:0']);
-			DB::transaction(function() use ($validated){
-				foreach ($validated['orders'] as $o) { \App\Models\Item::where('id', $o['id'])->update(['sort_order' => (int)$o['sort_order']]); }
+			DB::transaction(function () use ($validated) {
+				foreach ($validated['orders'] as $o) {
+					\App\Models\Item::where('id', $o['id'])->update(['sort_order' => (int)$o['sort_order']]);
+				}
 			});
 			return response()->json(['success' => true]);
 		}])->name('item-management.reorder');
@@ -159,10 +169,12 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', function($request, $
 		Route::get('/coupon-management/{id}/preview', [CouponManagementController::class, 'preview'])->name('coupon-management.preview');
 		Route::resource('coupon-management', CouponManagementController::class);
 		Route::resource('faq-management', FaqManagementController::class);
-		Route::post('faq-management/reorder', [FaqManagementController::class, function(\Illuminate\Http\Request $request) {
+		Route::post('faq-management/reorder', [FaqManagementController::class, function (\Illuminate\Http\Request $request) {
 			$validated = $request->validate(['orders' => 'required|array', 'orders.*.id' => 'required|integer|exists:faqs,id', 'orders.*.sort_order' => 'required|integer|min:0']);
-			DB::transaction(function() use ($validated){
-				foreach ($validated['orders'] as $o) { \App\Models\Faq::where('id', $o['id'])->update(['sort_order' => (int)$o['sort_order']]); }
+			DB::transaction(function () use ($validated) {
+				foreach ($validated['orders'] as $o) {
+					\App\Models\Faq::where('id', $o['id'])->update(['sort_order' => (int)$o['sort_order']]);
+				}
 			});
 			return response()->json(['success' => true]);
 		}])->name('faq-management.reorder');
