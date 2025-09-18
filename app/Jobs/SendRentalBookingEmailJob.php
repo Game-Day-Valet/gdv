@@ -12,6 +12,7 @@ use Twilio\Rest\Client as TwilioClient;
 use Illuminate\Support\Str;
 use App\Models\EmailLog;
 use App\Models\SettingNotification;
+use Illuminate\Support\Facades\Cache;
 
 class SendRentalBookingEmailJob implements ShouldQueue
 {
@@ -184,6 +185,53 @@ class SendRentalBookingEmailJob implements ShouldQueue
             ]);
             
             throw $e;
+        }
+
+        // Admin notification email (new booking)
+        try {
+            if (SettingNotification::current()->email_enabled) {
+                $adminEmail = trim((string) env('ADMIN_NOTIFY_EMAIL', config('mail.from.address')));
+                if (!empty($adminEmail)) {
+                    // Throttle to avoid SMTP rate limits (e.g., Mailtrap: 1 msg/sec on free tier)
+                    $lockKey = 'admin_notify_throttle';
+                    if (!Cache::add($lockKey, true, now()->addSeconds(2))) {
+                        // If locked, delay send a bit via re-dispatch
+                        self::dispatch($this->rental)->delay(now()->addSeconds(3));
+                        return;
+                    }
+                    $subject = 'New Rental Booking Received';
+                    $adminData = [
+                        'rental' => $this->rental->load(['user','tournament','tournament.sport']),
+                        'user' => $this->rental->user,
+                        'tournament' => $this->rental->tournament,
+                        'sport' => optional($this->rental->tournament)->sport,
+                        'email_content' => 'A new booking has been placed. View it in the admin panel: ' . route('rental-management.index'),
+                        'itemNames' => [],
+                        'bundleNames' => [],
+                        'title' => 'New Booking Notification',
+                    ];
+
+                    $log = EmailLog::create([
+                        'to_email' => $adminEmail,
+                        'subject' => $subject,
+                        'body_preview' => (string) $adminData['email_content'],
+                        'status' => 'queued',
+                        'meta' => ['context' => 'admin_booking_notification', 'rental_id' => $this->rental->id],
+                    ]);
+
+                    $smtpReady = (bool) (config('mail.mailers.smtp.host') && config('mail.mailers.smtp.username') && config('mail.mailers.smtp.password') && config('mail.from.address'));
+                    if ($smtpReady) {
+                        Mail::send('emails.rental-booking', $adminData, function ($message) use ($adminEmail, $subject) {
+                            $message->to($adminEmail)->subject($subject);
+                        });
+                        $log->update(['status' => 'sent', 'sent_at' => now()]);
+                    } else {
+                        $log->update(['status' => 'failed', 'error_reason' => 'SMTP configuration incomplete']);
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::error('Admin booking email failed', ['rental_id' => $this->rental->id, 'error' => $e->getMessage()]);
         }
     }
 

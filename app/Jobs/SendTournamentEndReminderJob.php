@@ -66,7 +66,8 @@ class SendTournamentEndReminderJob implements ShouldQueue
 
         // Email
         try {
-            $canEmail = $notif->email_enabled && ($user->email_notification !== false) && !empty($user->email);
+            $recipientEmail = $rental->email ?: ($user->email ?? null);
+            $canEmail = $notif->email_enabled && ($user->email_notification !== false) && !empty($recipientEmail);
             if ($canEmail) {
                 $view = 'emails.rental-booking';
                 $payload = [
@@ -82,7 +83,7 @@ class SendTournamentEndReminderJob implements ShouldQueue
 
                 // Log create (queued)
                 $log = EmailLog::create([
-                    'to_email' => $user->email,
+                    'to_email' => $recipientEmail,
                     'subject' => 'Tournament Reminder',
                     'body_preview' => (string) $emailContent,
                     'status' => 'queued',
@@ -98,9 +99,9 @@ class SendTournamentEndReminderJob implements ShouldQueue
                     $log->update(['status' => 'failed', 'error_reason' => 'SMTP configuration incomplete']);
                     Log::warning('Pre-end reminder email skipped due to SMTP config', ['rental_id' => $rental->id, 'user_id' => $user->id]);
                 } else {
-                    Log::info('Sending pre-end reminder email', ['rental_id' => $rental->id, 'user_id' => $user->id, 'to' => $user->email]);
-                    Mail::send($view, $payload, function ($message) use ($user) {
-                        $message->to($user->email, $user->name ?? 'Customer')
+                    Log::info('Sending pre-end reminder email', ['rental_id' => $rental->id, 'user_id' => $user->id, 'to' => $recipientEmail]);
+                    Mail::send($view, $payload, function ($message) use ($recipientEmail, $user) {
+                        $message->to($recipientEmail, $user->name ?? 'Customer')
                             ->subject('Tournament Reminder');
                     });
                     $log->update(['status' => 'sent', 'sent_at' => now()]);
@@ -110,7 +111,7 @@ class SendTournamentEndReminderJob implements ShouldQueue
         } catch (\Throwable $e) {
             try {
                 EmailLog::create([
-                    'to_email' => $user->email ?? '',
+                    'to_email' => $recipientEmail ?? '',
                     'subject' => 'Tournament Reminder',
                     'body_preview' => (string) $emailContent,
                     'status' => 'failed',

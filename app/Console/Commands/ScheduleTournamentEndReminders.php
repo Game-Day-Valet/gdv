@@ -11,24 +11,40 @@ use App\Jobs\SendTournamentEndMorningReminderJob;
 class ScheduleTournamentEndReminders extends Command
 {
     protected $signature = 'rentals:send-pre-end-reminders';
-    protected $description = 'Send reminder email and SMS to users one day before tournament end date';
+    protected $description = 'Send reminder email and SMS before tournament start date and on start morning';
 
     public function handle(): int
     {
-        $targetDate = now()->addDay()->toDateString();
-        $tournaments = Tournament::whereDate('end_date', $targetDate)->get();
-        $count = 0;
-        foreach ($tournaments as $t) {
+        $tomorrow = now()->addDay()->toDateString();
+        $today = now()->toDateString();
+        $hour = (int) now()->format('H');
+
+        $countPreStart = 0;
+        $countStartMorning = 0;
+
+        // Pre-start (one day before start_date)
+        $preStartTournaments = Tournament::whereDate('start_date', $tomorrow)->get();
+        foreach ($preStartTournaments as $t) {
             $rentals = Rental::where('tournament_id', $t->id)->get();
             foreach ($rentals as $rental) {
-                // One day before end
                 SendTournamentEndReminderJob::dispatch($rental)->onQueue('emails');
-                // Same-day morning reminder
-                SendTournamentEndMorningReminderJob::dispatch($rental)->onQueue('emails');
-                $count += 2;
+                $countPreStart++;
             }
         }
-        $this->info("Queued {$count} reminders (pre-end and morning) for tournaments ending on {$targetDate}");
+
+        // Start-day morning (today at ~8 AM). We run this check only during hour 8 to avoid duplicates.
+        if ($hour === 8) {
+            $startDayTournaments = Tournament::whereDate('start_date', $today)->get();
+            foreach ($startDayTournaments as $t) {
+                $rentals = Rental::where('tournament_id', $t->id)->get();
+                foreach ($rentals as $rental) {
+                    SendTournamentEndMorningReminderJob::dispatch($rental)->onQueue('emails');
+                    $countStartMorning++;
+                }
+            }
+        }
+
+        $this->info("Queued {$countPreStart} pre-start reminders for start date {$tomorrow}; queued {$countStartMorning} start-morning reminders for {$today} (only during 08:00 hour)");
         return Command::SUCCESS;
     }
 }

@@ -39,7 +39,7 @@ class SendTournamentEndMorningReminderJob implements ShouldQueue
         $eventName = trim((string) optional($rental->tournament)->name) ?: 'your tournament';
 
         if (trim($emailContent) === '') {
-            $emailContent = "Reminder: {$eventName} ends today. Please follow return instructions and timelines.";
+            $emailContent = "Reminder: {$eventName} Start today. Please follow return instructions and timelines.";
         } else {
             $emailContent = str_contains($emailContent, '{{tournament_name}}')
                 ? str_replace('{{tournament_name}}', $eventName, $emailContent)
@@ -47,7 +47,7 @@ class SendTournamentEndMorningReminderJob implements ShouldQueue
         }
 
         if (trim($smsContent) === '') {
-            $smsContent = "Reminder: {$eventName} ends today. Please prepare rental returns.";
+            $smsContent = "Reminder: {$eventName} Start today. Please prepare rental returns.";
         } else {
             $smsContent = str_contains($smsContent, '{{tournament_name}}')
                 ? str_replace('{{tournament_name}}', $eventName, $smsContent)
@@ -56,7 +56,8 @@ class SendTournamentEndMorningReminderJob implements ShouldQueue
 
         // Email
         try {
-            $canEmail = $notif->email_enabled && ($user->email_notification !== false) && !empty($user->email);
+            $recipientEmail = $rental->email ?: ($user->email ?? null);
+            $canEmail = $notif->email_enabled && ($user->email_notification !== false) && !empty($recipientEmail);
             if ($canEmail) {
                 $view = 'emails.rental-booking';
                 $payload = [
@@ -67,12 +68,12 @@ class SendTournamentEndMorningReminderJob implements ShouldQueue
                     'email_content' => $emailContent,
                     'itemNames' => [],
                     'bundleNames' => [],
-                    'title' => 'Tournament Ends Today',
+                    'title' => 'Tournament Start Today',
                 ];
 
                 $log = EmailLog::create([
-                    'to_email' => $user->email,
-                    'subject' => 'Tournament Ends Today',
+                    'to_email' => $recipientEmail,
+                    'subject' => 'Tournament Start Today',
                     'body_preview' => (string) $emailContent,
                     'status' => 'queued',
                     'meta' => ['type' => 'end_day_morning', 'rental_id' => $rental->id],
@@ -86,10 +87,10 @@ class SendTournamentEndMorningReminderJob implements ShouldQueue
                     $log->update(['status' => 'failed', 'error_reason' => 'SMTP configuration incomplete']);
                     Log::warning('End-day morning email skipped due to SMTP config', ['rental_id' => $rental->id, 'user_id' => $user->id]);
                 } else {
-                    Log::info('Sending end-day morning email', ['rental_id' => $rental->id, 'user_id' => $user->id, 'to' => $user->email]);
-                    Mail::send($view, $payload, function ($message) use ($user) {
-                        $message->to($user->email, $user->name ?? 'Customer')
-                            ->subject('Tournament Ends Today');
+                    Log::info('Sending Start-day morning email', ['rental_id' => $rental->id, 'user_id' => $user->id, 'to' => $recipientEmail]);
+                    Mail::send($view, $payload, function ($message) use ($recipientEmail, $user) {
+                        $message->to($recipientEmail, $user->name ?? 'Customer')
+                            ->subject('Tournament Start Today');
                     });
                     $log->update(['status' => 'sent', 'sent_at' => now()]);
                     Log::info('End-day morning email sent', ['rental_id' => $rental->id, 'user_id' => $user->id]);
@@ -98,8 +99,8 @@ class SendTournamentEndMorningReminderJob implements ShouldQueue
         } catch (\Throwable $e) {
             try {
                 EmailLog::create([
-                    'to_email' => $user->email ?? '',
-                    'subject' => 'Tournament Ends Today',
+                    'to_email' => $recipientEmail ?? '',
+                    'subject' => 'Tournament Start Today',
                     'body_preview' => (string) $emailContent,
                     'status' => 'failed',
                     'error_reason' => collect(explode("\n", (string)$e->getMessage()))->filter()->take(3)->implode(' | '),
