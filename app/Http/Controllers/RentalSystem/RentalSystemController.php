@@ -648,7 +648,7 @@ class RentalSystemController extends Controller
         try {
             $collection = $this->rentals->getByUser($user->id) ?? collect();
         } catch (\Throwable $e) {
-            \Log::warning('Profile rentals load failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+            Log::warning('Profile rentals load failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
             $collection = collect();
         }
         $rentals = [];
