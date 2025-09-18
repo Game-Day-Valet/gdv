@@ -654,7 +654,7 @@ class RentalSystemController extends Controller
             $collection = collect();
         }
         $rentals = [];
-        foreach ($collection as $r) {
+        foreach (is_iterable($collection) ? $collection : [] as $r) {
             $itemsArray = [];
             $bundlesArray = [];
 
@@ -662,7 +662,7 @@ class RentalSystemController extends Controller
             if (is_array($r->items)) {
                 foreach ($r->items as $item) {
                     if (is_array($item) && isset($item['item_id']) && isset($item['quantity'])) {
-                        $itemModel = $this->items->find($item['item_id']);
+                        $itemModel = null; try { $itemModel = $this->items->find($item['item_id']); } catch (\Throwable $e) { $itemModel = null; }
                         if ($itemModel) {
                             $itemsArray[] = [
                                 'name' => $itemModel->name,
