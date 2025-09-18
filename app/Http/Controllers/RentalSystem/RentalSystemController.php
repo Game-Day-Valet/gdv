@@ -44,11 +44,13 @@ class RentalSystemController extends Controller
     protected $privacyPolicies;
     protected $termsConditions;
 
+
     public function __construct(
         ReferralService $referralService,
         SportRepositoryInterface $sports,
         TournamentRepositoryInterface $tournaments,
         ItemRepositoryInterface $items,
+        
         BundleRepositoryInterface $bundles,
         RentalRepositoryInterface $rentals,
         PrivacyPolicyRepositoryInterface $privacyPolicies,
