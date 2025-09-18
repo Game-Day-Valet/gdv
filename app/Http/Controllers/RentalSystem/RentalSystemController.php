@@ -642,7 +642,15 @@ class RentalSystemController extends Controller
             return redirect()->route('rentalsystem.signin');
         }
         $user = Auth::user();
-        $collection = $this->rentals->getByUser($user->id);
+        if (!$user) {
+            return redirect()->route('rentalsystem.signin')->with('error', 'Please sign in to view your profile.');
+        }
+        try {
+            $collection = $this->rentals->getByUser($user->id) ?? collect();
+        } catch (\Throwable $e) {
+            \Log::warning('Profile rentals load failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+            $collection = collect();
+        }
         $rentals = [];
         foreach ($collection as $r) {
             $itemsArray = [];
@@ -669,7 +677,7 @@ class RentalSystemController extends Controller
                     if (is_array($b) && isset($b['bundle_id'])) {
                         $bundleId = $b['bundle_id'];
                         $qty = isset($b['quantity']) ? (int) $b['quantity'] : 1;
-                        $bundle = $this->bundles->find($bundleId);
+                        $bundle = null; try { $bundle = $this->bundles->find($bundleId); } catch (\Throwable $e) { $bundle = null; }
                         if ($bundle) {
                             $bundlesArray[] = [
                                 'name' => $bundle->name,
@@ -677,7 +685,7 @@ class RentalSystemController extends Controller
                             ];
                         }
                     } elseif (is_numeric($b)) {
-                        $bundle = $this->bundles->find($b);
+                        $bundle = null; try { $bundle = $this->bundles->find($b); } catch (\Throwable $e) { $bundle = null; }
                         if ($bundle) {
                             $bundlesArray[] = [
                                 'name' => $bundle->name,
