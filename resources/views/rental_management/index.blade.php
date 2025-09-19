@@ -131,9 +131,17 @@
                         </div>
                     @endif
                     <div class="table-responsive" style="overflow-x: auto;">
+                        <div class="d-flex justify-content-between mb-2">
+                            <div></div>
+                            <div>
+                                <button id="archiveSelected" class="btn btn-sm btn-warning">Archive Selected</button>
+                                <a href="{{ route('rental-archive.index') }}" class="btn btn-sm btn-outline-secondary">View Archive</a>
+                            </div>
+                        </div>
                         <table id="datatable" class="table table-bordered dt-responsive nowrap" style="min-width: 1400px;">
                             <thead>
                                 <tr>
+                                    <th style="width:28px;"><input type="checkbox" id="selectAllRows"></th>
                                     @can('super_admin')
                                     <th style="width:32px;"></th>
                                     @endcan
@@ -155,6 +163,7 @@
                             <tbody id="rentalsTbody">
                                 @foreach ($rentals as $rental)
                                     <tr data-id="{{ $rental->id }}">
+                                        <td><input type="checkbox" class="rowSelect" value="{{ $rental->id }}"></td>
                                         @can('super_admin')
                                         <td class="drag-handle" style="cursor:move; text-align:center;">⇅</td>
                                         @endcan
@@ -354,6 +363,46 @@
             return false;
         }
         document.addEventListener('DOMContentLoaded', function () {
+            // Archive selected
+            const selectAll = document.getElementById('selectAllRows');
+            const archiveBtn = document.getElementById('archiveSelected');
+            selectAll?.addEventListener('change', ()=>{
+                document.querySelectorAll('.rowSelect').forEach(cb=>cb.checked = selectAll.checked);
+            });
+            archiveBtn?.addEventListener('click', async ()=>{
+                const ids = Array.from(document.querySelectorAll('.rowSelect:checked')).map(cb=>parseInt(cb.value));
+                if(ids.length===0){ return; }
+                const ok = await confirmArchive('Are you sure you want to archive selected bookings?');
+                if(!ok) return;
+                try{
+                    const res = await fetch('{{ route('rental-archive.archive') }}', { method:'POST', headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'}, body: JSON.stringify({ids}) });
+                    if(res.ok){ location.reload(); }
+                }catch(e){ Swal.fire('Error','Failed to archive','error'); }
+            });
+
+            async function confirmArchive(msg){
+                return new Promise(resolve=>{
+                    const wrap = document.createElement('div');
+                    wrap.style.cssText='position:fixed;inset:0;background:rgba(17,24,39,.55);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;z-index:10550;';
+                    wrap.innerHTML = `
+                    <div style="background:#fff;border-radius:16px;max-width:460px;width:92%;padding:22px 20px;border:1px solid #e5e7eb;box-shadow:0 18px 40px rgba(17,24,39,.18);">
+                      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+                        <div style="width:40px;height:40px;border-radius:10px;background:#fef3c7;display:flex;align-items:center;justify-content:center;color:#b45309;">
+                          <i class=\"fas fa-box-archive\"></i>
+                        </div>
+                        <div style="font-weight:700;font-size:16px;">Archive selected bookings?</div>
+                      </div>
+                      <div style="color:#6b7280;margin-bottom:14px;">${msg}</div>
+                      <div style="display:flex;gap:10px;justify-content:flex-end;">
+                        <button id="aCancel" class="btn btn-light" style="border:1px solid #e5e7eb;">Cancel</button>
+                        <button id="aOk" class="btn btn-primary" style="background-color:#3b82f6;border-color:#3b82f6;">Archive</button>
+                      </div>
+                    </div>`;
+                    document.body.appendChild(wrap);
+                    wrap.querySelector('#aCancel').addEventListener('click', ()=>{ wrap.remove(); resolve(false); });
+                    wrap.querySelector('#aOk').addEventListener('click', ()=>{ wrap.remove(); resolve(true); });
+                });
+            }
             console.log('DOM loaded, initializing rental management...');
             let currentRentalId = null;
             let selectedImages = [];

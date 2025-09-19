@@ -16,6 +16,7 @@ class RentalRepository implements RentalRepositoryInterface
         $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
 
         return Rental::with(['user', 'tournament'])
+            ->whereNull('archived_at')
             // Group A: recent ids; Group B: others
             ->orderByRaw("CASE WHEN id IN ($inList) THEN 0 ELSE 1 END ASC")
             // For recent, keep newest first
@@ -33,6 +34,7 @@ class RentalRepository implements RentalRepositoryInterface
         $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
 
         return Rental::with(['user', 'tournament'])
+            ->whereNull('archived_at')
             ->whereIn('payment_status', ['paid', 'completed'])
             ->orderByRaw("CASE WHEN id IN ($inList) THEN 0 ELSE 1 END ASC")
             ->orderBy('created_at', 'desc')
@@ -48,6 +50,7 @@ class RentalRepository implements RentalRepositoryInterface
         $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
 
         return Rental::with(['user', 'tournament'])
+            ->whereNull('archived_at')
             ->where('payment_status', 'pending')
             ->orderByRaw("CASE WHEN id IN ($inList) THEN 0 ELSE 1 END ASC")
             ->orderBy('created_at', 'desc')
@@ -238,6 +241,7 @@ class RentalRepository implements RentalRepositoryInterface
         $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
 
         $query = Rental::with(['user', 'tournament'])
+            ->whereNull('archived_at')
             ->where('assigned_manager_id', $managerId)
             ->orderByRaw("CASE WHEN id IN ($inList) THEN 0 ELSE 1 END ASC")
             ->orderBy('created_at', 'desc')
@@ -257,6 +261,7 @@ class RentalRepository implements RentalRepositoryInterface
         $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
 
         $query = Rental::with(['user', 'tournament'])
+            ->whereNull('archived_at')
             ->where('assigned_manager_id', $managerId)
             ->whereIn('payment_status', ['paid', 'completed'])
             ->orderByRaw("CASE WHEN id IN ($inList) THEN 0 ELSE 1 END ASC")
@@ -275,6 +280,7 @@ class RentalRepository implements RentalRepositoryInterface
         $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
 
         $query = Rental::with(['user', 'tournament'])
+            ->whereNull('archived_at')
             ->where('assigned_manager_id', $managerId)
             ->where('payment_status', 'pending')
             ->orderByRaw("CASE WHEN id IN ($inList) THEN 0 ELSE 1 END ASC")

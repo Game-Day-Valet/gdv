@@ -122,6 +122,12 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', function ($request, 
 	// Rental Management - Accessible to both manager and admin
 	Route::get('rental-management/pending', [RentalManagementController::class, 'pending'])->name('rental-management.pending');
 	Route::resource('rental-management', RentalManagementController::class)->except(['create', 'store', 'edit', 'update', 'destroy']);
+
+	// Archive
+	Route::get('rental-archive', [\App\Http\Controllers\RentalArchiveController::class, 'index'])->name('rental-archive.index');
+	Route::get('rental-archive/folder/{tournamentId}', [\App\Http\Controllers\RentalArchiveController::class, 'folder'])->name('rental-archive.folder');
+	Route::post('rental-archive/archive', [\App\Http\Controllers\RentalArchiveController::class, 'archive'])->name('rental-archive.archive');
+	Route::post('rental-archive/unarchive', [\App\Http\Controllers\RentalArchiveController::class, 'unarchive'])->name('rental-archive.unarchive');
 	Route::post('/rental-management/{id}/update-status', [RentalManagementController::class, 'updateStatus'])->name('rental-management.update-status');
 	Route::post('/rental-management/{id}/update-payment-status', [RentalManagementController::class, 'updatePaymentStatus'])->name('rental-management.update-payment-status');
 	Route::get('/rental-management/{id}/available-statuses', [RentalManagementController::class, 'getAvailableStatuses'])->name('rental-management.available-statuses');
