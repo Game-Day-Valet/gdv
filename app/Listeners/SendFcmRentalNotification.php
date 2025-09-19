@@ -9,6 +9,8 @@ use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
+use App\Models\RentalStatusLog;
 // use Illuminate\Support\Facades\Mail; // email sending moved to SendRentalStatusUpdateEmail listener
 use App\Models\SettingNotification;
 
@@ -19,6 +21,16 @@ class SendFcmRentalNotification implements ShouldQueue
     public function handle(RentalStatusUpdated $event)
     {
         $user = $event->rental->user;
+
+        // Idempotency: suppress duplicate notifications for same rental+status
+        $dedupeKey = 'rental_status_notified_' . $event->rental->id . '_' . $event->newStatus;
+        if (!Cache::add($dedupeKey, now()->toIso8601String(), now()->addMinutes(15))) {
+            Log::warning('Duplicate status notification suppressed', [
+                'rental_id' => $event->rental->id,
+                'status' => $event->newStatus,
+            ]);
+            return;
+        }
 
         $globalFcm = (bool) \App\Models\SettingNotification::current()->fcm_enabled;
         $hasFcm = $globalFcm && $user && $user->fcm_token && $user->fcm_notification !== false;
@@ -118,14 +130,53 @@ class SendFcmRentalNotification implements ShouldQueue
                         ];
                         $body = $fallbackByStatus[$event->newStatus] ?? 'Your rental status has been updated.';
                     }
-                    
-                    $twilio->messages->create($originalTo, ['from' => $from, 'body' => $body]);
+                    // If delivered, include delivery photos as MMS media
+                    $messageParams = ['from' => $from, 'body' => $body];
+                    if ($event->newStatus === 'delivered') {
+                        try {
+                            $latestLog = RentalStatusLog::where('rental_id', $event->rental->id)
+                                ->where('status', 'delivered')
+                                ->orderBy('created_at', 'desc')
+                                ->first();
+                            $paths = $latestLog && is_array($latestLog->image_paths) ? $latestLog->image_paths : [];
+                            Log::info('Preparing MMS media for delivered status', [
+                                'rental_id' => $event->rental->id,
+                                'log_id' => optional($latestLog)->id,
+                                'paths' => $paths,
+                            ]);
+                            $mediaUrls = [];
+                            foreach ($paths as $p) {
+                                $p = ltrim($p, '/');
+                                $isPublic = Storage::disk('public')->exists($p);
+                                if ($isPublic) {
+                                    $url = asset('storage/' . $p);
+                                    // Ensure https for Twilio
+                                    if (strpos($url, 'http://') === 0) { $url = preg_replace('#^http://#', 'https://', $url); }
+                                    $mediaUrls[] = $url;
+                                    Log::info('Added MMS media URL', [ 'url' => $url ]);
+                                }
+                                if (count($mediaUrls) >= 10) break; // Twilio max 10
+                            }
+                            if (!empty($mediaUrls)) {
+                                $messageParams['mediaUrl'] = $mediaUrls;
+                                Log::info('Final MMS media list prepared', [ 'count' => count($mediaUrls), 'urls' => $mediaUrls ]);
+                            }
+                        } catch (\Throwable $e) {
+                            Log::warning('Failed preparing MMS media for delivered status', [
+                                'rental_id' => $event->rental->id,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
+                    }
+                    $result = $twilio->messages->create($originalTo, $messageParams);
                     Log::info('Twilio SMS sent for rental status update', [
                         'rental_id' => $event->rental->id,
                         'status' => $event->newStatus,
                         'to' => $originalTo,
                         'original_to' => $originalTo,
                         'used_fallback' => $rawBody === null || trim($rawBody) === '',
+                        'twilio_sid' => method_exists($result ?? null, 'sid') ? $result->sid : null,
+                        'has_media' => isset($messageParams['mediaUrl']) ? count((array)$messageParams['mediaUrl']) : 0,
                     ]);
                 }
             } catch (\Throwable $e) {
