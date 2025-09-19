@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RoutingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EmailPreviewController;
+use App\Http\Controllers\RentalArchiveController;
+use App\Http\Controllers\TwilioChatController;
 use Illuminate\Support\Facades\DB;
 
 require __DIR__ . '/auth.php';
@@ -127,10 +129,10 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', function ($request, 
 	Route::resource('rental-management', RentalManagementController::class)->except(['create', 'store', 'edit', 'update', 'destroy']);
 
 	// Archive
-	Route::get('rental-archive', [\App\Http\Controllers\RentalArchiveController::class, 'index'])->name('rental-archive.index');
-	Route::get('rental-archive/folder/{tournamentId}', [\App\Http\Controllers\RentalArchiveController::class, 'folder'])->name('rental-archive.folder');
-	Route::post('rental-archive/archive', [\App\Http\Controllers\RentalArchiveController::class, 'archive'])->name('rental-archive.archive');
-	Route::post('rental-archive/unarchive', [\App\Http\Controllers\RentalArchiveController::class, 'unarchive'])->name('rental-archive.unarchive');
+	Route::get('rental-archive', [RentalArchiveController::class, 'index'])->name('rental-archive.index');
+	Route::get('rental-archive/folder/{tournamentId}', [RentalArchiveController::class, 'folder'])->name('rental-archive.folder');
+	Route::post('rental-archive/archive', [RentalArchiveController::class, 'archive'])->name('rental-archive.archive');
+	Route::post('rental-archive/unarchive', [RentalArchiveController::class, 'unarchive'])->name('rental-archive.unarchive');
 	Route::post('/rental-management/{id}/update-status', [RentalManagementController::class, 'updateStatus'])->name('rental-management.update-status');
 	Route::post('/rental-management/{id}/update-payment-status', [RentalManagementController::class, 'updatePaymentStatus'])->name('rental-management.update-payment-status');
 	Route::get('/rental-management/{id}/available-statuses', [RentalManagementController::class, 'getAvailableStatuses'])->name('rental-management.available-statuses');
@@ -149,10 +151,10 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', function ($request, 
 
 		
 	// Twilio Chat
-	Route::get('/twilio/chat', [\App\Http\Controllers\TwilioChatController::class, 'index'])->name('twilio.chat');
-	Route::get('/twilio/chat/messages', [\App\Http\Controllers\TwilioChatController::class, 'messages'])->name('twilio.chat.messages');
-	Route::post('/twilio/chat/send', [\App\Http\Controllers\TwilioChatController::class, 'send'])->name('twilio.chat.send');
-	Route::post('/twilio/chat/upload', [\App\Http\Controllers\TwilioChatController::class, 'upload'])->name('twilio.chat.upload');
+	Route::get('/twilio/chat', [TwilioChatController::class, 'index'])->name('twilio.chat');
+	Route::get('/twilio/chat/messages', [TwilioChatController::class, 'messages'])->name('twilio.chat.messages');
+	Route::post('/twilio/chat/send', [TwilioChatController::class, 'send'])->name('twilio.chat.send');
+	Route::post('/twilio/chat/upload', [TwilioChatController::class, 'upload'])->name('twilio.chat.upload');
 	// media route should be PUBLIC (outside admin); defined below
 
 	
