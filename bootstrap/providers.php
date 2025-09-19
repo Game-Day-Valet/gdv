@@ -31,4 +31,7 @@ return [
     App\Providers\BroadcastServiceProvider::class,
     App\Providers\EventServiceProvider::class,
     App\Providers\RouteServiceProvider::class,
+    
+    // Third Party Service Providers...
+    Barryvdh\DomPDF\ServiceProvider::class,
 ];

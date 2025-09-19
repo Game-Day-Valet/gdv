@@ -12,6 +12,7 @@ use Twilio\Rest\Client as TwilioClient;
 use Illuminate\Support\Str;
 use App\Models\EmailLog;
 use App\Models\SettingNotification;
+use App\Services\InvoiceService;
 use Illuminate\Support\Facades\Cache;
 
 class SendRentalBookingEmailJob implements ShouldQueue
@@ -116,9 +117,17 @@ class SendRentalBookingEmailJob implements ShouldQueue
                         return;
                     }
                     try {
-                        Mail::send('emails.rental-booking', $emailData, function ($message) use ($toEmail, $toName, $subject) {
+                        // Generate PDF invoice
+                        $invoiceService = new InvoiceService();
+                        $invoicePath = $invoiceService->generateInvoice($rental);
+                        
+                        Mail::send('emails.rental-booking', $emailData, function ($message) use ($toEmail, $toName, $subject, $invoicePath) {
                             $message->to($toEmail, $toName)
-                                    ->subject($subject);
+                                    ->subject($subject)
+                                    ->attach($invoicePath, [
+                                        'as' => 'Invoice-GDV-' . str_pad($this->rental->id, 6, '0', STR_PAD_LEFT) . '.pdf',
+                                        'mime' => 'application/pdf',
+                                    ]);
                         });
                         $emailLog->update(['status' => 'sent', 'sent_at' => now()]);
                     } catch (\Throwable $mailErr) {
@@ -221,8 +230,17 @@ class SendRentalBookingEmailJob implements ShouldQueue
 
                     $smtpReady = (bool) (config('mail.mailers.smtp.host') && config('mail.mailers.smtp.username') && config('mail.mailers.smtp.password') && config('mail.from.address'));
                     if ($smtpReady) {
-                        Mail::send('emails.rental-booking', $adminData, function ($message) use ($adminEmail, $subject) {
-                            $message->to($adminEmail)->subject($subject);
+                        // Generate PDF invoice for admin notification
+                        $invoiceService = new InvoiceService();
+                        $invoicePath = $invoiceService->generateInvoice($this->rental);
+                        
+                        Mail::send('emails.rental-booking', $adminData, function ($message) use ($adminEmail, $subject, $invoicePath) {
+                            $message->to($adminEmail)
+                                    ->subject($subject)
+                                    ->attach($invoicePath, [
+                                        'as' => 'Invoice-GDV-' . str_pad($this->rental->id, 6, '0', STR_PAD_LEFT) . '.pdf',
+                                        'mime' => 'application/pdf',
+                                    ]);
                         });
                         $log->update(['status' => 'sent', 'sent_at' => now()]);
                     } else {
