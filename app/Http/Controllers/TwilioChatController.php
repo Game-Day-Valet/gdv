@@ -291,8 +291,30 @@ class TwilioChatController extends Controller
             if (!is_dir($publicDir)) @mkdir($publicDir, 0755, true);
             // If the target file doesn't exist at public path, copy it
             if (!file_exists($publicAbsolute) && file_exists($storageAbsolute)) {
-                @copy($storageAbsolute, $publicAbsolute);
+                $copied = @copy($storageAbsolute, $publicAbsolute);
+                Log::info('TwilioChat upload copy fallback', [
+                    'src_exists' => file_exists($storageAbsolute),
+                    'dst_exists_before' => file_exists($publicAbsolute),
+                    'copied' => (bool) $copied,
+                    'src' => $storageAbsolute,
+                    'dst' => $publicAbsolute,
+                ]);
             }
+
+            // Deep diagnostics
+            $link = public_path('storage');
+            Log::info('TwilioChat upload diagnostics', [
+                'original_name' => $file->getClientOriginalName(),
+                'mime' => $file->getMimeType(),
+                'size_bytes' => $file->getSize(),
+                'stored_path' => $path,
+                'storage_abs_exists' => file_exists($storageAbsolute),
+                'public_dir_exists' => is_dir($publicDir),
+                'public_file_exists' => file_exists($publicAbsolute),
+                'public_storage_link_exists' => file_exists($link),
+                'public_storage_is_link' => is_link($link),
+                'url' => $url,
+            ]);
             
             return response()->json([
                 'success' => true, 
@@ -300,8 +322,14 @@ class TwilioChatController extends Controller
                 'filename' => $filename
             ]);
         } catch (\Throwable $e) {
-            Log::error('TwilioChat upload failed', ['error' => $e->getMessage()]);
-            return response()->json(['success' => false, 'message' => 'Upload failed: ' . $e->getMessage()], 500);
+            Log::error('TwilioChat upload failed', [
+                'error' => $e->getMessage(),
+                'trace' => app()->hasDebugModeEnabled() ? $e->getTraceAsString() : null,
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Upload failed: ' . $e->getMessage(),
+            ], 500);
         }
     }
 }
