@@ -277,8 +277,22 @@ class TwilioChatController extends Controller
         try {
             $file = $request->file('image');
             $filename = 'twilio_chat_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            // Save to the public disk (storage/app/public/twilio_chat)
             $path = $file->storeAs('public/twilio_chat', $filename);
+
+            // Build the expected public URL via the storage symlink
             $url = asset('storage/twilio_chat/' . $filename);
+
+            // Production safety: if the storage symlink is missing or server doesn't follow symlinks (404),
+            // copy the file into public/storage/twilio_chat as a fallback so it's web-accessible.
+            $storageAbsolute = storage_path('app/public/twilio_chat/' . $filename);
+            $publicDir = public_path('storage/twilio_chat');
+            $publicAbsolute = $publicDir . DIRECTORY_SEPARATOR . $filename;
+            if (!is_dir($publicDir)) @mkdir($publicDir, 0755, true);
+            // If the target file doesn't exist at public path, copy it
+            if (!file_exists($publicAbsolute) && file_exists($storageAbsolute)) {
+                @copy($storageAbsolute, $publicAbsolute);
+            }
             
             return response()->json([
                 'success' => true, 
