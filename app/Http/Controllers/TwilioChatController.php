@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class TwilioChatController extends Controller
 {
@@ -280,11 +281,9 @@ class TwilioChatController extends Controller
             // Save to the public disk (storage/app/public/twilio_chat)
             $path = $file->storeAs('public/twilio_chat', $filename);
 
-            // Build the expected public URL via the storage symlink
-            $url = asset('storage/twilio_chat/' . $filename);
+            // Build a controller-served URL to avoid webserver symlink issues
+            $url = url('/twilio/chat/media/' . $filename);
 
-            // Production safety: if the storage symlink is missing or server doesn't follow symlinks (404),
-            // copy the file into public/storage/twilio_chat as a fallback so it's web-accessible.
             $storageAbsolute = storage_path('app/public/twilio_chat/' . $filename);
             $publicDir = public_path('storage/twilio_chat');
             $publicAbsolute = $publicDir . DIRECTORY_SEPARATOR . $filename;
@@ -331,6 +330,24 @@ class TwilioChatController extends Controller
                 'message' => 'Upload failed: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    // Public: serve uploaded media reliably (Twilio needs direct HTTPS access)
+    public function media(string $filename)
+    {
+        // Security: allow only plain filenames
+        $safe = basename($filename);
+        $path = 'twilio_chat/' . $safe;
+        if (!Storage::disk('public')->exists($path)) {
+            Log::warning('TwilioChat media not found', ['filename' => $safe, 'path' => $path]);
+            abort(404);
+        }
+
+        $mime = Storage::disk('public')->mimeType($path) ?: 'application/octet-stream';
+        $contents = Storage::disk('public')->get($path);
+        return response($contents, 200)
+            ->header('Content-Type', $mime)
+            ->header('Cache-Control', 'public, max-age=604800'); // 7 days
     }
 }
 
