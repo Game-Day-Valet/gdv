@@ -67,6 +67,8 @@ class InvoiceService
             // Generate PDF
             $pdf = Pdf::loadView('invoices.rental-invoice', $data);
             $pdf->setPaper('A4', 'portrait');
+            $pdf->getDomPDF()->set_option('isRemoteEnabled', true);
+            $pdf->getDomPDF()->set_option('isHtml5ParserEnabled', true);
             
             // Generate filename
             $filename = 'invoice-gdv-' . str_pad($rental->id, 6, '0', STR_PAD_LEFT) . '.pdf';

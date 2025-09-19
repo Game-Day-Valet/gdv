@@ -15,7 +15,7 @@
             font-family: 'Arial', sans-serif;
             line-height: 1.4;
             color: #333;
-            background-color: #ffffff;
+            background-color: #f5f5dc;
             font-size: 12px;
         }
 
@@ -23,7 +23,7 @@
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #ffffff;
+            background-color: #f5f5dc;
         }
 
         /* Header Styles */
@@ -31,35 +31,73 @@
             text-align: center;
             margin-bottom: 30px;
             padding-bottom: 20px;
-            border-bottom: 2px solid #C94C4C;
         }
 
-        .company-logo {
-            width: 100%;
-            max-width: 400px;
-            height: auto;
-            margin: 0 auto 15px auto;
-            display: block;
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
         }
 
-        .company-info {
-            text-align: center;
+        .gdv-logo {
+            font-size: 48px;
+            font-weight: bold;
+            color: #000;
+            margin-right: 20px;
+            font-family: 'Arial Black', sans-serif;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
         .company-name {
-            font-size: 24px;
+            font-size: 32px;
             font-weight: bold;
             color: #C94C4C;
-            margin-bottom: 5px;
             font-family: 'Arial Black', sans-serif;
             text-transform: uppercase;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
         .tagline {
-            font-size: 12px;
+            font-size: 14px;
             color: #333;
             font-weight: normal;
             text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        .top-image {
+            width: 100%;
+            max-width: 500px;
+            height: 200px;
+            object-fit: contain;
+            margin: 20px auto;
+            display: block;
+        }
+
+        .top-image-placeholder {
+            width: 100%;
+            max-width: 400px;
+            height: 100px;
+            margin: 20px auto;
+            display: block;
+            border: 2px dashed #ccc;
+            text-align: center;
+            line-height: 100px;
+            color: #666;
+            background-color: #f9f9f9;
+        }
+
+        .signature-placeholder {
+            width: 200px;
+            height: 50px;
+            margin: 10px 0;
+            border: 1px dashed #ccc;
+            text-align: center;
+            line-height: 50px;
+            color: #666;
+            background-color: #f9f9f9;
+            font-style: italic;
         }
 
         .invoice-title {
@@ -68,6 +106,7 @@
             color: #333;
             text-align: center;
             margin: 20px 0;
+            text-transform: uppercase;
         }
 
         /* Invoice Details */
@@ -77,7 +116,11 @@
             margin-bottom: 30px;
         }
 
-        .invoice-info {
+        .invoice-info-left {
+            flex: 1;
+        }
+
+        .invoice-info-right {
             flex: 1;
         }
 
@@ -103,6 +146,12 @@
             color: #333;
         }
 
+        .detail-row-right {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 5px;
+        }
+
         /* Items Table */
         .items-table {
             width: 100%;
@@ -111,12 +160,13 @@
         }
 
         .items-table th {
-            background-color: #f8f9fa;
+            background-color: #ffffff;
             padding: 12px 8px;
             text-align: left;
             font-weight: bold;
-            color: #333;
-            border-bottom: 2px solid #C94C4C;
+            color: #000;
+            border-bottom: 1px solid #000;
+            text-transform: uppercase;
         }
 
         .items-table th:first-child {
@@ -124,11 +174,11 @@
         }
 
         .items-table th:nth-child(2) {
-            text-align: center;
+            text-align: right;
         }
 
         .items-table th:nth-child(3) {
-            text-align: center;
+            text-align: right;
         }
 
         .items-table th:last-child {
@@ -137,7 +187,7 @@
 
         .items-table td {
             padding: 10px 8px;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 1px solid #000;
         }
 
         .items-table td:first-child {
@@ -145,11 +195,11 @@
         }
 
         .items-table td:nth-child(2) {
-            text-align: center;
+            text-align: right;
         }
 
         .items-table td:nth-child(3) {
-            text-align: center;
+            text-align: right;
         }
 
         .items-table td:last-child {
@@ -174,11 +224,11 @@
 
         .summary-table td {
             padding: 8px 12px;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 1px solid #000;
         }
 
         .summary-table .total-row {
-            border-top: 2px solid #C94C4C;
+            border-top: 1px solid #000;
             font-weight: bold;
             font-size: 14px;
         }
@@ -195,7 +245,6 @@
         .invoice-footer {
             margin-top: 40px;
             padding-top: 20px;
-            border-top: 1px solid #e9ecef;
         }
 
         .footer-content {
@@ -224,6 +273,7 @@
             font-weight: bold;
             color: #333;
             margin-bottom: 10px;
+            text-transform: uppercase;
         }
 
         .company-signature {
@@ -236,9 +286,9 @@
             text-align: center;
             margin-top: 20px;
             padding-top: 15px;
-            border-top: 1px dotted #ccc;
+            border-top: 1px dotted #000;
             font-size: 11px;
-            color: #666;
+            color: #000;
         }
 
         /* Page Break */
@@ -251,11 +301,11 @@
     <div class="invoice-container">
         <!-- Header -->
         <div class="invoice-header">
-            <img src="https://drive.google.com/uc?export=download&id=1k0Ud895vW8x-xSzLKUZmtBFcU3I6j6P2" alt="GDV Game Day Valet" class="company-logo">
-            <div class="company-info">
-                <div class="company-name">GAME DAY VALET</div>
-                <div class="tagline">WHERE THE FANS ARE THE MVP</div>
-            </div>
+            @if(file_exists(public_path('images/topimage.png')))
+                <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('images/topimage.png'))) }}" class="top-image">
+            @else
+                <div class="top-image-placeholder">Top Image</div>
+            @endif
         </div>
 
         <!-- Invoice Title -->
@@ -263,24 +313,24 @@
 
         <!-- Invoice Details -->
         <div class="invoice-details">
-            <div class="invoice-info">
+            <div class="invoice-info-left">
                 <div class="detail-row">
                     <span class="detail-label">Invoice no:</span>
                     <span class="detail-value">GDV-{{ str_pad($rental->id, 6, '0', STR_PAD_LEFT) }}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Issued to:</span>
-                    <span class="detail-value">{{ $rental->coach_name ?? 'N/A' }}</span>
+                    <span class="detail-value">{{ $rental->user->name ?? 'N/A' }}</span>
                 </div>
             </div>
-            <div class="invoice-info">
-                <div class="detail-row">
+            <div class="invoice-info-right">
+                <div class="detail-row-right">
                     <span class="detail-label">Issued date:</span>
-                    <span class="detail-value">{{ now()->format('M d, Y') }}</span>
+                    <span class="detail-value">{{ $rental->created_at->format('M d, Y') }}</span>
                 </div>
-                <div class="detail-row">
+                <div class="detail-row-right">
                     <span class="detail-label">Due date:</span>
-                    <span class="detail-value">{{ now()->addDays(30)->format('M d, Y') }}</span>
+                    <span class="detail-value">{{ $rental->created_at->addDays(30)->format('M d, Y') }}</span>
                 </div>
             </div>
         </div>
@@ -355,8 +405,8 @@
                 @endif
 
                 @php
-                    $tax = 10; // Fixed tax amount as shown in image
-                    $total = $subtotal + $tax;
+                    $tax = 0; // Tax hidden for now
+                    $total = $subtotal; // Total without tax
                 @endphp
             </tbody>
         </table>
@@ -364,10 +414,6 @@
         <!-- Summary Section -->
         <div class="summary-section">
             <table class="summary-table">
-                <tr>
-                    <td class="label">TAX:</td>
-                    <td class="amount">${{ number_format($tax, 2) }}</td>
-                </tr>
                 <tr class="total-row">
                     <td class="label">TOTAL:</td>
                     <td class="amount">${{ number_format($total, 2) }}</td>
@@ -380,10 +426,23 @@
             <div class="footer-content">
                 <div class="payment-info">
                     <h4>Payment info:</h4>
+                    <p><strong>Payment Method:</strong> {{ ucfirst($rental->payment_method ?? 'Not specified') }}</p>
+                    <p><strong>Payment Status:</strong> {{ ucfirst($rental->payment_status ?? 'Pending') }}</p>
+                    @if($rental->payment_status === 'pending' || $rental->payment_status === 'unpaid')
+                        <p>Payment due upon delivery</p>
+                        <p>Cash, Credit Card, or Check accepted</p>
+                    @elseif($rental->payment_status === 'paid')
+                        <p>Payment completed - Thank you!</p>
+                    @endif
+                    <p>Contact us for payment arrangements</p>
                 </div>
                 <div class="thank-you">
                     <h3>THANK YOU FOR YOUR ORDER!</h3>
-                    <img src="https://drive.google.com/uc?export=download&id=1R3Kvu8bhqyXs6ISnG92HhPw40KxWKd4s" alt="Game Day Valet Signature" class="company-signature">
+                    @if(file_exists(public_path('images/signature.png')))
+                        <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('images/signature.png'))) }}" alt="Game Day Valet Signature" class="company-signature">
+                    @else
+                        <div class="signature-placeholder">Game Day Valet</div>
+                    @endif
                 </div>
             </div>
             <div class="contact-info">
