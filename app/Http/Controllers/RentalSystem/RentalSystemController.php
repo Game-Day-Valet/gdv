@@ -267,7 +267,19 @@ class RentalSystemController extends Controller
         if ($sports) {
             foreach ($sports as $s) {
                 try {
-                    $s->setAttribute('tournaments_count', method_exists($s, 'tournaments') ? $s->tournaments()->count() : 0);
+                    // Count only ACTIVE tournaments for this sport
+                    if (method_exists($s, 'tournaments')) {
+                        $count = $s->tournaments()->where('status', \App\Enums\TournamentStatus::ACTIVE->value)->count();
+                        $s->setAttribute('tournaments_count', $count);
+                    } else {
+                        // Fallback via repository if relation not present
+                        $all = $this->sports->getTournamentsBySport($s->id);
+                        $count = collect($all)->filter(function($t){
+                            $status = is_array($t) ? ($t['status'] ?? null) : ($t->status ?? null);
+                            return $status === \App\Enums\TournamentStatus::ACTIVE->value || $status === 'active' || $status === 1 || $status === true || $status === 'ACTIVE';
+                        })->count();
+                        $s->setAttribute('tournaments_count', $count);
+                    }
                 } catch (\Throwable $e) {
                     $s->setAttribute('tournaments_count', 0);
                 }
