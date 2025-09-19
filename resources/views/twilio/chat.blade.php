@@ -21,7 +21,31 @@
 .bubble.them .ts.bottom:after{left:10px;right:auto}
 .bubble:hover .ts{display:block}
 .bubble .body{white-space:pre-wrap;word-wrap:break-word}
-.composer{display:flex;gap:8px;padding:10px;border-top:1px solid #e5e7eb;background:#fff}
+.status-icon{font-size:12px;margin-top:4px;display:flex;gap:6px;align-items:center;justify-content:flex-end;color:#6b7280}
+.status-icon.success{color:#16a34a}
+.status-icon.error{color:#dc2626}
+.status-icon.pending{color:#9ca3af}
+.bubble .media{max-width:200px;margin:5px 0;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+.bubble .media img{width:100%;height:auto;display:block;transition:transform 0.2s ease}
+.bubble .media img:hover{transform:scale(1.02)}
+.composer{display:flex;flex-direction:column;padding:16px;border-top:1px solid #e5e7eb;background:#fff;border-radius:0 0 8px 8px}
+.media-preview{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;min-height:40px;align-items:center}
+.media-preview-item{position:relative;width:80px;height:80px;border-radius:12px;overflow:hidden;border:2px solid #e5e7eb;box-shadow:0 2px 8px rgba(0,0,0,0.1);transition:all 0.2s ease}
+.media-preview-item:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+.media-preview-item img{width:100%;height:100%;object-fit:cover}
+.media-preview-item .remove{position:absolute;top:-8px;right:-8px;background:#dc3545;color:white;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:all 0.2s ease}
+.media-preview-item .remove:hover{background:#c82333;transform:scale(1.1)}
+.composer-input{display:flex;gap:12px;align-items:center}
+.attach-btn{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border:none;color:white;padding:12px 16px;border-radius:12px;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(102,126,234,0.3)}
+.attach-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(102,126,234,0.4)}
+.attach-btn:active{transform:translateY(0)}
+.send-btn{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);border:none;color:white;padding:12px 24px;border-radius:12px;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(79,70,229,0.3)}
+.send-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(79,70,229,0.4)}
+.send-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.message-input{flex:1;border:2px solid #e5e7eb;border-radius:12px;padding:12px 16px;font-size:14px;transition:all 0.2s ease;background:#fafafa}
+.message-input:focus{outline:none;border-color:#4f46e5;background:#fff;box-shadow:0 0 0 3px rgba(79,70,229,0.1)}
+.empty-state{text-align:center;padding:40px;color:#6b7280}
+.empty-state i{font-size:48px;margin-bottom:16px;color:#d1d5db}
 </style>
 @endsection
 
@@ -54,10 +78,24 @@
             @endforeach
         </div>
         <div class="chat-window">
-            <div class="messages" id="messages"></div>
+            <div class="messages" id="messages">
+                <div class="empty-state" id="emptyState">
+                    <i class="fas fa-comments"></i>
+                    <div>Select a conversation to start chatting</div>
+                </div>
+            </div>
             <div class="composer">
-                <input type="text" id="composeInput" class="form-control" placeholder="Type a message...">
-                <button id="sendBtn" class="btn btn-primary">Send</button>
+                <div class="media-preview" id="mediaPreview"></div>
+                <div class="composer-input">
+                    <input type="file" id="imageInput" accept="image/*" style="display:none">
+                    <button id="attachBtn" class="attach-btn" type="button" title="Attach Image">
+                        <i class="fas fa-paperclip"></i>
+                    </button>
+                    <input type="text" id="composeInput" class="message-input" placeholder="Type a message...">
+                    <button id="sendBtn" class="send-btn">
+                        <i class="fas fa-paper-plane"></i> Send
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -68,21 +106,68 @@ const messagesEl = document.getElementById('messages');
 const chatList = document.getElementById('chatList');
 const inputEl = document.getElementById('composeInput');
 const sendBtn = document.getElementById('sendBtn');
+const imageInput = document.getElementById('imageInput');
+const attachBtn = document.getElementById('attachBtn');
+const mediaPreview = document.getElementById('mediaPreview');
 let currentPhone = '{{ $selectedPhone }}' || (chatList.querySelector('.chat-item')?.getAttribute('data-phone')||'');
+let selectedImages = [];
 
 function renderMessages(list){
+  const emptyState = document.getElementById('emptyState');
+  if(emptyState) emptyState.style.display = 'none';
+  
   messagesEl.innerHTML='';
+  if(list.length === 0) {
+    const emptyDiv = document.createElement('div');
+    emptyDiv.className = 'empty-state';
+    emptyDiv.innerHTML = '<i class="fas fa-comments"></i><div>No messages yet. Start the conversation!</div>';
+    messagesEl.appendChild(emptyDiv);
+    return;
+  }
+  
   list.forEach(m=>{
     const div=document.createElement('div');
     div.className='bubble '+(m.mine?'me':'them');
-    const body=document.createElement('div');
-    body.className='body';
-    body.textContent=m.body;
+    
+    // Add media if exists
+    if(m.media_urls && m.media_urls.length > 0){
+      m.media_urls.forEach(url => {
+        const mediaDiv = document.createElement('div');
+        mediaDiv.className = 'media';
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = 'Image';
+        img.loading = 'lazy';
+        mediaDiv.appendChild(img);
+        div.appendChild(mediaDiv);
+      });
+    }
+    
+    // Add text body if exists
+    if(m.body && m.body.trim()){
+      const body=document.createElement('div');
+      body.className='body';
+      body.textContent=m.body;
+      div.appendChild(body);
+    }
+    
     const ts=document.createElement('div');
     ts.className='ts bottom';
     ts.textContent = new Date(m.time?.replace(' ','T')+'Z').toLocaleString();
-    div.appendChild(body);
     div.appendChild(ts);
+
+    // Delivery status icon (only for our outbound messages)
+    if(m.mine){
+      const statusWrap=document.createElement('div');
+      statusWrap.className='status-icon ' + (m.status==='delivered' || m.status==='sent' ? 'success' : (m.status==='failed' || m.status==='undelivered' ? 'error' : 'pending'));
+      statusWrap.title = 'Status: ' + (m.status || 'pending');
+      const icon=document.createElement('i');
+      if(m.status==='delivered' || m.status==='sent') icon.className='fas fa-check-circle';
+      else if(m.status==='failed' || m.status==='undelivered') icon.className='fas fa-times-circle';
+      else icon.className='fas fa-clock';
+      statusWrap.appendChild(icon);
+      div.appendChild(statusWrap);
+    }
     const wrap=document.createElement('div');
     wrap.appendChild(div);
     messagesEl.appendChild(wrap);
@@ -101,16 +186,25 @@ async function loadMessages(){
 
 async function sendMessage(){
   const body = inputEl.value.trim();
-  if(!body || !currentPhone) return;
+  if((!body && selectedImages.length === 0) || !currentPhone) return;
   sendBtn.disabled=true;
   try{
     const res = await fetch(`{{ url('/admin/twilio/chat/send') }}`,{
       method:'POST',
       headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},
-      body: JSON.stringify({ phone: currentPhone, body })
+      body: JSON.stringify({ 
+        phone: currentPhone, 
+        body: body || null,
+        media_urls: selectedImages.length > 0 ? selectedImages : null
+      })
     });
     const data = await res.json();
-    if(data.success){ inputEl.value=''; loadMessages(); }
+    if(data.success){ 
+      inputEl.value=''; 
+      selectedImages = [];
+      updateMediaPreview();
+      loadMessages(); 
+    }
   }catch(e){ /* ignore */ }
   finally{ sendBtn.disabled=false; }
 }
@@ -122,6 +216,78 @@ chatList.addEventListener('click',(e)=>{
   item.classList.add('active');
   currentPhone=item.getAttribute('data-phone');
   loadMessages();
+});
+
+// Image handling functions
+async function uploadImage(file) {
+  // Show loading state
+  const loadingItem = document.createElement('div');
+  loadingItem.className = 'media-preview-item';
+  loadingItem.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:#f3f4f6;color:#6b7280;">
+      <i class="fas fa-spinner fa-spin"></i>
+    </div>
+  `;
+  mediaPreview.appendChild(loadingItem);
+  mediaPreview.style.display = 'flex';
+  
+  const formData = new FormData();
+  formData.append('image', file);
+  
+  try {
+    const res = await fetch(`{{ url('/admin/twilio/chat/upload') }}`, {
+      method: 'POST',
+      headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+      body: formData
+    });
+    const data = await res.json();
+    if(data.success) {
+      selectedImages.push(data.url);
+      updateMediaPreview();
+    } else {
+      alert('Upload failed: ' + (data.message || 'Unknown error'));
+      loadingItem.remove();
+    }
+  } catch(e) {
+    console.error('Upload failed:', e);
+    alert('Upload failed: ' + e.message);
+    loadingItem.remove();
+  }
+}
+
+function updateMediaPreview() {
+  mediaPreview.innerHTML = '';
+  if(selectedImages.length === 0) {
+    mediaPreview.style.display = 'none';
+    return;
+  }
+  
+  mediaPreview.style.display = 'flex';
+  selectedImages.forEach((url, index) => {
+    const item = document.createElement('div');
+    item.className = 'media-preview-item';
+    item.innerHTML = `
+      <img src="${url}" alt="Preview" loading="lazy">
+      <div class="remove" onclick="removeImage(${index})" title="Remove image">
+        <i class="fas fa-times"></i>
+      </div>
+    `;
+    mediaPreview.appendChild(item);
+  });
+}
+
+function removeImage(index) {
+  selectedImages.splice(index, 1);
+  updateMediaPreview();
+}
+
+// Event listeners
+attachBtn.addEventListener('click', () => imageInput.click());
+imageInput.addEventListener('change', (e) => {
+  if(e.target.files.length > 0) {
+    uploadImage(e.target.files[0]);
+    e.target.value = ''; // Reset input
+  }
 });
 
 sendBtn.addEventListener('click', sendMessage);

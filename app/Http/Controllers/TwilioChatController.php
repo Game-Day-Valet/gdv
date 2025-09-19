@@ -47,6 +47,24 @@ class TwilioChatController extends Controller
         return $result;
     }
 
+    protected function extractMediaUrls($media): array
+    {
+        if (!$media) return [];
+        
+        $urls = [];
+        try {
+            foreach ($media as $mediaItem) {
+                if (isset($mediaItem->uri)) {
+                    $urls[] = (string) $mediaItem->uri;
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Failed to extract media URLs', ['error' => $e->getMessage()]);
+        }
+        
+        return $urls;
+    }
+
     // GET /admin/twilio/chat
     public function index(Request $request)
     {
@@ -153,6 +171,7 @@ class TwilioChatController extends Controller
                     'status' => (string) $m->status,
                     'time' => optional($m->dateSent ?? $m->dateCreated)->format('Y-m-d H:i:s'),
                     'mine' => $this->formatPhone((string) $m->from) === $this->formatPhone($fromNumber),
+                    'media_urls' => $this->extractMediaUrls($m->media),
                 ];
             }
             // sort chronologically asc
@@ -165,27 +184,110 @@ class TwilioChatController extends Controller
         }
     }
 
-    // POST /admin/twilio/chat/send { phone, body }
+    // POST /admin/twilio/chat/send { phone, body, media_urls }
     public function send(Request $request)
     {
         $data = $request->validate([
             'phone' => 'required|string',
-            'body' => 'required|string|max:1000',
+            'body' => 'nullable|string|max:1000',
+            'media_urls' => 'nullable|array',
+            'media_urls.*' => 'url|max:2048',
         ]);
+        
         $to = $this->formatPhone($data['phone']);
-        $body = $data['body'];
+        $body = $data['body'] ?? '';
+        $mediaUrls = $data['media_urls'] ?? [];
         $from = config('services.twilio.from');
+
+        // Validate that either body or media_urls is provided
+        if (empty($body) && empty($mediaUrls)) {
+            return response()->json(['success' => false, 'message' => 'Either message body or media is required'], 422);
+        }
+
+        // Guard against Twilio 11200: MediaUrl must be publicly accessible over HTTPS
+        $invalidMedia = [];
+        $sanitizedMedia = [];
+        foreach ($mediaUrls as $url) {
+            $isHttps = stripos($url, 'https://') === 0;
+            $isLocal = preg_match('#^(https?://)?(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])#i', $url);
+            if (!$isHttps || $isLocal) {
+                $invalidMedia[] = $url;
+            } else {
+                $sanitizedMedia[] = $url;
+            }
+        }
+        if (!empty($invalidMedia)) {
+            Log::warning('TwilioChat blocked non-public media', ['invalid_media' => $invalidMedia]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Images must be publicly accessible over HTTPS. On local, use an https tunnel (e.g., ngrok) or upload to a public host (S3/Cloudinary).',
+                'invalid_media' => $invalidMedia,
+                'code' => 11200,
+            ], 422);
+        }
 
         try {
             $client = $this->client();
-            $client->messages->create($to, [
+            $messageData = [
                 'from' => $from,
-                'body' => $body,
+            ];
+            
+            if (!empty($body)) {
+                $messageData['body'] = $body;
+            }
+            
+            if (!empty($sanitizedMedia)) {
+                $messageData['mediaUrl'] = $sanitizedMedia;
+            }
+            
+            $message = $client->messages->create($to, $messageData);
+            Log::info('TwilioChat sent', [
+                'to' => $to,
+                'body_len' => strlen((string) $body),
+                'media_count' => count($sanitizedMedia),
+                'sid' => (string) ($message->sid ?? ''),
+                'status' => (string) ($message->status ?? ''),
             ]);
-            return response()->json(['success' => true]);
+            return response()->json(['success' => true, 'sid' => (string) ($message->sid ?? '')]);
+        } catch (\Twilio\Exceptions\RestException $e) {
+            $code = method_exists($e, 'getCode') ? $e->getCode() : 0;
+            Log::error('TwilioChat send failed', [
+                'to' => $to,
+                'error' => $e->getMessage(),
+                'code' => $code,
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'code' => $code,
+            ], 502);
         } catch (\Throwable $e) {
-            Log::error('TwilioChat send failed', ['to' => $to, 'error' => $e->getMessage()]);
+            Log::error('TwilioChat send failed (unexpected)', ['to' => $to, 'error' => $e->getMessage()]);
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // POST /admin/twilio/chat/upload - Handle image upload
+    public function upload(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
+        ]);
+
+        try {
+            $file = $request->file('image');
+            $filename = 'twilio_chat_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('public/twilio_chat', $filename);
+            $url = asset('storage/twilio_chat/' . $filename);
+            
+            return response()->json([
+                'success' => true, 
+                'url' => $url,
+                'filename' => $filename
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('TwilioChat upload failed', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Upload failed: ' . $e->getMessage()], 500);
         }
     }
 }

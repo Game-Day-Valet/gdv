@@ -149,6 +149,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', function ($request, 
 	Route::get('/twilio/chat', [\App\Http\Controllers\TwilioChatController::class, 'index'])->name('twilio.chat');
 	Route::get('/twilio/chat/messages', [\App\Http\Controllers\TwilioChatController::class, 'messages'])->name('twilio.chat.messages');
 	Route::post('/twilio/chat/send', [\App\Http\Controllers\TwilioChatController::class, 'send'])->name('twilio.chat.send');
+	Route::post('/twilio/chat/upload', [\App\Http\Controllers\TwilioChatController::class, 'upload'])->name('twilio.chat.upload');
 
 	
 		Route::resource('booking-settings', \App\Http\Controllers\BookingSettingsController::class)->except(['show']);
