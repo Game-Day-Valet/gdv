@@ -301,7 +301,7 @@
                 @if(is_array($item) && isset($item['item_id']) && isset($item['quantity']))
                 <div class="item-row">
                     <span>{{ $itemNames[$item['item_id']] ?? ('Item #' . $item['item_id']) }}</span>
-                    <span>Qty: {{ $item['quantity'] }}</span>
+                    <span>  Qty: {{ $item['quantity'] }}</span>
                 </div>
                 @endif
                 @endforeach
@@ -315,12 +315,12 @@
                     @if(is_array($bundle) && isset($bundle['bundle_id']))
                         <div class="item-row">
                             <span>{{ $bundleNames[$bundle['bundle_id']] ?? ('Bundle #' . $bundle['bundle_id']) }}</span>
-                            <span>Qty: {{ $bundle['quantity'] ?? 1 }}</span>
+                            <span>  Qty: {{ $bundle['quantity'] ?? 1 }}</span>
                         </div>
                     @elseif(is_numeric($bundle))
                         <div class="item-row">
                             <span>{{ $bundleNames[$bundle] ?? ('Bundle #' . $bundle) }}</span>
-                            <span>Qty: 1</span>
+                            <span>  Qty: 1</span>
                         </div>
                     @endif
                 @endforeach
