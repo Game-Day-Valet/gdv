@@ -281,7 +281,7 @@ class TwilioChatController extends Controller
             // Save to the public disk (storage/app/public/twilio_chat)
             $path = $file->storeAs('public/twilio_chat', $filename);
 
-            // Build a controller-served URL to avoid webserver symlink issues
+            // Build a public controller-served URL (no admin prefix)
             $url = url('/twilio/chat/media/' . $filename);
 
             $storageAbsolute = storage_path('app/public/twilio_chat/' . $filename);

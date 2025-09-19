@@ -79,6 +79,9 @@ Route::prefix('')->name('rentalsystem.')->group(function () {
 // Public page: Privacy Policy for rental system (rendered server-side for SEO and reliability)
 Route::get('/privacy-policy', [\App\Http\Controllers\RentalSystem\RentalSystemController::class, 'privacyPolicy'])->name('rentalsystem.privacy-policy');
 
+// Public Twilio chat media (no auth, direct HTTPS for Twilio)
+Route::get('/twilio/chat/media/{filename}', [\App\Http\Controllers\TwilioChatController::class, 'media'])->name('twilio.chat.media');
+
 // Public page: Support
 Route::view('/support', 'rentalsystem.support')->name('rentalsystem.support');
 // Public page: Terms & Conditions
@@ -150,7 +153,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', function ($request, 
 	Route::get('/twilio/chat/messages', [\App\Http\Controllers\TwilioChatController::class, 'messages'])->name('twilio.chat.messages');
 	Route::post('/twilio/chat/send', [\App\Http\Controllers\TwilioChatController::class, 'send'])->name('twilio.chat.send');
 	Route::post('/twilio/chat/upload', [\App\Http\Controllers\TwilioChatController::class, 'upload'])->name('twilio.chat.upload');
-	Route::get('/twilio/chat/media/{filename}', [\App\Http\Controllers\TwilioChatController::class, 'media'])->name('twilio.chat.media');
+	// media route should be PUBLIC (outside admin); defined below
 
 	
 		Route::resource('booking-settings', \App\Http\Controllers\BookingSettingsController::class)->except(['show']);
