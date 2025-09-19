@@ -67,13 +67,13 @@ Route::prefix('')->name('rentalsystem.')->group(function () {
 		Route::get('/checkout/success', [RentalSystemController::class, 'checkoutSuccess'])->name('checkout.success');
 		Route::get('/checkout/cancel', [RentalSystemController::class, 'checkoutCancel'])->name('checkout.cancel');
 		Route::post('/profile', [RentalSystemController::class, 'updateProfile'])->name('profile.update');
+		Route::get('/profile', [RentalSystemController::class, 'showProfile'])->name('profile');
 		Route::post('/profile/notifications', [RentalSystemController::class, 'updateNotifications'])->name('profile.notifications');
 		Route::delete('/profile/delete-account', [RentalSystemController::class, 'deleteAccountWeb'])->name('profile.delete');
 		Route::get('/logout', [RentalSystemController::class, 'logout'])->name('logout');
 	});
 
 	// Allow profile page to handle auth gracefully itself
-	Route::get('/profile', [RentalSystemController::class, 'showProfile'])->name('profile');
 });
 
 // Public page: Privacy Policy for rental system (rendered server-side for SEO and reliability)
