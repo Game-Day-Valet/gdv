@@ -68,6 +68,8 @@ class RentalResource extends JsonResource
             'payment_method' => $this->payment_method,
             'payment_status' => $this->payment_status,
             'total_amount' => $this->total_amount,
+            'tax_rate' => $this->tax_rate,
+            'tax_amount' => $this->tax_amount,
             'status' => $this->status,
             'return_instruction' => $this->return_instruction,
             'status_logs' => $this->statusLogs,

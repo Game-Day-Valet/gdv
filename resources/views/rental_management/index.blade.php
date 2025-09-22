@@ -151,6 +151,8 @@
                                     <th>Coach</th>
                                     
                                     <th>Total Amount</th>
+                                    <th>Tax Rate</th>
+                                    <th>Tax Amount</th>
                                     <th>Payment Status</th>
                                     <!-- <th>Booking Days</th> -->
                                     <th>Status</th>
@@ -180,6 +182,20 @@
                                         <td>
                                             @if($rental->total_amount)
                                                 ${{ number_format($rental->total_amount, 2) }}
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if(!is_null($rental->tax_rate))
+                                                {{ number_format((float)$rental->tax_rate, 2) }}%
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if(!is_null($rental->tax_amount))
+                                                ${{ number_format((float)$rental->tax_amount, 2) }}
                                             @else
                                                 <span class="text-muted">N/A</span>
                                             @endif

@@ -184,6 +184,26 @@
                                         </div>
                                     </div>
                                     <div class="row mb-2">
+                                        <div class="col-4"><strong>Tax Rate:</strong></div>
+                                        <div class="col-8">
+                                            @if(!is_null($rental->tax_rate))
+                                                {{ number_format((float)$rental->tax_rate, 2) }}%
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-4"><strong>Tax Amount:</strong></div>
+                                        <div class="col-8">
+                                            @if(!is_null($rental->tax_amount))
+                                                ${{ number_format((float)$rental->tax_amount, 2) }}
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="row mb-2">
                                         <div class="col-4"><strong>Payment Method:</strong></div>
                                         <div class="col-8">{{ ucfirst($rental->payment_method ?? 'N/A') }}</div>
                                     </div>

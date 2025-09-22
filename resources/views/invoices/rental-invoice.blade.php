@@ -414,9 +414,25 @@
         <!-- Summary Section -->
         <div class="summary-section">
             <table class="summary-table">
+                <tr>
+                    <td class="label">SUBTOTAL:</td>
+                    <td class="amount">${{ number_format($subtotal, 2) }}</td>
+                </tr>
+                <tr>
+                    <td class="label">INSURANCE:</td>
+                    <td class="amount">${{ number_format((float)($rental->insurance_option ?? 0), 2) }}</td>
+                </tr>
+                <tr>
+                    <td class="label">DAMAGE WAIVER:</td>
+                    <td class="amount">${{ number_format((float)($rental->damage_waiver ?? 0), 2) }}</td>
+                </tr>
+                <tr>
+                    <td class="label">TAX ({{ number_format((float)($rental->tax_rate ?? 0), 2) }}%):</td>
+                    <td class="amount">${{ number_format((float)($rental->tax_amount ?? 0), 2) }}</td>
+                </tr>
                 <tr class="total-row">
                     <td class="label">TOTAL:</td>
-                    <td class="amount">${{ number_format($total, 2) }}</td>
+                    <td class="amount">${{ number_format((float)($rental->total_amount ?? ($subtotal + (float)($rental->insurance_option ?? 0) + (float)($rental->damage_waiver ?? 0))), 2) }}</td>
                 </tr>
             </table>
         </div>

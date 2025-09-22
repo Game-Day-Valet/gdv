@@ -43,6 +43,8 @@ class RentalRequest extends FormRequest
             'payment_method' => 'nullable|in:stripe,apple_pay,google_pay',
             'payment_status' => 'nullable|in:pending,completed',
             'total_amount' => 'nullable|numeric|min:0',
+            'tax_rate' => 'nullable|numeric',
+            'tax_amount' => 'nullable|numeric',
             'status' => 'nullable|in:pending,delivered,picked_up,returned',
             'return_instruction' => 'nullable|string',
         ];

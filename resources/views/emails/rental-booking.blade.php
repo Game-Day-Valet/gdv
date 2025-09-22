@@ -330,6 +330,12 @@
             <!-- Total Amount -->
             <div class="total-section">
                 <div class="total-amount">Total Amount: ${{ number_format($rental->total_amount ?? 0, 2) }}</div>
+                @if(!is_null($rental->tax_rate))
+                <div style="margin-top: 10px; font-size: 16px;">Tax Rate: {{ number_format((float)$rental->tax_rate, 2) }}%</div>
+                @endif
+                @if(!is_null($rental->tax_amount))
+                <div style="margin-top: 5px; font-size: 16px;">Tax Amount: ${{ number_format((float)$rental->tax_amount, 2) }}</div>
+                @endif
                 @if($rental->insurance_option)
                 <div style="margin-top: 10px; font-size: 16px;">Insurance: ${{ number_format($rental->insurance_option, 2) }}</div>
                 @endif

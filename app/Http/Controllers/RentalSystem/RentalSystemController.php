@@ -550,12 +550,13 @@ class RentalSystemController extends Controller
         // Get the discounted total from frontend (if coupon was applied)
         $frontendTotal = (float) $request->input('total_amount', 0);
         
-        // Use frontend total if it's provided and reasonable, otherwise use calculated total
-        if ($frontendTotal > 0 && $frontendTotal <= $total) {
-            $finalTotal = $frontendTotal;
-        } else {
-            $finalTotal = $total;
-        }
+        // Use frontend total if it's provided and reasonable, otherwise use calculated total (pre-tax)
+        $subTotalBeforeTax = ($frontendTotal > 0 && $frontendTotal <= $total) ? $frontendTotal : $total;
+
+        // Calculate tax for website flow using tournament tax_rate
+        $taxRate = (float) ($tournament->tax_rate ?? 0);
+        $taxAmount = round($subTotalBeforeTax * ($taxRate / 100), 2);
+        $finalTotal = $subTotalBeforeTax + $taxAmount;
 
         $dropOffDateTime = null;
 
@@ -576,6 +577,8 @@ class RentalSystemController extends Controller
             'payment_method' => 'stripe',
             'payment_status' => 'pending',
             'total_amount' => $finalTotal,
+            'tax_rate' => $taxRate,
+            'tax_amount' => $taxAmount,
             'status' => 'pending',
         ]);
 

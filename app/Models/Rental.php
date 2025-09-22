@@ -32,6 +32,8 @@ class Rental extends Model
         'payment_method',
         'payment_status',
         'total_amount',
+        'tax_rate',
+        'tax_amount',
         'status',
         'return_instruction',
         'estimated_delivery_time',
@@ -47,6 +49,8 @@ class Rental extends Model
         'insurance_option' => 'decimal:2',
         'damage_waiver' => 'decimal:2',
         'total_amount' => 'decimal:2',
+        'tax_rate' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
         'estimated_delivery_time' => 'datetime',
         'booking_days' => 'integer',
     ];

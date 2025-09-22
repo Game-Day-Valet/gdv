@@ -113,6 +113,8 @@ class RentalRepository implements RentalRepositoryInterface
                 'payment_method' => $data['payment_method'] ?? null,
                 'payment_status' => $data['payment_status'] ?? 'pending',
                 'total_amount' => $data['total_amount'] ?? null,
+                'tax_rate' => $data['tax_rate'] ?? null,
+                'tax_amount' => $data['tax_amount'] ?? null,
                 'status' => $data['status'] ?? 'pending',
                 'return_instruction' => $data['return_instruction'] ?? null,
             ]);
@@ -153,6 +155,8 @@ class RentalRepository implements RentalRepositoryInterface
                 'payment_method' => $data['payment_method'] ?? $rental->payment_method,
                 'payment_status' => $data['payment_status'] ?? $rental->payment_status,
                 'total_amount' => $data['total_amount'] ?? $rental->total_amount,
+                'tax_rate' => array_key_exists('tax_rate', $data) ? $data['tax_rate'] : $rental->tax_rate,
+                'tax_amount' => array_key_exists('tax_amount', $data) ? $data['tax_amount'] : $rental->tax_amount,
                 'status' => $data['status'] ?? $rental->status,
                 'return_instruction' => $data['return_instruction'] ?? $rental->return_instruction,
             ]);

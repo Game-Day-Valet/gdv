@@ -22,6 +22,7 @@ class TournamentUpdateRequest extends FormRequest
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'location' => 'sometimes|required|string|max:255',
             'status' => 'nullable|in:' . implode(',', array_column(TournamentStatus::cases(), 'value')),
+            'tax_rate' => 'nullable|numeric|min:0|max:100',
         ];
     }
 

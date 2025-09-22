@@ -50,6 +50,7 @@
                                 <th>Start Date</th>
                                 <th>End Date</th>
                                 <th>Location</th>
+                                <th>Tax Rate</th>
                                 <th>Status</th>
                                 <th>Action</th>
                             </tr>
@@ -72,6 +73,7 @@
                                     <td>{{ \Carbon\Carbon::parse($tournament->start_date)->format('d M Y') }}</td>
                                     <td>{{ $tournament->end_date ? \Carbon\Carbon::parse($tournament->end_date)->format('d M Y') : '-' }}</td>
                                     <td><span class="d-inline-block text-truncate" style="max-width: 260px;" title="{{ $tournament->location }}">{{ $tournament->location }}</span></td>
+                                    <td>{{ number_format((float)($tournament->tax_rate ?? 0), 2) }} %</td>
                                     <td>{{ \Illuminate\Support\Str::title($tournament->status->value) }}</td>
                                     <td>
                                         <div class="d-flex gap-2">

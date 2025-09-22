@@ -19,6 +19,7 @@ class Tournament extends Model
         'end_date',
         'location',
         'status',
+        'tax_rate',
         'sort_order',
     ];
 
@@ -26,6 +27,7 @@ class Tournament extends Model
         'status' => TournamentStatus::class,
         'start_date' => 'date',
         'end_date' => 'date',
+        'tax_rate' => 'float',
     ];
 
     protected static function booted()

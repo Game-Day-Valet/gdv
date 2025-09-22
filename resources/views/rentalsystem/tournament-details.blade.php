@@ -352,6 +352,15 @@
                             <p>{{ $sport->name ?? 'Sport' }}</p>
                         </div>
                     </div>
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-receipt"></i>
+                        </div>
+                        <div class="info-content">
+                            <h4>Tax Rate</h4>
+                            <p>{{ number_format((float)($tournament->tax_rate ?? 0), 2) }}%</p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Tournament Duration -->

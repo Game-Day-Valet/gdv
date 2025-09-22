@@ -343,6 +343,8 @@
 
             <!-- Hidden field for discounted total -->
             <input type="hidden" name="total_amount" id="total_amount_input" value="0">
+            <input type="hidden" name="tax_rate" id="tax_rate_input" value="{{ isset($tournament) ? (float)($tournament->tax_rate ?? 0) : 0 }}">
+            <input type="hidden" name="tax_amount" id="tax_amount_input" value="0">
 
             <div class="layout">
                 <div>
@@ -506,6 +508,9 @@
                         <div class="sum-row" id="discountRow" style="display:none; color: var(--primary-color); font-weight:700;">
                             <span>Discount</span><span id="discountAmount">-$0.00</span>
                         </div>
+                        <div class="sum-row" id="taxRow" style="display:flex;">
+                            <span>Tax (<span id="taxRateLabel">0%</span>)</span><span id="taxAmount">$0.00</span>
+                        </div>
                         <div class="sum-total sum-row"><span>Total</span><span id="totalAmount">$0.00</span></div>
                         <div style="height:10px"></div>
                         <button type="submit" class="btn-primary">Confirm Booking</button>
@@ -658,18 +663,23 @@
             document.querySelectorAll('input[name="damage_waiver_options[]"]:checked').forEach(c => {
                 waiverVal += parseFloat(c.getAttribute('data-price')) || 0;
             });
-            let total = itemsSubtotal + bundlesSubtotal + insuranceVal + waiverVal;
+            let subtotalBeforeDiscount = itemsSubtotal + bundlesSubtotal + insuranceVal + waiverVal;
 
             // Apply promo discount if available
             const discountValue = parseFloat(window.__appliedDiscount || 0) || 0;
             const discountType = window.__appliedDiscountType || null; // 'fixed' or 'percent'
             let discountApplied = 0;
             if (discountType === 'percent') {
-                discountApplied = Math.min(total, (total * (discountValue / 100)));
+                discountApplied = Math.min(subtotalBeforeDiscount, (subtotalBeforeDiscount * (discountValue / 100)));
             } else if (discountType === 'fixed') {
-                discountApplied = Math.min(total, discountValue);
+                discountApplied = Math.min(subtotalBeforeDiscount, discountValue);
             }
-            total = total - discountApplied;
+            const subtotalAfterDiscount = subtotalBeforeDiscount - discountApplied;
+
+            // Tax calculation
+            const taxRate = parseFloat(document.getElementById('tax_rate_input')?.value || '0') || 0;
+            const taxAmount = +(subtotalAfterDiscount * (taxRate / 100)).toFixed(2);
+            const total = subtotalAfterDiscount + taxAmount;
 
             document.getElementById('itemsSubtotal').textContent = formatUSD(itemsSubtotal);
             document.getElementById('bundlesSubtotal').textContent = formatUSD(bundlesSubtotal);
@@ -683,10 +693,17 @@
             } else {
                 discountRow.style.display = 'none';
             }
+            // Update tax UI and hidden inputs
+            const taxRateLabel = document.getElementById('taxRateLabel');
+            const taxAmountEl = document.getElementById('taxAmount');
+            if (taxRateLabel) taxRateLabel.textContent = `${taxRate.toFixed(2)}%`;
+            if (taxAmountEl) taxAmountEl.textContent = formatUSD(taxAmount);
             document.getElementById('totalAmount').textContent = formatUSD(total);
             // write final total to hidden input for server/stripe
             const totalInput = document.getElementById('total_amount_input');
             if (totalInput) totalInput.value = total.toFixed(2);
+            const taxAmountInput = document.getElementById('tax_amount_input');
+            if (taxAmountInput) taxAmountInput.value = taxAmount.toFixed(2);
         }
 
         // Event listeners for items (quantity buttons)
