@@ -38,7 +38,8 @@
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
-                    <table id="datatable" class="table table-bordered dt-responsive table-responsive nowrap">
+                    <div class="table-responsive" style="overflow-x:auto;">
+                    <table id="datatable" class="table table-bordered dt-responsive nowrap" style="min-width: 1100px;">
                         <thead>
                             <tr>
                                 @can('super_admin')
@@ -69,7 +70,7 @@
                                         @endif
                                     </td>
                                     <td>{{ $tournament->sport->name ?? '-' }}</td>
-                                    <td><span class="d-inline-block text-truncate" style="max-width: 220px;" title="{{ $tournament->name }}">{{ $tournament->name }}</span></td>
+                                    <td><span class="d-inline-block text-truncate" style="max-width: 360px;" title="{{ $tournament->name }}">{{ $tournament->name }}</span></td>
                                     <td>{{ \Carbon\Carbon::parse($tournament->start_date)->format('d M Y') }}</td>
                                     <td>{{ $tournament->end_date ? \Carbon\Carbon::parse($tournament->end_date)->format('d M Y') : '-' }}</td>
                                     <td><span class="d-inline-block text-truncate" style="max-width: 260px;" title="{{ $tournament->location }}">{{ $tournament->location }}</span></td>
@@ -91,6 +92,7 @@
                             @endforeach
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
