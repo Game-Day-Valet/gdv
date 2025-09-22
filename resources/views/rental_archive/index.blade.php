@@ -56,19 +56,26 @@
 
 <div class="row g-4">
 @forelse($folders as $tournamentName => $list)
+  @php
+    $first = optional($list)->first();
+    $tournament = optional($first)->tournament; // may be null if deleted
+    $sport = optional($tournament)->sport; // may be null if deleted
+    $sportName = optional($sport)->name;
+    $start = optional($tournament)->start_date;
+    $end = optional($tournament)->end_date;
+    $lastArchived = $list->max('archived_at');
+    $folderUrl = ($first && $first->tournament_id)
+        ? route('rental-archive.folder', $first->tournament_id)
+        : '#';
+    $folderTitle = $tournamentName ?: (optional($tournament)->name ?? 'Deleted Tournament');
+  @endphp
   <div class="col-xl-4 col-lg-6">
-    <a class="folder-card" href="{{ route('rental-archive.folder', optional($list->first())->tournament_id) }}">
+    <a class="folder-card" href="{{ $folderUrl }}">
       <div class="text-center">
         <div class="folder-icon">
           <i class="fas fa-folder"></i>
         </div>
-        <div class="folder-title">{{ $tournamentName }}</div>
-        @php
-          $sportName = optional(optional($list->first())->tournament->sport)->name;
-          $start = optional(optional($list->first())->tournament)->start_date;
-          $end = optional(optional($list->first())->tournament)->end_date;
-          $lastArchived = $list->max('archived_at');
-        @endphp
+        <div class="folder-title">{{ $folderTitle }}</div>
         @if($sportName)
           <div class="folder-info"><i class="fas fa-trophy"></i> {{ $sportName }}</div>
         @endif

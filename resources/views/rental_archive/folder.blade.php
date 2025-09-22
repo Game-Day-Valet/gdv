@@ -32,6 +32,7 @@
         <tbody>
           @foreach($rentals as $r)
           @php
+            // Tournament or sport may be deleted; guard all accesses
             $tStart = optional($r->tournament)->start_date;
             $tEnd = optional($r->tournament)->end_date;
             $fmt = function($val){
@@ -57,7 +58,7 @@
           <tr>
             <td><input type="checkbox" class="rowCheck" value="{{ $r->id }}"></td>
             <td>{{ optional($r->user)->name ?? 'N/A' }}<br><small class="text-muted">{{ optional($r->user)->email ?? 'N/A' }}</small></td>
-            <td>{{ optional($r->tournament)->name ?? 'N/A' }}</td>
+            <td>{{ optional($r->tournament)->name ?? 'Deleted Tournament' }}</td>
             <td>
               @php($s = $fmt($tStart))
               @php($e = $fmt($tEnd))
