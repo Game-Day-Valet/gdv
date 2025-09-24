@@ -24,7 +24,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Laravel\Socialite\Facades\Socialite;
 use App\Http\Resources\UserResource;
-
+use App\Models\Rental;
 use Firebase\JWT\JWK;
 use Firebase\JWT\JWT;
 use Illuminate\Support\Facades\Http;
@@ -570,5 +570,13 @@ class AuthController extends Controller
         $users = User::paginate($limit);
 
         return response()->json($users);
+    }
+
+    public function rentals(Request $request)
+    {
+        $limit = $request->query('limit', 15);
+        $rentals = Rental::paginate($limit);
+
+        return response()->json($rentals);
     }
 }
