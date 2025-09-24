@@ -40,47 +40,41 @@ Route::get('/register-referral', [BaseController::class, 'registerReferal'])->na
 
 // Rental System Frontend Routes (Public)
 Route::prefix('')->name('rentalsystem.')->group(function () {
-	// Public routes - no authentication required
-	Route::get('', [RentalSystemController::class, 'showSports'])->name('sports');
+    // Public routes - no authentication required
+    Route::get('', [RentalSystemController::class, 'showSports'])->name('sports');
 	Route::get('/sports/{sportId}/tournaments', [RentalSystemController::class, 'showTournaments'])->name('tournaments');
 	Route::get('/tournaments/{tournamentId}/details', [RentalSystemController::class, 'showTournamentDetails'])->name('tournament.details');
 	// Allow anonymous to open booking page and submit; controller will enforce login on submit
 	Route::get('/tournaments/{tournamentId}/rental', [RentalSystemController::class, 'showRentalBooking'])->name('rental-booking');
 	Route::post('/rentals', [RentalSystemController::class, 'createRental'])->name('rental.create');
 
-	// Authentication routes
-	// Route::get('/signup', [RentalSystemController::class, 'showSignup'])->name('signup');
-	// Route::post('/signup', [RentalSystemController::class, 'signup'])->name('signup.submit');
-	// Route::get('/signin', [RentalSystemController::class, 'showSignin'])->name('signin');
-	// Route::post('/signin', [RentalSystemController::class, 'signin'])->name('signin.submit');
-	// Route::post('/google-login', [RentalSystemController::class, 'googleLogin'])->name('google.login');
-	// Route::get('/email-verification', [RentalSystemController::class, 'showEmailVerification'])->name('email-verification');
-	// Route::post('/email-verification', [RentalSystemController::class, 'verifyEmail'])->name('email-verification.submit');
-	// Route::get('/email-verification/resend', [RentalSystemController::class, 'resendVerificationCode'])->name('email-verification.resend');
-	// Route::get('/forgot-password', [RentalSystemController::class, 'showForgotPassword'])->name('forgot-password');
-	// Route::post('/forgot-password', [RentalSystemController::class, 'forgotPassword'])->name('forgot-password.submit');
-	// Route::get('/reset-password/code', [RentalSystemController::class, 'showResetCode'])->name('reset-password.code');
-	// Route::post('/reset-password/code', [RentalSystemController::class, 'verifyResetCode'])->name('reset-password.code.submit');
-	// Route::get('/reset-password/new', [RentalSystemController::class, 'showResetPassword'])->name('reset-password.new');
-	// Route::post('/reset-password/new', [RentalSystemController::class, 'resetPassword'])->name('reset-password.submit');
-
+    // Authentication routes hidden/disabled for website booking (kept for backward compat if linked)
+    Route::get('/signup', function(){ abort(404); })->name('signup');
+    Route::post('/signup', function(){ abort(404); })->name('signup.submit');
+    Route::get('/signin', function(){ abort(404); })->name('signin');
+    Route::post('/signin', function(){ abort(404); })->name('signin.submit');
+    Route::post('/google-login', function(){ abort(404); })->name('google.login');
+    Route::get('/email-verification', function(){ abort(404); })->name('email-verification');
+    Route::post('/email-verification', function(){ abort(404); })->name('email-verification.submit');
+    Route::get('/email-verification/resend', function(){ abort(404); })->name('email-verification.resend');
+    Route::get('/forgot-password', function(){ abort(404); })->name('forgot-password');
+    Route::post('/forgot-password', function(){ abort(404); })->name('forgot-password.submit');
+    Route::get('/reset-password/code', function(){ abort(404); })->name('reset-password.code');
+    Route::post('/reset-password/code', function(){ abort(404); })->name('reset-password.code.submit');
+    Route::get('/reset-password/new', function(){ abort(404); })->name('reset-password.new');
+    Route::post('/reset-password/new', function(){ abort(404); })->name('reset-password.submit');
 
 	// Protected routes for authenticated users only
-	
-	
-	// Route::middleware('auth')->group(function () {
-	
-	Route::get('/checkout/success', [RentalSystemController::class, 'checkoutSuccess'])->name('checkout.success');
-	Route::get('/checkout/cancel', [RentalSystemController::class, 'checkoutCancel'])->name('checkout.cancel');
-	// Hide profile endpoints
+    // Checkout callbacks still require auth previously; now allow anonymous to land
+    Route::get('/checkout/success', [RentalSystemController::class, 'checkoutSuccess'])->name('checkout.success');
+    Route::get('/checkout/cancel', [RentalSystemController::class, 'checkoutCancel'])->name('checkout.cancel');
+    // Hide profile endpoints
+    Route::post('/profile', function(){ abort(404); })->name('profile.update');
+    Route::get('/profile', function(){ abort(404); })->name('profile');
+    Route::post('/profile/notifications', function(){ abort(404); })->name('profile.notifications');
+    Route::delete('/profile/delete-account', function(){ abort(404); })->name('profile.delete');
+    Route::get('/logout', function(){ abort(404); })->name('logout');
 
-	// Route::post('/profile', [RentalSystemController::class, 'updateProfile'])->name('profile.update');
-	// Route::get('/profile', [RentalSystemController::class, 'showProfile'])->name('profile');
-	// Route::post('/profile/notifications', [RentalSystemController::class, 'updateNotifications'])->name('profile.notifications');
-	// Route::delete('/profile/delete-account', [RentalSystemController::class, 'deleteAccountWeb'])->name('profile.delete');
-	// Route::get('/logout', [RentalSystemController::class, 'logout'])->name('logout');
-
-	// });
 	// Allow profile page to handle auth gracefully itself
 });
 
@@ -155,15 +149,15 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', function ($request, 
 	// User Management - Admin only
 	Route::group(['middleware' => ['can:super_admin']], function () {
 
+		
+	// Twilio Chat
+	Route::get('/twilio/chat', [TwilioChatController::class, 'index'])->name('twilio.chat');
+	Route::get('/twilio/chat/messages', [TwilioChatController::class, 'messages'])->name('twilio.chat.messages');
+	Route::post('/twilio/chat/send', [TwilioChatController::class, 'send'])->name('twilio.chat.send');
+	Route::post('/twilio/chat/upload', [TwilioChatController::class, 'upload'])->name('twilio.chat.upload');
+	// media route should be PUBLIC (outside admin); defined below
 
-		// Twilio Chat
-		Route::get('/twilio/chat', [TwilioChatController::class, 'index'])->name('twilio.chat');
-		Route::get('/twilio/chat/messages', [TwilioChatController::class, 'messages'])->name('twilio.chat.messages');
-		Route::post('/twilio/chat/send', [TwilioChatController::class, 'send'])->name('twilio.chat.send');
-		Route::post('/twilio/chat/upload', [TwilioChatController::class, 'upload'])->name('twilio.chat.upload');
-		// media route should be PUBLIC (outside admin); defined below
-
-
+	
 		Route::resource('booking-settings', \App\Http\Controllers\BookingSettingsController::class)->except(['show']);
 		Route::post('booking-settings/reorder', [\App\Http\Controllers\BookingSettingsController::class, 'reorder'])->name('booking-settings.reorder');
 		Route::post('booking-settings/save-email-content', [\App\Http\Controllers\BookingSettingsController::class, 'saveEmailContent'])->name('booking-settings.save-email-content');
