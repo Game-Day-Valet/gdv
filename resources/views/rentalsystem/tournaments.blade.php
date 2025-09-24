@@ -119,9 +119,9 @@
 <body>
     <header class="header">
         <div class="header-content">
-            <div class="logo">
+            <a href="{{ route('rentalsystem.sports') }}" class="logo" style="color: white; text-decoration: none;">
                 <i class="fas fa-trophy"></i> Game Day Valet
-            </div>
+            </a>
             <div class="user-menu"></div>
         </div>
     </header>
