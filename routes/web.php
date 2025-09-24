@@ -127,6 +127,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', function ($request, 
 	// Rental Management - Accessible to both manager and admin
 	Route::get('rental-management/pending', [RentalManagementController::class, 'pending'])->name('rental-management.pending');
 	Route::resource('rental-management', RentalManagementController::class)->except(['create', 'store', 'edit', 'update', 'destroy']);
+    Route::post('rental-management/{id}/assign-manager', [RentalManagementController::class, 'assignManager'])->name('rental-management.assign-manager');
 
 	// Archive
 	Route::get('rental-archive', [RentalArchiveController::class, 'index'])->name('rental-archive.index');

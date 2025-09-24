@@ -270,6 +270,7 @@
                                             <div class="d-flex gap-2">
                                                 <a href="{{ route('rental-management.show', $rental->id) }}" class="btn btn-sm btn-info">View</a>
                                                 @can('super_admin')
+                                                <button type="button" class="btn btn-sm btn-outline-primary" data-open-assign-manager data-rental-id="{{ $rental->id }}" data-current-manager-id="{{ $rental->assigned_manager_id ?? '' }}">Assign</button>
                                                 <form method="POST" action="{{ route('rental-management.destroy', $rental->id) }}" onsubmit="return confirmDelete(event)" style="display:inline;">
                                                     @csrf
                                                     @method('DELETE')
@@ -350,6 +351,33 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-primary" id="saveStatusBtn">Update Status</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assign Manager Modal -->
+    <div class="modal fade" id="assignManagerModal" tabindex="-1" aria-labelledby="assignManagerLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="assignManagerLabel">Assign Manager</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Select Manager</label>
+                        <select class="form-select" id="assign_manager_select">
+                            <option value="">Select manager</option>
+                            @foreach(($managers ?? []) as $m)
+                                <option value="{{ $m->id }}">{{ $m->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="assignManagerSaveBtn">Save</button>
                 </div>
             </div>
         </div>
@@ -744,6 +772,39 @@
                     loadAvailableStatuses(1, 'pending');
                 }, 1000);
             };
+
+            // Assign Manager modal
+            let assignModalRentalId = null;
+            document.querySelectorAll('[data-open-assign-manager]').forEach(function(btn){
+                btn.addEventListener('click', function(){
+                    assignModalRentalId = this.getAttribute('data-rental-id');
+                    const current = this.getAttribute('data-current-manager-id') || '';
+                    const select = document.getElementById('assign_manager_select');
+                    if(select){ select.value = current; }
+                    const modal = new bootstrap.Modal(document.getElementById('assignManagerModal'));
+                    modal.show();
+                });
+            });
+
+            document.getElementById('assignManagerSaveBtn')?.addEventListener('click', async function(){
+                const select = document.getElementById('assign_manager_select');
+                const managerId = select ? select.value : '';
+                if(!assignModalRentalId || !managerId){ Swal.fire('Select manager','Please choose a manager to assign.','info'); return; }
+                try{
+                    const formData = new FormData();
+                    formData.append('assigned_manager_id', managerId);
+                    formData.append('_token','{{ csrf_token() }}');
+                    const res = await fetch(`/admin/rental-management/${assignModalRentalId}/assign-manager`, { method:'POST', body: formData });
+                    const data = await res.json();
+                    if(data.success){
+                        Swal.fire('Updated','Assigned manager updated successfully.','success').then(()=>location.reload());
+                    }else{
+                        Swal.fire('Error', data.message || 'Failed to update manager', 'error');
+                    }
+                }catch(e){
+                    Swal.fire('Error','Failed to update manager','error');
+                }
+            });
         });
     </script>
 @endsection

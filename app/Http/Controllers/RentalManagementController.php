@@ -208,6 +208,42 @@ class RentalManagementController extends Controller
     }
 
     /**
+     * Assign or change manager for a rental without altering status
+     */
+    public function assignManager(Request $request, $id)
+    {
+        $request->validate([
+            'assigned_manager_id' => 'required|exists:users,id',
+        ]);
+
+        $user = Auth::user();
+        if (!$user || !$user->hasRole(Role::SUPER_ADMIN)) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        try {
+            $rental = Rental::findOrFail($id);
+            $rental->assigned_manager_id = (int) $request->input('assigned_manager_id');
+            $rental->save();
+
+            // Optionally log in status logs
+            try {
+                RentalStatusLog::create([
+                    'rental_id' => $rental->id,
+                    'status' => $rental->status,
+                    'notes' => 'Manager reassigned by admin',
+                    'image_paths' => null,
+                    'updated_by' => $user->id,
+                ]);
+            } catch (\Throwable $e) { /* ignore */ }
+
+            return response()->json(['success' => true, 'message' => 'Assigned manager updated successfully.']);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to assign manager: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Get available statuses based on current status
      */
     public function getAvailableStatuses($id)
