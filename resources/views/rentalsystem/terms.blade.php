@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terms & Conditions - Rental System</title>
+    <title>Terms & Conditions - Game Day Valet</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -27,7 +27,7 @@
 <body>
     <header class="header">
         <div class="header-content">
-            <div class="logo"><i class="fas fa-file-contract"></i> Rental System</div>
+            <div class="logo"><i class="fas fa-file-contract"></i> Game Day Valet</div>
             <div>
                 <a href="{{ route('rentalsystem.sports') }}" style="color:#fff;text-decoration:none;font-weight:600;">
                     <i class="fas fa-home"></i> Home

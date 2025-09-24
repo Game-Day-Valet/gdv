@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Delete Policy - Rental System</title>
+    <title>Account Delete Policy - Game Day Valet</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
         :root { --primary:#dc3545; --ink:#0f172a; --muted:#64748b; --border:#e5e7eb; }
@@ -24,18 +24,18 @@
 <body>
     <header class="header">
         <div class="inner">
-            <a href="{{ route('rentalsystem.sports') }}" class="brand"><i class="fas fa-trophy"></i> Rental System</a>
+            <a href="{{ route('rentalsystem.sports') }}" class="brand"><i class="fas fa-trophy"></i> Game Day Valet</a>
             <a href="{{ route('rentalsystem.profile') }}" class="back">Back to Profile</a>
         </div>
     </header>
     <main class="container">
         <div class="card">
-            <h1>Delete My Account – Rental System</h1>
-            <p class="muted">If you would like to delete your account and associated data from Rental System, please follow the steps below:</p>
+            <h1>Delete My Account – Game Day Valet</h1>
+            <p class="muted">If you would like to delete your account and associated data from Game Day Valet, please follow the steps below:</p>
 
             <h2>How to request account deletion</h2>
             <ul>
-                <li>Open the Rental System app/website.</li>
+                <li>Open the Game Day Valet app/website.</li>
                 <li>Go to Profile &gt; Settings &gt; Delete Account.</li>
                 <li>Confirm the deletion request.</li>
                 <li>Alternatively, you can email us at <strong>support@rentalsystem.com</strong> with the subject line “Delete My Account”.</li>

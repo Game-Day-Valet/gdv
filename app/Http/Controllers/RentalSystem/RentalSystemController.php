@@ -432,10 +432,7 @@ class RentalSystemController extends Controller
 
     public function createRental(Request $request)
     {
-        if (!Auth::check()) {
-            session(['url.intended' => url()->previous()]);
-            return back()->with('login_required', true);
-        }
+        // Anonymous booking allowed; no auth required
 
         $validator = Validator::make($request->all(), [
             'tournament_id' => 'required|integer',
@@ -562,7 +559,8 @@ class RentalSystemController extends Controller
 
         // Create rental record with pending payment
         $rental = $this->rentals->create([
-            'user_id' => $user->id,
+            'user_id' => $user->id ?? null,
+            'booking_source' => 'website',
             'tournament_id' => (int) $request->input('tournament_id'),
             'team_name_with_age_group' => $request->input('team_name_with_age_group') ?: null,
             'coach_name' => $request->input('coach_name') ?: null,
@@ -603,7 +601,8 @@ class RentalSystemController extends Controller
                 'cancel_url' => route('rentalsystem.checkout.cancel', ['rental' => $rental->id]),
                 'metadata' => [
                     'rental_id' => (string) $rental->id,
-                    'user_id' => (string) $user->id,
+                    'user_id' => (string) ($user->id ?? ''),
+                    'booking_source' => 'website',
                 ],
             ]);
             return redirect($session->url);
@@ -615,9 +614,6 @@ class RentalSystemController extends Controller
 
     public function checkoutSuccess(Request $request)
     {
-        if (!Auth::check()) {
-            return redirect()->route('rentalsystem.signin');
-        }
         $sessionId = $request->query('session_id');
         if (!$sessionId) {
             return redirect()->route('rentalsystem.sports')->with('error', 'Missing Stripe session.');
@@ -636,21 +632,18 @@ class RentalSystemController extends Controller
                     }
                     event(new \App\Events\RentalBookingCreated($rental));
                 } catch (\Throwable $e) { /* log silently */ }
-                return redirect()->route('rentalsystem.profile')->with('success', 'Booking confirmed. Payment completed.');
+                return view('rentalsystem.checkout-success', ['rental' => $rental]);
             }
-            return redirect()->route('rentalsystem.profile')->with('info', 'Payment not completed yet.');
+            return redirect()->route('rentalsystem.sports')->with('info', 'Payment not completed yet.');
         } catch (\Throwable $e) {
-            return redirect()->route('rentalsystem.profile')->with('error', 'Stripe confirmation failed: ' . $e->getMessage());
+            return redirect()->route('rentalsystem.sports')->with('error', 'Stripe confirmation failed: ' . $e->getMessage());
         }
     }
 
     public function checkoutCancel(Request $request)
     {
-        if (!Auth::check()) {
-            return redirect()->route('rentalsystem.signin');
-        }
         $rentalId = $request->query('rental');
-        return redirect()->route('rentalsystem.profile')->with('info', 'Checkout canceled.' . ($rentalId ? ' Rental #' . $rentalId . ' remains pending.' : ''));
+        return redirect()->route('rentalsystem.sports')->with('info', 'Checkout canceled.' . ($rentalId ? ' Rental #' . $rentalId . ' remains pending.' : ''));
     }
 
     public function showProfile()

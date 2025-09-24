@@ -107,12 +107,12 @@ class SendRentalStatusUpdateEmail implements ShouldQueue
                 ][$status] ?? 'Rental Status Update',
             ];
 
-            $toEmail = $rental->user->email;
+            $toEmail = $rental->email;
             $toName = optional($rental->user)->name ?? 'Customer';
 
-            // Respect user's email notification preference when user exists
+            // Respect user's email notification preference when user exists, but bypass for website-origin bookings
             $canEmail = true;
-            if ($rental->user) {
+            if ($rental->user && ($rental->booking_source !== 'website')) {
                 $canEmail = $rental->user->email_notification !== false;
             }
 

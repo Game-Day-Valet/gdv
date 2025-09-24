@@ -320,7 +320,7 @@
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Issued to:</span>
-                    <span class="detail-value">{{ $rental->user->name ?? 'N/A' }}</span>
+                    <span class="detail-value">{{ $rental->user->name ?? 'Customer' }}</span>
                 </div>
             </div>
             <div class="invoice-info-right">

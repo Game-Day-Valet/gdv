@@ -14,6 +14,7 @@ class Rental extends Model
     protected $fillable = [
         'user_id',
         'tournament_id',
+        'booking_source',
         'team_name_with_age_group',
         'coach_name',
         'phone_number',

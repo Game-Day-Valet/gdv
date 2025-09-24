@@ -3,6 +3,9 @@
     <div class="detail-row"><span class="detail-label">Tournament:</span><span class="detail-value">{{ $tournament->name ?? 'N/A' }}</span></div>
     <div class="detail-row"><span class="detail-label">Sport:</span><span class="detail-value">{{ $sport->name ?? 'N/A' }}</span></div>
     <div class="detail-row"><span class="detail-label">Team Name:</span><span class="detail-value">{{ $rental->team_name_with_age_group ?? 'N/A' }}</span></div>
+    <div class="detail-row"><span class="detail-label">Coach Name:</span><span class="detail-value">{{ $rental->coach_name ?? 'N/A' }}</span></div>
+    <div class="detail-row"><span class="detail-label">Phone Number:</span><span class="detail-value">{{ $rental->phone_number ?? 'N/A' }}</span></div>
+    <div class="detail-row"><span class="detail-label">Email:</span><span class="detail-value">{{ $rental->email ?? 'N/A' }}</span></div>
 </div>
 @if(!empty($rental->items) && is_array($rental->items))
 <div class="items-section">

@@ -36,7 +36,7 @@ class SendFcmRentalNotification implements ShouldQueue
         $hasFcm = $globalFcm && $user && $user->fcm_token && $user->fcm_notification !== false;
 
         // Prevent duplicate notifications using atomic lock or cache-add
-        $cacheKey = 'fcm_notification_rental_' . $event->rental->id . '_' . $event->newStatus . '_' . $user->id;
+        $cacheKey = 'fcm_notification_rental_' . $event->rental->id . '_' . $event->newStatus;
         try {
             $lock = Cache::lock($cacheKey . '_lock', 10);
             if (!$lock->get()) {

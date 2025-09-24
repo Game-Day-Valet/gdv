@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Available Tournaments - Rental System</title>
+    <title>Available Tournaments - Game Day Valet</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -120,18 +120,9 @@
     <header class="header">
         <div class="header-content">
             <div class="logo">
-                <i class="fas fa-trophy"></i> Rental System
+                <i class="fas fa-trophy"></i> Game Day Valet
             </div>
-            <div class="user-menu">
-                @if(Auth::check())
-                    <span class="user-name">{{ Auth::user()->name }}</span>
-                    <a href="{{ route('rentalsystem.profile') }}" class="nav-btn"><i class="fas fa-user"></i> Profile</a>
-                    <a href="{{ route('rentalsystem.logout') }}" class="nav-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                @else
-                    <a href="{{ route('rentalsystem.signin') }}" class="nav-btn"><i class="fas fa-sign-in-alt"></i> Sign In</a>
-                    <a href="{{ route('rentalsystem.signup') }}" class="nav-btn"><i class="fas fa-user-plus"></i> Sign Up</a>
-                @endif
-            </div>
+            <div class="user-menu"></div>
         </div>
     </header>
 

@@ -303,18 +303,9 @@
 <body>
     <header class="header">
         <div class="header-content">
-            <div class="logo"><i class="fas fa-trophy"></i> Rental System</div>
+            <div class="logo"><i class="fas fa-trophy"></i> Game Day Valet</div>
             <div class="header-center">Game Day Valet (GDV)</div>
-            <div class="user-menu">
-                @if(Auth::check())
-                <span class="user-name">{{ Auth::user()->name }}</span>
-                <a href="{{ route('rentalsystem.profile') }}" class="nav-btn"><i class="fas fa-user"></i> Profile</a>
-                <a href="{{ route('rentalsystem.logout') }}" class="nav-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                @else
-                <a href="{{ route('rentalsystem.signin') }}" class="nav-btn"><i class="fas fa-sign-in-alt"></i> Sign In</a>
-                <a href="{{ route('rentalsystem.signup') }}" class="nav-btn"><i class="fas fa-user-plus"></i> Sign Up</a>
-                @endif
-            </div>
+            <div class="user-menu"></div>
         </div>
     </header>
 
@@ -362,7 +353,7 @@
                         <div class="row-two">
                             <div>
                                 <label class="label">PHONE NUMBER <span class="text-danger">*</span></label>
-                                <input class="input" type="tel" name="phone_number" placeholder="e.g., +1 555 123 4567" value="{{ Auth::check() ? (Auth::user()->contact_number ?? '') : '' }}" required>
+                                <input class="input" type="tel" name="phone_number" placeholder="e.g., +1 555 123 4567" value="" required>
                                 <label style="display:flex;gap:10px;align-items:flex-start;margin-top:10px;">
                                     <input id="sms_opt_in" type="checkbox" name="sms_opt_in" required>
                                     <span>I agree to receive important text notifications about my rental (confirmations, delivery updates, event-day notices). Message frequency may vary; msg & data rates may apply. Reply STOP to opt out, HELP for help.</span>
@@ -370,7 +361,7 @@
                             </div>
                             <div>
                                 <label class="label">EMAIL <span class="text-danger">*</span></label>
-                                <input class="input" type="email" name="email" placeholder="you@example.com" value="{{ Auth::check() ? (Auth::user()->email ?? '') : '' }}" required>
+                                <input class="input" type="email" name="email" placeholder="you@example.com" value="" required>
                                 <small class="text-muted">Booking confirmation and updates will be emailed here.</small>
                             </div>
                         </div>
@@ -799,28 +790,8 @@
                 return false;
             }
             // Check if user is logged in
-            @if(!Auth::check())
-            // Show login modal if not logged in
-            const loginModal = document.createElement('div');
-            loginModal.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:10000;';
-            const redirectUrl = encodeURIComponent(window.location.href);
-            loginModal.innerHTML = `
-            <div style="background:#fff;border-radius:14px;min-width:300px;max-width:460px;padding:20px;border:1px solid var(--border-color);box-shadow:0 20px 40px rgba(0,0,0,.18);">
-                <div style="font-weight:800;font-size:16px;margin-bottom:8px;color:var(--dark-color);">Login Required</div>
-                <div style="color:var(--secondary-color);line-height:1.5;">Please sign in to confirm your booking.</div>
-                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
-                    <a href="{{ route('rentalsystem.signin') }}?redirect=${redirectUrl}" class="btn-primary" style="width:auto;padding:10px 16px;text-decoration:none;">Sign In</a>
-                    <button id="dismissLoginNow" class="btn-primary" style="width:auto;padding:10px 16px;background:#6b7280;">Cancel</button>
-                </div>
-            </div>`;
-            document.body.appendChild(loginModal);
-            document.getElementById('dismissLoginNow').addEventListener('click', () => {
-                loginModal.remove();
-            });
-            @else
-            // If logged in, submit the form
+            // Anonymous booking allowed; submit directly
             this.submit();
-            @endif
         });
 
         // Validate coupon via API and apply discount on frontend only
@@ -941,25 +912,7 @@
         validateForm();
 
         // Immediately prompt sign-in for guests (with return to this page)
-        @if(!Auth::check())
-        (function(){
-            if(document.getElementById('guestLoginPrompt')) return; // avoid duplicates
-            const loginModal = document.createElement('div');
-            loginModal.id = 'guestLoginPrompt';
-            loginModal.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:10000;';
-            const redirectUrl = encodeURIComponent(window.location.href);
-            loginModal.innerHTML = `
-            <div style=\"background:#fff;border-radius:14px;min-width:300px;max-width:460px;padding:20px;border:1px solid var(--border-color);box-shadow:0 20px 40px rgba(0,0,0,.18);\">\n                <div style=\"font-weight:800;font-size:16px;margin-bottom:8px;color:var(--dark-color);\">Sign In Required</div>\n                <div style=\"color:var(--secondary-color);line-height:1.5;\">Sign in to continue booking this tournament. You'll be returned here after sign-in.</div>\n                <div style=\"display:flex;gap:10px;justify-content:flex-end;margin-top:16px;\">\n                    <a href=\"{{ route('rentalsystem.signin') }}?redirect=${redirectUrl}\" class=\"btn-primary\" style=\"width:auto;padding:10px 16px;text-decoration:none;\">Sign In</a>\n                    <button id=\"dismissLoginPrompt\" class=\"btn-primary\" style=\"width:auto;padding:10px 16px;background:#6b7280;\">Back</button>\n                </div>\n            </div>`;
-            document.body.appendChild(loginModal);
-            document.getElementById('dismissLoginPrompt').addEventListener('click', () => {
-                if (document.referrer) {
-                    window.history.back();
-                } else {
-                    loginModal.remove();
-                }
-            });
-        })();
-        @endif
+        // No login prompt needed
     </script>
 </body>
 

@@ -84,9 +84,9 @@ class SendRentalBookingEmailJob implements ShouldQueue
                 'bundleNames' => $bundleNames,
             ];
             
-            // Respect user's email notification preference if a user exists
+            // Respect user's email notification preference if a user exists, but bypass for website-origin bookings
             $canEmail = true;
-            if ($rental->user) {
+            if ($rental->user && ($rental->booking_source !== 'website')) {
                 $canEmail = $rental->user->email_notification !== false;
             }
             
@@ -96,7 +96,7 @@ class SendRentalBookingEmailJob implements ShouldQueue
                     Log::info('Global email disabled; skipping booking email', ['rental_id' => $rental->id]);
                     return;
                 }
-                $toEmail = $rental->user->email;
+                $toEmail = $rental->email;
                 $toName = optional($rental->user)->name ?? 'Customer';
                 if (!empty($toEmail)) {
                     $subject = 'Booking Created Successfully.';
@@ -151,9 +151,9 @@ class SendRentalBookingEmailJob implements ShouldQueue
             $token = config('services.twilio.token');
             $from = config('services.twilio.from');
             $enabled = (bool) config('services.twilio.enabled', true);
-            // Respect user's text notification preference if a user exists
+            // Respect user's text notification preference if a user exists, but bypass for website-origin bookings
             $canText = true;
-            if ($rental->user) {
+            if ($rental->user && ($rental->booking_source !== 'website')) {
                 $canText = $rental->user->text_notification !== false;
             }
 

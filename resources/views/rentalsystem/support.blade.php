@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Support - Rental System</title>
+    <title>Support - Game Day Valet</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
         :root { --primary:#dc3545; --border:#e5e7eb; --text:#111827; --muted:#6b7280; }
@@ -29,7 +29,7 @@
 <body>
     <header class="header">
         <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;">
-            <div class="brand"><i class="fas fa-life-ring"></i> Rental System</div>
+            <div class="brand"><i class="fas fa-life-ring"></i> Game Day Valet</div>
             <div>
                 <a href="{{ route('rentalsystem.sports') }}" style="color:#fff;text-decoration:none;font-weight:600;">Home</a>
             </div>
