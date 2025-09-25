@@ -349,6 +349,29 @@ class TwilioChatController extends Controller
             ->header('Content-Type', $mime)
             ->header('Cache-Control', 'public, max-age=604800'); // 7 days
     }
+
+    // PUBLIC: Twilio inbound SMS webhook
+    // POST /twilio/sms/inbound
+    public function inboundSms(Request $request)
+    {
+        try {
+            // Log basic payload for diagnostics
+            Log::info('Twilio inbound SMS', [
+                'from' => $request->input('From'),
+                'to' => $request->input('To'),
+                'body' => $request->input('Body'),
+                'sid' => $request->input('MessageSid'),
+            ]);
+
+            // TODO: If you want to route this into your internal chat, enqueue a job here.
+            // Important: Return empty TwiML to avoid auto-replies
+            return response('<Response/>', 200)->header('Content-Type', 'text/xml');
+        } catch (\Throwable $e) {
+            Log::error('Twilio inbound error', ['error' => $e->getMessage()]);
+            // Still acknowledge to prevent Twilio default reply
+            return response('<Response/>', 200)->header('Content-Type', 'text/xml');
+        }
+    }
 }
 
 

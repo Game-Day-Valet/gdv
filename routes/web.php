@@ -83,6 +83,7 @@ Route::get('/privacy-policy', [\App\Http\Controllers\RentalSystem\RentalSystemCo
 
 // Public Twilio chat media (no auth, direct HTTPS for Twilio)
 Route::get('/twilio/chat/media/{filename}', [\App\Http\Controllers\TwilioChatController::class, 'media'])->name('twilio.chat.media');
+Route::post('/twilio/sms/inbound', [\App\Http\Controllers\TwilioChatController::class, 'inboundSms'])->name('twilio.sms.inbound');
 
 // Public page: Support
 Route::view('/support', 'rentalsystem.support')->name('rentalsystem.support');
