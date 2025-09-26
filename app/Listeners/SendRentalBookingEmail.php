@@ -28,11 +28,6 @@ class SendRentalBookingEmail implements ShouldQueue
         
         // Check if email was already sent for this rental using cache
         if (Cache::has($cacheKey)) {
-            Log::warning('Email already sent for rental, skipping duplicate', [
-                'rental_id' => $rentalId,
-                'user_id' => $event->rental->user_id,
-                'timestamp' => now()->toISOString()
-            ]);
             return;
         }
 

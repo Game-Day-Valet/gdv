@@ -5,16 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\BookingOption;
 use Illuminate\Http\Request;
 use App\Models\SettingNotification;
+use Illuminate\Support\Facades\DB;
 
 class BookingSettingsController extends Controller
 {
     public function index()
     {
-        $options = BookingOption::whereIn('type', ['insurance','damage_waiver'])
+        $options = BookingOption::whereIn('type', ['insurance', 'damage_waiver'])
             ->orderBy('type')
             ->orderByRaw('COALESCE(sort_order, 999999) asc')
             ->get();
+
         $emailContent = BookingOption::where('type', 'email_content')->value('description');
+        $emailContentHtml = BookingOption::where('type', 'email_content_html')->value('description');
         $chatInitial = BookingOption::where('type', 'chat_initial_message')->value('description');
         $smsBooking = BookingOption::where('type', 'sms_booking_confirmation')->value('description');
         $smsConfirmed = BookingOption::where('type', 'sms_status_confirmed')->value('description');
@@ -25,8 +28,13 @@ class BookingSettingsController extends Controller
         $smsPreEndReminder = BookingOption::where('type', 'sms_pre_end_reminder')->value('description');
         $emailEndDayMorning = BookingOption::where('type', 'email_end_day_morning')->value('description');
         $smsEndDayMorning = BookingOption::where('type', 'sms_end_day_morning')->value('description');
+
+        // Email status templates (rich text) - new keys
+        $emailStatusConfirmedHtml = BookingOption::where('type', 'email_status_confirmed_html')->value('description');
+        $emailStatusDeliveredHtml = BookingOption::where('type', 'email_status_delivered_html')->value('description');
+        $emailStatusCancelledHtml = BookingOption::where('type', 'email_status_cancelled_html')->value('description');
         $notif = SettingNotification::current();
-        return view('booking_settings.index', compact('options', 'emailContent', 'chatInitial', 'smsBooking', 'smsConfirmed', 'smsOutForDelivery', 'smsDelivered', 'smsCancelled','notif','emailPreEndReminder','smsPreEndReminder','emailEndDayMorning','smsEndDayMorning'));
+        return view('booking_settings.index', compact('options', 'emailContent', 'emailContentHtml', 'chatInitial', 'smsBooking', 'smsConfirmed', 'smsOutForDelivery', 'smsDelivered', 'smsCancelled', 'notif', 'emailPreEndReminder', 'smsPreEndReminder', 'emailEndDayMorning', 'smsEndDayMorning', 'emailStatusConfirmedHtml', 'emailStatusDeliveredHtml', 'emailStatusCancelledHtml'));
     }
 
     public function saveNotifications(Request $request)
@@ -36,8 +44,10 @@ class BookingSettingsController extends Controller
             'sms_enabled' => 'required|boolean',
             'fcm_enabled' => 'required|boolean',
         ]);
-        $row = SettingNotification::query()->orderBy('id','asc')->first();
-        if (!$row) { $row = new SettingNotification(); }
+        $row = SettingNotification::query()->orderBy('id', 'asc')->first();
+        if (!$row) {
+            $row = new SettingNotification();
+        }
         $row->fill($data);
         $row->save();
         $row->refreshCache();
@@ -98,7 +108,7 @@ class BookingSettingsController extends Controller
             'orders.*.id' => 'required|integer|exists:booking_options,id',
             'orders.*.sort_order' => 'required|integer|min:0',
         ]);
-        \DB::transaction(function() use ($data) {
+        DB::transaction(function () use ($data) {
             foreach ($data['orders'] as $o) {
                 BookingOption::where('id', $o['id'])->update(['sort_order' => (int) $o['sort_order']]);
             }
@@ -110,19 +120,30 @@ class BookingSettingsController extends Controller
     {
         $data = $request->validate([
             'email_content' => 'required|string',
+            'email_content_html' => 'required|string',
         ]);
 
         BookingOption::updateOrCreate(
             ['type' => 'email_content'],
             [
-                'label' => 'Rental Booking Email Content',
+                'label' => 'Rental Booking SMS Content',
                 'description' => $data['email_content'],
                 'price' => 0,
                 'enabled' => true,
             ]
         );
 
-        return redirect()->route('booking-settings.index')->with('success', 'Booking confirmation email content updated.');
+        BookingOption::updateOrCreate(
+            ['type' => 'email_content_html'],
+            [
+                'label' => 'Rental Booking Email Content (HTML)',
+                'description' => $data['email_content_html'],
+                'price' => 0,
+                'enabled' => true,
+            ]
+        );
+
+        return redirect()->route('booking-settings.index')->with('success', 'Booking confirmation templates updated.');
     }
 
     public function saveChatInitialMessage(Request $request)
@@ -152,6 +173,10 @@ class BookingSettingsController extends Controller
             'sms_status_out_for_delivery' => 'nullable|string',
             'sms_status_delivered' => 'nullable|string',
             'sms_status_cancelled' => 'nullable|string',
+            // Email rich-text templates (HTML)
+            'email_status_confirmed_html' => 'nullable|string',
+            'email_status_delivered_html' => 'nullable|string',
+            'email_status_cancelled_html' => 'nullable|string',
         ]);
 
         $map = [
@@ -160,6 +185,10 @@ class BookingSettingsController extends Controller
             'sms_status_out_for_delivery' => 'Status Out For Delivery SMS',
             'sms_status_delivered' => 'Status Delivered SMS',
             'sms_status_cancelled' => 'Status Cancelled SMS',
+            // Email rich text
+            'email_status_confirmed_html' => 'Email Status Confirmed (HTML)',
+            'email_status_delivered_html' => 'Email Status Delivered (HTML)',
+            'email_status_cancelled_html' => 'Email Status Cancelled (HTML)',
         ];
 
         foreach ($map as $type => $label) {
@@ -236,4 +265,4 @@ class BookingSettingsController extends Controller
 
         return redirect()->route('booking-settings.index')->with('success', 'End-day morning templates saved.');
     }
-} 
+}

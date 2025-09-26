@@ -50,7 +50,7 @@ class RentalSystemController extends Controller
         SportRepositoryInterface $sports,
         TournamentRepositoryInterface $tournaments,
         ItemRepositoryInterface $items,
-        
+
         BundleRepositoryInterface $bundles,
         RentalRepositoryInterface $rentals,
         PrivacyPolicyRepositoryInterface $privacyPolicies,
@@ -274,7 +274,7 @@ class RentalSystemController extends Controller
                     } else {
                         // Fallback via repository if relation not present
                         $all = $this->sports->getTournamentsBySport($s->id);
-                        $count = collect($all)->filter(function($t){
+                        $count = collect($all)->filter(function ($t) {
                             $status = is_array($t) ? ($t['status'] ?? null) : ($t->status ?? null);
                             return $status === \App\Enums\TournamentStatus::ACTIVE->value || $status === 'active' || $status === 1 || $status === true || $status === 'ACTIVE';
                         })->count();
@@ -333,7 +333,7 @@ class RentalSystemController extends Controller
 
     public function privacyPolicy()
     {
-        $policies = collect($this->privacyPolicies->getAll() ?? [])->filter(function($it){
+        $policies = collect($this->privacyPolicies->getAll() ?? [])->filter(function ($it) {
             return (bool) (is_array($it) ? ($it['status'] ?? true) : ($it->status ?? true)) === true;
         });
         return view('rentalsystem.privacy-policy', ['policies' => $policies]);
@@ -341,7 +341,7 @@ class RentalSystemController extends Controller
 
     public function terms()
     {
-        $terms = collect($this->termsConditions->getAll() ?? [])->filter(function($it){
+        $terms = collect($this->termsConditions->getAll() ?? [])->filter(function ($it) {
             return (bool) (is_array($it) ? ($it['status'] ?? true) : ($it->status ?? true)) === true;
         });
         return view('rentalsystem.terms', ['terms' => $terms]);
@@ -436,6 +436,7 @@ class RentalSystemController extends Controller
 
         $validator = Validator::make($request->all(), [
             'tournament_id' => 'required|integer',
+            'full_name' => 'nullable|string|max:255',
             'team_name_with_age_group' => 'nullable|string|max:255',
             'coach_name' => 'nullable|string|max:255',
             'phone_number' => 'nullable|string|max:30',
@@ -546,7 +547,7 @@ class RentalSystemController extends Controller
 
         // Get the discounted total from frontend (if coupon was applied)
         $frontendTotal = (float) $request->input('total_amount', 0);
-        
+
         // Use frontend total if it's provided and reasonable, otherwise use calculated total (pre-tax)
         $subTotalBeforeTax = ($frontendTotal > 0 && $frontendTotal <= $total) ? $frontendTotal : $total;
 
@@ -561,6 +562,7 @@ class RentalSystemController extends Controller
         $rental = $this->rentals->create([
             'user_id' => $user->id ?? null,
             'booking_source' => 'website',
+            'full_name' => $request->input('full_name') ?: null,
             'tournament_id' => (int) $request->input('tournament_id'),
             'team_name_with_age_group' => $request->input('team_name_with_age_group') ?: null,
             'coach_name' => $request->input('coach_name') ?: null,
@@ -631,7 +633,8 @@ class RentalSystemController extends Controller
                         $user->notify(new \App\Notifications\RentalBookingConfirmationNotification($rental, $user));
                     }
                     event(new \App\Events\RentalBookingCreated($rental));
-                } catch (\Throwable $e) { /* log silently */ }
+                } catch (\Throwable $e) { /* log silently */
+                }
                 return view('rentalsystem.checkout-success', ['rental' => $rental]);
             }
             return redirect()->route('rentalsystem.sports')->with('info', 'Payment not completed yet.');
@@ -670,7 +673,12 @@ class RentalSystemController extends Controller
             if (is_array($r->items)) {
                 foreach ($r->items as $item) {
                     if (is_array($item) && isset($item['item_id']) && isset($item['quantity'])) {
-                        $itemModel = null; try { $itemModel = $this->items->find($item['item_id']); } catch (\Throwable $e) { $itemModel = null; }
+                        $itemModel = null;
+                        try {
+                            $itemModel = $this->items->find($item['item_id']);
+                        } catch (\Throwable $e) {
+                            $itemModel = null;
+                        }
                         if ($itemModel) {
                             $itemsArray[] = [
                                 'name' => $itemModel->name,
@@ -687,7 +695,12 @@ class RentalSystemController extends Controller
                     if (is_array($b) && isset($b['bundle_id'])) {
                         $bundleId = $b['bundle_id'];
                         $qty = isset($b['quantity']) ? (int) $b['quantity'] : 1;
-                        $bundle = null; try { $bundle = $this->bundles->find($bundleId); } catch (\Throwable $e) { $bundle = null; }
+                        $bundle = null;
+                        try {
+                            $bundle = $this->bundles->find($bundleId);
+                        } catch (\Throwable $e) {
+                            $bundle = null;
+                        }
                         if ($bundle) {
                             $bundlesArray[] = [
                                 'name' => $bundle->name,
@@ -695,7 +708,12 @@ class RentalSystemController extends Controller
                             ];
                         }
                     } elseif (is_numeric($b)) {
-                        $bundle = null; try { $bundle = $this->bundles->find($b); } catch (\Throwable $e) { $bundle = null; }
+                        $bundle = null;
+                        try {
+                            $bundle = $this->bundles->find($b);
+                        } catch (\Throwable $e) {
+                            $bundle = null;
+                        }
                         if ($bundle) {
                             $bundlesArray[] = [
                                 'name' => $bundle->name,
@@ -779,10 +797,20 @@ class RentalSystemController extends Controller
         $user = Auth::user();
         try {
             // Revoke tokens if any (mobile/web API tokens)
-            try { if (method_exists($user, 'tokens')) { $user->tokens()->delete(); } } catch (\Throwable $e) { /* ignore */ }
+            try {
+                if (method_exists($user, 'tokens')) {
+                    $user->tokens()->delete();
+                }
+            } catch (\Throwable $e) { /* ignore */
+            }
 
             // Clean simple relations if available
-            try { if (method_exists($user, 'cart_items')) { $user->cart_items()->delete(); } } catch (\Throwable $e) { /* ignore */ }
+            try {
+                if (method_exists($user, 'cart_items')) {
+                    $user->cart_items()->delete();
+                }
+            } catch (\Throwable $e) { /* ignore */
+            }
 
             // Delete the user
             $userId = $user->id;
@@ -861,7 +889,7 @@ class RentalSystemController extends Controller
                 if (!$user->sms_consent) {
                     $user->sms_consent = true;
                 }
-                    $user->save();
+                $user->save();
             }
 
             Auth::login($user);

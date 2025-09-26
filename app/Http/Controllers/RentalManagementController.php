@@ -261,7 +261,6 @@ class RentalManagementController extends Controller
             $currentStatus = $rental->status;
             $availableStatuses = $this->getNextAvailableStatuses($currentStatus);
 
-            Log::info('Available statuses for rental ' . $id . ' with current status ' . $currentStatus . ': ' . json_encode($availableStatuses));
 
             return response()->json([
                 'success' => true,

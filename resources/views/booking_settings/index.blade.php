@@ -105,15 +105,18 @@
 
 <div class="card mt-4">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0">Rental Booking Email Content</h5>
+        <h5 class="card-title mb-0">Rental Booking Confirmation Templates</h5>
     </div>
     <div class="card-body">
         <form method="POST" action="{{ route('booking-settings.save-email-content') }}">
             @csrf
             <div class="mb-3">
-                <label for="email_content" class="form-label">Email Paragraph Content</label>
-                <textarea name="email_content" id="email_content" class="form-control" rows="5" placeholder="Enter confirmation paragraph..." required>{{ old('email_content', $emailContent) }}</textarea>
-                <div class="form-text">This text appears in the booking confirmation email body.</div>
+                <label for="email_content_html" class="form-label">Email Paragraph Content</label>
+                <textarea name="email_content_html" id="email_content_html" class="form-control" rows="5" placeholder="Enter confirmation paragraph...">{{ old('email_content_html', $emailContentHtml) }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label for="email_content" class="form-label">SMS Content</label>
+                <textarea name="email_content" id="email_content" class="form-control" rows="4" placeholder="Enter confirmation SMS text..." required>{{ old('email_content', $emailContent) }}</textarea>
             </div>
             <button type="submit" class="btn btn-primary">Save</button>
         </form>
@@ -130,7 +133,6 @@
             <div class="mb-3">
                 <label for="chat_initial_message" class="form-label">Initial Message</label>
                 <textarea name="chat_initial_message" id="chat_initial_message" class="form-control" rows="3" placeholder="Hi! A GDV team member will be with you shortly." required>{{ old('chat_initial_message', $chatInitial) }}</textarea>
-                <div class="form-text">This message is auto-sent when a new chat conversation starts.</div>
             </div>
             <button type="submit" class="btn btn-primary">Save</button>
         </form>
@@ -139,20 +141,18 @@
 
 <div class="card mt-4">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0">Pre-End Reminder Templates</h5>
+        <h5 class="card-title mb-0">This will be sent before tournament start date (Text that is sent the day before the tournament)</h5>
     </div>
     <div class="card-body">
         <form method="POST" action="{{ route('booking-settings.save-pre-end-reminders') }}">
             @csrf
             <div class="mb-3">
-                <label class="form-label" for="email_pre_end_reminder">Email: One Day Before Tournament Ends</label>
+                <label class="form-label" for="email_pre_end_reminder">Email Content</label>
                 <textarea name="email_pre_end_reminder" id="email_pre_end_reminder" class="form-control" rows="3" placeholder="Friendly reminder: Wraps up tomorrow. Please plan returns.">{{ old('email_pre_end_reminder', $emailPreEndReminder) }}</textarea>
-                <small class="form-text text-muted">Tournament name is added automatically. This content renders inside the standard booking email template.</small>
             </div>
             <div class="mb-3">
-                <label class="form-label" for="sms_pre_end_reminder">SMS: One Day Before Tournament Ends</label>
+                <label class="form-label" for="sms_pre_end_reminder">SMS Content</label>
                 <textarea name="sms_pre_end_reminder" id="sms_pre_end_reminder" class="form-control" rows="2" placeholder="Reminder: Ends tomorrow. Please prepare rental returns.">{{ old('sms_pre_end_reminder', $smsPreEndReminder) }}</textarea>
-                <small class="form-text text-muted">Tournament name is added automatically by the system.</small>
             </div>
             <button type="submit" class="btn btn-primary">Save</button>
         </form>
@@ -161,18 +161,17 @@
 
 <div class="card mt-4">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0">End-Day Morning Reminder Templates</h5>
+        <h5 class="card-title mb-0">This will be sent on the morning of Tournament start date (Text that is sent the day before the tournament)</h5>
     </div>
     <div class="card-body">
         <form method="POST" action="{{ route('booking-settings.save-end-day-morning') }}">
             @csrf
             <div class="mb-3">
-                <label class="form-label" for="email_end_day_morning">Email: Morning (Ends Today)</label>
+                <label class="form-label" for="email_end_day_morning">Email Content</label>
                 <textarea name="email_end_day_morning" id="email_end_day_morning" class="form-control" rows="3" placeholder="Reminder: Ends today. Please follow return instructions.">{{ old('email_end_day_morning', $emailEndDayMorning) }}</textarea>
-                <small class="form-text text-muted">Tournament name is added automatically.</small>
             </div>
             <div class="mb-3">
-                <label class="form-label" for="sms_end_day_morning">SMS: Morning (Ends Today)</label>
+                <label class="form-label" for="sms_end_day_morning">SMS Content</label>
                 <textarea name="sms_end_day_morning" id="sms_end_day_morning" class="form-control" rows="2" placeholder="Reminder: Ends today. Please prepare rental returns.">{{ old('sms_end_day_morning', $smsEndDayMorning) }}</textarea>
             </div>
             <button type="submit" class="btn btn-primary">Save</button>
@@ -197,11 +196,11 @@
                 <label class="form-label" for="sms_status_confirmed">Status: Confirmed</label>
                 <textarea name="sms_status_confirmed" id="sms_status_confirmed" class="form-control" rows="2" placeholder="Type the exact SMS text to send">{{ old('sms_status_confirmed', $smsConfirmed) }}</textarea>
             </div>
+            --}}
             <div class="mb-3">
                 <label class="form-label" for="sms_status_out_for_delivery">Status: Out For Delivery</label>
                 <textarea name="sms_status_out_for_delivery" id="sms_status_out_for_delivery" class="form-control" rows="2" placeholder="Type the exact SMS text to send">{{ old('sms_status_out_for_delivery', $smsOutForDelivery) }}</textarea>
             </div>
-            --}}
             <div class="mb-3">
                 <label class="form-label" for="sms_status_delivered">Status: Delivered</label>
                 <textarea name="sms_status_delivered" id="sms_status_delivered" class="form-control" rows="2" placeholder="Type the exact SMS text to send">{{ old('sms_status_delivered', $smsDelivered) }}</textarea>
@@ -214,10 +213,36 @@
         </form>
     </div>
 </div>
+
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Email Status Templates</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ route('booking-settings.save-sms-templates') }}">
+            @csrf
+            <div class="mb-3">
+                <label class="form-label" for="email_status_confirmed_html">Email: Status Confirmed</label>
+                <textarea name="email_status_confirmed_html" id="email_status_confirmed_html" class="form-control" rows="5">{{ old('email_status_confirmed_html', $emailStatusConfirmedHtml) }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="email_status_delivered_html">Email: Status Delivered</label>
+                <textarea name="email_status_delivered_html" id="email_status_delivered_html" class="form-control" rows="5">{{ old('email_status_delivered_html', $emailStatusDeliveredHtml) }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="email_status_cancelled_html">Email: Status Cancelled</label>
+                <textarea name="email_status_cancelled_html" id="email_status_cancelled_html" class="form-control" rows="5">{{ old('email_status_cancelled_html', $emailStatusCancelledHtml) }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+        </form>
+    </div>
+</div>
 @endsection
 
 @section('script')
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
 <script>
  document.addEventListener('DOMContentLoaded', function(){
     const tbody = document.getElementById('settingsTbody');
@@ -298,5 +323,50 @@
       }
     });
   }
+
+  // Init Quill (free, no key) for email rich-text areas
+  function initQuillForTextarea(textareaId) {
+    const ta = document.getElementById(textareaId);
+    if (!ta) return null;
+    // hide original textarea
+    ta.style.display = 'none';
+    // create container
+    const editorDiv = document.createElement('div');
+    editorDiv.id = textareaId + '_editor';
+    editorDiv.style.height = '220px';
+    ta.parentNode.insertBefore(editorDiv, ta.nextSibling);
+    // init quill
+    const q = new Quill('#' + editorDiv.id, {
+      theme: 'snow',
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline'],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          ['link'],
+          ['clean']
+        ]
+      }
+    });
+    // set initial html from textarea
+    const initial = ta.value || '';
+    q.root.innerHTML = initial;
+    return { quill: q, textarea: ta };
+  }
+
+  const editors = [
+    initQuillForTextarea('email_content_html'),
+    initQuillForTextarea('email_status_confirmed_html'),
+    initQuillForTextarea('email_status_delivered_html'),
+    initQuillForTextarea('email_status_cancelled_html'),
+  ].filter(Boolean);
+
+  // on form submit, copy HTML back into respective textareas
+  document.querySelectorAll('form').forEach(f => {
+    f.addEventListener('submit', function(){
+      editors.forEach(({quill, textarea}) => {
+        textarea.value = quill.root.innerHTML;
+      });
+    });
+  });
 </script>
-@endsection 
+@endsection

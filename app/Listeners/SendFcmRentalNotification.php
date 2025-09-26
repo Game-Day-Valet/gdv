@@ -25,10 +25,6 @@ class SendFcmRentalNotification implements ShouldQueue
         // Idempotency: suppress duplicate notifications for same rental+status
         $dedupeKey = 'rental_status_notified_' . $event->rental->id . '_' . $event->newStatus;
         if (!Cache::add($dedupeKey, now()->toIso8601String(), now()->addMinutes(15))) {
-            Log::warning('Duplicate status notification suppressed', [
-                'rental_id' => $event->rental->id,
-                'status' => $event->newStatus,
-            ]);
             return;
         }
 
@@ -40,18 +36,10 @@ class SendFcmRentalNotification implements ShouldQueue
         try {
             $lock = Cache::lock($cacheKey . '_lock', 10);
             if (!$lock->get()) {
-                Log::warning('Duplicate FCM notification prevented by lock for rental ID ' . $event->rental->id, [
-                    'status' => $event->newStatus,
-                    'user_id' => $user->id,
-                ]);
                 return;
             }
         } catch (\Throwable $e) {
             if (!Cache::add($cacheKey, true, now()->addSeconds(30))) {
-                Log::warning('Duplicate FCM notification prevented by cache-add for rental ID ' . $event->rental->id, [
-                    'status' => $event->newStatus,
-                    'user_id' => $user->id,
-                ]);
                 return;
             }
         }
@@ -87,7 +75,6 @@ class SendFcmRentalNotification implements ShouldQueue
                 ]);
             }
         } else {
-            Log::info('FCM skipped (no token); proceeding with SMS for rental ID ' . $event->rental->id);
         }
 
         // Always attempt SMS regardless of FCM, but honor user text preference
@@ -139,11 +126,7 @@ class SendFcmRentalNotification implements ShouldQueue
                                 ->orderBy('created_at', 'desc')
                                 ->first();
                             $paths = $latestLog && is_array($latestLog->image_paths) ? $latestLog->image_paths : [];
-                            Log::info('Preparing MMS media for delivered status', [
-                                'rental_id' => $event->rental->id,
-                                'log_id' => optional($latestLog)->id,
-                                'paths' => $paths,
-                            ]);
+                            
                             $mediaUrls = [];
                             foreach ($paths as $p) {
                                 $p = ltrim($p, '/');
@@ -153,13 +136,11 @@ class SendFcmRentalNotification implements ShouldQueue
                                     // Ensure https for Twilio
                                     if (strpos($url, 'http://') === 0) { $url = preg_replace('#^http://#', 'https://', $url); }
                                     $mediaUrls[] = $url;
-                                    Log::info('Added MMS media URL', [ 'url' => $url ]);
                                 }
                                 if (count($mediaUrls) >= 10) break; // Twilio max 10
                             }
                             if (!empty($mediaUrls)) {
                                 $messageParams['mediaUrl'] = $mediaUrls;
-                                Log::info('Final MMS media list prepared', [ 'count' => count($mediaUrls), 'urls' => $mediaUrls ]);
                             }
                         } catch (\Throwable $e) {
                             Log::warning('Failed preparing MMS media for delivered status', [
@@ -169,15 +150,6 @@ class SendFcmRentalNotification implements ShouldQueue
                         }
                     }
                     $result = $twilio->messages->create($originalTo, $messageParams);
-                    Log::info('Twilio SMS sent for rental status update', [
-                        'rental_id' => $event->rental->id,
-                        'status' => $event->newStatus,
-                        'to' => $originalTo,
-                        'original_to' => $originalTo,
-                        'used_fallback' => $rawBody === null || trim($rawBody) === '',
-                        'twilio_sid' => method_exists($result ?? null, 'sid') ? $result->sid : null,
-                        'has_media' => isset($messageParams['mediaUrl']) ? count((array)$messageParams['mediaUrl']) : 0,
-                    ]);
                 }
             } catch (\Throwable $e) {
                 Log::error('Twilio SMS failed for rental status update', [

@@ -94,6 +94,7 @@ class RentalRepository implements RentalRepositoryInterface
 
             $rental = Rental::create([
                 'user_id' => $data['user_id'],
+                'full_name' => $data['full_name'] ?? null,
                 'tournament_id' => $data['tournament_id'],
                 'booking_source' => $data['booking_source'] ?? null,
                 'team_name_with_age_group' => $data['team_name_with_age_group'],
@@ -137,6 +138,7 @@ class RentalRepository implements RentalRepositoryInterface
             $rental = Rental::findOrFail($id);
             $rental->update([
                 'user_id' => $data['user_id'] ?? $rental->user_id,
+                'full_name' => $data['full_name'] ?? $rental->full_name,
                 'tournament_id' => $data['tournament_id'] ?? $rental->tournament_id,
                 'booking_source' => array_key_exists('booking_source', $data) ? $data['booking_source'] : $rental->booking_source,
                 'team_name_with_age_group' => $data['team_name_with_age_group'] ?? $rental->team_name_with_age_group,

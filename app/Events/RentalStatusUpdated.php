@@ -116,11 +116,6 @@ class RentalStatusUpdated implements ShouldBroadcast
             'formatted_updated_at' => ($this->rental->updated_at ?? null) ? $this->rental->updated_at->format('d M Y H:i') : null,
         ];
 
-        Log::info('RentalStatusUpdated broadcastWith data', [
-            'data' => $data,
-            'rental_id' => $this->rental->id,
-        ]);
-
         return $data;
     }
 }

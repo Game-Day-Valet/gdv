@@ -133,7 +133,7 @@
                                 <div class="card-body">
                                     <div class="row mb-2">
                                         <div class="col-4"><strong>User:</strong></div>
-                                        <div class="col-8">{{ $rental->user->name ?? 'N/A' }} ({{ $rental->user->email ?? 'N/A' }})</div>
+                                        <div class="col-8">{{ $rental->user->name ?? $rental->full_name }} ({{ $rental->user->email ?? $rental->email }})</div>
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-4"><strong>Tournament:</strong></div>

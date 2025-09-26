@@ -257,11 +257,11 @@
 
         <!-- Content Section -->
         <div class="email-content">
-            <h2 class="welcome-text">Hello {{ optional($user)->name ?? 'Customer' }}!</h2>
+            <h2 class="welcome-text">Hello {{ optional($user)->name ?? ($rental->full_name ?? 'Customer') }}!</h2>
 
-            <p class="verification-text">
-                {{ $email_content ?? "Great news! Your rental booking has been confirmed successfully. We're excited to provide you with the equipment you need for your upcoming event." }}
-            </p>
+            <div class="verification-text">
+                {!! $email_content ?? "Great news! Your rental booking has been confirmed successfully. We're excited to provide you with the equipment you need for your upcoming event." !!}
+            </div>
 
             <!-- Confirmation Image -->
             <div class="verification-image">

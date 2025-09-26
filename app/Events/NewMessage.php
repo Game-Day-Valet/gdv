@@ -21,13 +21,6 @@ class NewMessage implements ShouldBroadcast
     {
         $this->message = $message;
         $this->userId = $userId;
-        Log::debug('NewMessage event constructed', [
-            'message_id' => $message->id,
-            'conversation_id' => $message->conversation_id,
-            'sender_id' => $message->sender_id,
-            'responder_id' => $message->conversation->responder_id,
-            'user_id' => $userId,
-        ]);
     }
 
     public function broadcastOn()
@@ -44,31 +37,17 @@ class NewMessage implements ShouldBroadcast
 
         $channel = new Channel($channelName);
 
-        Log::info('Broadcasting NewMessage on public channel', [
-            'channel' => $channel->name,
-            'message_id' => $this->message->id,
-            'conversation_id' => $this->message->conversation_id,
-            'responder_id' => $conversation->responder_id,
-            'user_id' => $this->userId,
-        ]);
-
         return $channel;
     }
 
     public function broadcastAs()
     {
-        Log::debug('Broadcasting as new-message', [
-            'message_id' => $this->message->id,
-        ]);
         return 'new-message';
     }
 
     public function broadcastWith()
     {
         if (!$this->message) {
-            Log::error('NewMessage broadcastWith: message is null', [
-                'conversation_id' => $this->message->conversation_id ?? 'unknown',
-            ]);
             return [];
         }
 
@@ -108,10 +87,6 @@ class NewMessage implements ShouldBroadcast
             ],
         ];
 
-        Log::info('NewMessage broadcastWith data', [
-            'data' => $data,
-            'message_id' => $this->message->id,
-        ]);
 
         return $data;
     }

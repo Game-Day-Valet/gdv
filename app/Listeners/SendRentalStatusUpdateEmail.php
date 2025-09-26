@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use App\Models\EmailLog;
 use App\Models\SettingNotification;
+use Twilio\Rest\Client as TwilioClient;
 
 class SendRentalStatusUpdateEmail implements ShouldQueue
 {
@@ -30,6 +31,10 @@ class SendRentalStatusUpdateEmail implements ShouldQueue
                     'rental_id' => $rental->id,
                     'status' => $status,
                 ]);
+                // But send SMS for out_for_delivery
+                if ($status === 'out_for_delivery') {
+                    $this->sendSmsForStatus($rental, $status);
+                }
                 return;
             }
 
@@ -47,13 +52,22 @@ class SendRentalStatusUpdateEmail implements ShouldQueue
             $typeMap = [
                 'confirmed' => 'sms_status_confirmed',
                 'out_for_delivery' => 'sms_status_out_for_delivery',
-                'delivered' => 'sms_status_delivered',
+                'delivered' => 'email_status_delivered_html',
                 'cancelled' => 'sms_status_cancelled',
             ];
             $templateType = $typeMap[$status] ?? null;
             $dynamicContent = '';
+            $usedKey = null;
             if ($templateType) {
-                $dynamicContent = (string) (\App\Models\BookingOption::where('type', $templateType)->value('description') ?? '');
+                // Prefer email rich-text version if available (email_status_{status}_html). Fallback to legacy plain text key if admin hasn't set it.
+                $richKey = 'email_status_' . $status . '_html';
+                $dynamicContent = (string) (\App\Models\BookingOption::where('type', $richKey)->value('description') ?? '');
+                if (trim($dynamicContent) !== '') {
+                    $usedKey = $richKey;
+                } else {
+                    $dynamicContent = (string) (\App\Models\BookingOption::where('type', $templateType)->value('description') ?? '');
+                    $usedKey = $templateType;
+                }
             }
 
             // Fallback content if admin hasn't configured a message
@@ -141,6 +155,17 @@ class SendRentalStatusUpdateEmail implements ShouldQueue
                     'meta' => ['context' => 'status_update', 'rental_id' => $rental->id, 'status' => $status],
                 ]);
 
+                // Diagnostics for dynamic content
+                try {
+                    Log::info('Email dynamic content selected', [
+                        'rental_id' => $rental->id,
+                        'status' => $status,
+                        'used_key' => $usedKey ?? 'fallback',
+                        'content_length' => strlen((string)$dynamicContent),
+                        'content_preview' => substr(strip_tags((string)$dynamicContent), 0, 180),
+                    ]);
+                } catch (\Throwable $e) { /* ignore */ }
+
                 $smtpReady = (bool) (config('mail.mailers.smtp.host') && config('mail.mailers.smtp.username') && config('mail.mailers.smtp.password') && config('mail.from.address'));
                 if (!$smtpReady) {
                     $emailLog->update(['status' => 'failed', 'error_reason' => 'Email not sent: SMTP configuration incomplete.']);
@@ -153,6 +178,11 @@ class SendRentalStatusUpdateEmail implements ShouldQueue
                             ->subject($subject);
                     });
                     $emailLog->update(['status' => 'sent', 'sent_at' => now()]);
+                    Log::info('Rental status update email sent', [
+                        'rental_id' => $rental->id,
+                        'status' => $status,
+                        'to' => $toEmail,
+                    ]);
                 } catch (\Throwable $mailErr) {
                     $short = collect(preg_split("/\r?\n/", (string) $mailErr->getMessage()))->filter()->take(3)->implode(" \n");
                     $emailLog->update(['status' => 'failed', 'error_reason' => $short]);
@@ -164,16 +194,16 @@ class SendRentalStatusUpdateEmail implements ShouldQueue
                     ]);
                     return; // swallow transport errors to avoid breaking flow
                 }
-                Log::info('Rental status update email sent', [
-                    'rental_id' => $rental->id,
-                    'status' => $status,
-                    'to' => $toEmail,
-                ]);
             } else {
-                Log::warning('Rental status update email skipped (no recipient email)', [
+                Log::warning('Rental status update email skipped (no recipient email or preference)', [
                     'rental_id' => $rental->id,
                     'status' => $status,
                 ]);
+            }
+
+            // Send SMS for delivered and cancelled
+            if (in_array($status, ['delivered', 'cancelled'])) {
+                $this->sendSmsForStatus($rental, $status);
             }
         } catch (\Throwable $e) {
             Log::error('SendRentalStatusUpdateEmail failed', [
@@ -184,6 +214,66 @@ class SendRentalStatusUpdateEmail implements ShouldQueue
             throw $e;
         }
     }
+
+    protected function sendSmsForStatus($rental, $status)
+    {
+        $originalTo = $rental->phone_number;
+        $sid = config('services.twilio.sid');
+        $token = config('services.twilio.token');
+        $from = config('services.twilio.from');
+        $enabled = (bool) config('services.twilio.enabled', true);
+
+        // Respect user's text notification preference if a user exists, but bypass for website-origin bookings
+        $canText = true;
+        if ($rental->user && ($rental->booking_source !== 'website')) {
+            $canText = $rental->user->text_notification !== false;
+        }
+
+        // Global SMS toggle
+        if (!SettingNotification::current()->sms_enabled) {
+            Log::info('Global SMS disabled; skipping status SMS', ['rental_id' => $rental->id, 'status' => $status]);
+            return;
+        }
+
+        if ($canText && $enabled && !empty($originalTo) && $sid && $token && $from) {
+            try {
+                $twilio = new TwilioClient($sid, $token);
+                $templateKey = 'sms_status_' . $status;
+                $rawBody = (string) (\App\Models\BookingOption::where('type', $templateKey)->value('description') ?? '');
+                $body = trim($rawBody);
+                if ($body === '') {
+                    $fallbackByStatus = [
+                        'out_for_delivery' => "Good news! Your rental is out for delivery and on its way.",
+                        'delivered' => "Your rental has been delivered. We hope everything is perfect!",
+                        'cancelled' => "Your rental has been cancelled. If this was a mistake, please contact support.",
+                    ];
+                    $body = $fallbackByStatus[$status] ?? 'Your rental status has been updated to ' . $status;
+                }
+
+                // Log the SMS content with key
+                Log::info('Twilio SMS content for rental status', [
+                    'rental_id' => $rental->id,
+                    'status' => $status,
+                    'key' => $templateKey,
+                    'sms_body' => $body,
+                ]);
+
+                $twilio->messages->create($originalTo, ['from' => $from, 'body' => $body]);
+                Log::info('Twilio SMS sent for rental status', [
+                    'rental_id' => $rental->id,
+                    'status' => $status,
+                    'to' => $originalTo,
+                    'used_fallback' => trim($rawBody) === '',
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('Twilio SMS failed for status', [
+                    'rental_id' => $rental->id,
+                    'status' => $status,
+                    'to' => $originalTo,
+                    'error' => $e->getMessage(),
+                    'hint' => 'Ensure server has internet/DNS, correct Twilio credentials, phone in E.164 format.'
+                ]);
+            }
+        }
+    }
 }
-
-

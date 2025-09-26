@@ -171,8 +171,8 @@
                                         @endcan
                                          <td>
                                             <div>
-                                                <strong>{{ $rental->user->name ?? 'N/A' }}</strong><br>
-                                                <small class="text-muted">{{ $rental->user->email ?? 'N/A' }}</small>
+                                                <strong>{{ $rental->user->name ?? $rental->full_name }}</strong><br>
+                                                <small class="text-muted">{{ $rental->user->email ?? $rental->email }}</small>
                                             </div>
                                         </td>
                                         <td>{{ $rental->tournament->name ?? 'N/A' }}</td>

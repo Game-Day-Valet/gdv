@@ -47,7 +47,13 @@ class SendRentalBookingEmailJob implements ShouldQueue
             $rental = $this->rental->load(['user', 'tournament', 'tournament.sport']);
 
             // Prepare email data
-            $dynamicContent = \App\Models\BookingOption::where('type', 'email_content')->value('description');
+            $dynamicContent = \App\Models\BookingOption::where('type', 'email_content_html')->value('description');
+
+            // Log the dynamic content for email
+            Log::info('Email dynamic content for rental booking', [
+                'rental_id' => $rental->id,
+                'dynamic_content' => $dynamicContent ?? 'No content found',
+            ]);
 
             // Build name maps for items and bundles displayed in the email
             $itemNames = [];
@@ -93,7 +99,6 @@ class SendRentalBookingEmailJob implements ShouldQueue
             if ($canEmail) {
                 // Global email toggle
                 if (!SettingNotification::current()->email_enabled) {
-                    Log::info('Global email disabled; skipping booking email', ['rental_id' => $rental->id]);
                     return;
                 }
                 $toEmail = $rental->email;
@@ -113,7 +118,6 @@ class SendRentalBookingEmailJob implements ShouldQueue
                     $smtpReady = (bool) (config('mail.mailers.smtp.host') && config('mail.mailers.smtp.username') && config('mail.mailers.smtp.password') && config('mail.from.address'));
                     if (!$smtpReady) {
                         $emailLog->update(['status' => 'failed', 'error_reason' => 'Email not sent: SMTP configuration incomplete.']);
-                        Log::warning('Booking email skipped due to incomplete SMTP config', ['rental_id' => $rental->id, 'to' => $toEmail]);
                         return;
                     }
                     try {
@@ -133,11 +137,6 @@ class SendRentalBookingEmailJob implements ShouldQueue
                     } catch (\Throwable $mailErr) {
                         $short = collect(preg_split("/\r?\n/", (string) $mailErr->getMessage()))->filter()->take(3)->implode(" \n");
                         $emailLog->update(['status' => 'failed', 'error_reason' => $short]);
-                        Log::error('Booking email send failed', [
-                            'rental_id' => $rental->id,
-                            'to' => $toEmail,
-                            'error' => $mailErr->getMessage(),
-                        ]);
                         return; // do not bubble up transport errors
                     }
                 }
@@ -160,19 +159,21 @@ class SendRentalBookingEmailJob implements ShouldQueue
             if ($canText && $enabled && !empty($originalTo) && $sid && $token && $from) {
                 try {
                     $twilio = new TwilioClient($sid, $token);
-                    $rawBody = (string) (\App\Models\BookingOption::where('type', 'sms_booking_confirmation')->value('description') ?? '');
+                    $rawBody = (string) (\App\Models\BookingOption::where('type', 'email_content')->value('description') ?? '');
                     $body = trim($rawBody);
                     if ($body === '') {
                         $body = 'Your rental booking has been received. We will notify you with updates.';
                     }
+
+                    // Log the SMS content
+                    Log::info('Twilio SMS content for rental booking', [
+                        'rental_id' => $rental->id,
+                        'sms_body' => $body,
+                    ]);
+
                     // Respect user SMS preference if such a flag is ever added; for now SMS independent of email flag
                     $twilio->messages->create($originalTo, ['from' => $from, 'body' => $body]);
-                    Log::info('Twilio SMS sent for rental booking', [
-                        'rental_id' => $rental->id,
-                        'to' => $originalTo,
-                        'original_to' => $originalTo,
-                        'used_fallback' => trim($rawBody) === '',
-                    ]);
+          
                 } catch (\Throwable $e) {
                     Log::error('Twilio SMS failed', [
                         'rental_id' => $rental->id,
@@ -266,4 +267,4 @@ class SendRentalBookingEmailJob implements ShouldQueue
             'timestamp' => now()->toISOString()
         ]);
     }
-} 
+}

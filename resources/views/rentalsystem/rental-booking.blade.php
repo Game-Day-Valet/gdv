@@ -504,12 +504,21 @@
                     <div class="card">
                         <div class="row-two">
                             <div>
+                                <label class="label">FULL NAME <span class="text-danger">*</span></label>
+                                <input class="input" type="text" name="full_name" placeholder="Full name" required>
+                            </div>
+                            <div>
                                 <label class="label">TEAM NAME WITH AGE GROUP <span class="text-danger">*</span></label>
                                 <input class="input" type="text" name="team_name_with_age_group" placeholder="Team name with age group" required>
                             </div>
                             <div>
                                 <label class="label">COACH NAME <span class="text-danger">*</span></label>
                                 <input class="input" type="text" name="coach_name" placeholder="Coach name" required>
+                            </div>
+                            <div>
+                                <label class="label">EMAIL <span class="text-danger">*</span></label>
+                                <input class="input" type="email" name="email" placeholder="you@example.com" value="" required>
+                                <small class="text-muted">Booking confirmation and updates will be emailed here.</small>
                             </div>
                         </div>
                         <div class="row-two">
@@ -520,11 +529,6 @@
                                     <input id="sms_opt_in" type="checkbox" name="sms_opt_in" required>
                                     <span>I agree to receive important text notifications about my rental (confirmations, delivery updates, event-day notices). Message frequency may vary; msg & data rates may apply. Reply STOP to opt out, HELP for help.</span>
                                 </label>
-                            </div>
-                            <div>
-                                <label class="label">EMAIL <span class="text-danger">*</span></label>
-                                <input class="input" type="email" name="email" placeholder="you@example.com" value="" required>
-                                <small class="text-muted">Booking confirmation and updates will be emailed here.</small>
                             </div>
                         </div>
                     </div>

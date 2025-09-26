@@ -82,12 +82,6 @@ class InvoiceService
             $filePath = $storagePath . '/' . $filename;
             $pdf->save($filePath);
 
-            Log::info('Invoice PDF generated successfully', [
-                'rental_id' => $rental->id,
-                'filename' => $filename,
-                'file_path' => $filePath
-            ]);
-
             return $filePath;
 
         } catch (\Exception $e) {
