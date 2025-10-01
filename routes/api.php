@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\TournamentController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\StripeController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Support\Facades\Log;
 
 /*
 |--------------------------------------------------------------------------
@@ -159,3 +160,19 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/auth/google/login', [AuthController::class, 'googleLogin']);
 Route::post('/auth/apple/login', [AuthController::class, 'appleSignIn']);
 
+
+
+Route::post('/twilio/message', function (Request $request) {
+    
+    // Incoming SMS log karne ke liye
+    Log::info('Twilio Incoming:', $request->all());
+
+    // Agar aap custom reply dena chahty ho
+
+    /*
+    return response("<?xml version='1.0' encoding='UTF-8'?><Response><Message>Got your message!</Message></Response>", 200)
+           ->header('Content-Type', 'text/xml');
+    */
+
+    return response('', 204);
+});
