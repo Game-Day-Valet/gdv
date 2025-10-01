@@ -536,6 +536,7 @@
                     <!-- Bundles first, highlighted as best value -->
                     <div class="bundle-section" style="margin-top:18px;">
                         <div class="bundle-header"><i class="fas fa-star"></i> Best Value Bundles</div>
+                        <div style="color:white;font-weight:800;margin:-6px 0 10px;font-size:18px;">**Prices are for the entire tournament**</div>
                         @forelse(($availableBundles ?? []) as $bd)
                         <div class="bundle-row" data-type="bundle" data-id="{{ $bd->id }}" data-price="{{ (float)($bd->effective_price ?? $bd->price ?? 0) }}">
                             <div class="bundle-left">
