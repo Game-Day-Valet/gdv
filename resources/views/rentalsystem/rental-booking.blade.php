@@ -504,7 +504,7 @@
                     <div class="card">
                         <div style="background: #fff3cd; border: 1px solid #ffeeba; border-radius: 12px; padding: 12px; margin-bottom: 18px; text-align: center;">
                             <p style="color: black; font-size: 18px; margin: 0;">⚠️ <strong>LIMITED INVENTORY — RESERVE EARLY</strong></p>
-                            <p style="color: #856404; font-size: 14px; margin: 12px 0 0;">{{ $tournament->description }}</p>
+                            <p style="color: #856404; font-size: 14px; margin: 12px 0 0;">{{ $tournament->description ?? '' }}</p>
                         </div>
                         <div class="row-two">
                             <div>
