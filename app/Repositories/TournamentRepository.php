@@ -134,6 +134,7 @@ class TournamentRepository implements TournamentRepositoryInterface
                 'start_date' => $data['start_date'],
                 'end_date' => $data['end_date'] ?? null,
                 'location' => $data['location'],
+                'description' => $data['description'] ?? null,
                 'status' => $data['status'] ?? TournamentStatus::ACTIVE->value,
                 'tax_rate' => $data['tax_rate'] ?? 0,
             ]);
@@ -219,6 +220,7 @@ class TournamentRepository implements TournamentRepositoryInterface
                 'start_date' => $data['start_date'] ?? $tournament->start_date,
                 'end_date' => $data['end_date'] ?? $tournament->end_date,
                 'location' => $data['location'] ?? $tournament->location,
+                'description' => $data['description'] ?? $tournament->description,
                 'status' => $data['status'] ?? $tournament->status,
                 'tax_rate' => array_key_exists('tax_rate', $data) ? $data['tax_rate'] : $tournament->tax_rate,
             ]);

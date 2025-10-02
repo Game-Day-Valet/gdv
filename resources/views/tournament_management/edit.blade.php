@@ -88,6 +88,13 @@
                         @enderror
                     </div>
                     <div class="col-md-6">
+                        <label for="description" class="form-label">Description</label> <!-- Added Description field -->
+                        <textarea name="description" class="form-control @error('description') is-invalid @enderror" id="description" rows="3" placeholder="Enter tournament description">{{ old('description', $tournament->description) }}</textarea>
+                        @error('description')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-6">
                         <label for="status" class="form-label">Status</label>
                         <select name="status" class="form-control @error('status') is-invalid @enderror" id="status">
                             @foreach ($statuses as $status)

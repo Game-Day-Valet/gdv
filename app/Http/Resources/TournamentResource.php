@@ -25,6 +25,7 @@ class TournamentResource extends JsonResource
             'start_date' => $this->start_date,
             'end_date' => $this->end_date,
             'location' => $this->location,
+            'description' => $this->description,
             'status' => $this->status->value,
             'tax_rate' => $this->tax_rate,
             'is_favorite' => Auth::check() ? Favorite::where('user_id', Auth::id())->where('tournament_id', $this->id)->exists() : false,
