@@ -1,5 +1,31 @@
 @extends('layouts.vertical', ['title' => 'Tournament Edit'])
 
+@section('css')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css">
+    <style>
+        #description-editor .ql-container {
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            padding: 10px;
+        }
+        #description-editor .ql-toolbar {
+            border: 1px solid #ced4da;
+            border-bottom: none;
+            border-radius: 0.25rem 0.25rem 0 0;
+            background-color: #f8f9fa;
+        }
+        #description-editor.is-invalid .ql-container {
+            border-color: #dc3545;
+        }
+        #description-editor {
+            margin-bottom: 1.5rem;
+        }
+    </style>
+@endsection
+
 @section('content')
 <div class="py-3 d-flex align-items-sm-center flex-sm-row flex-column">
     <div class="flex-grow-1">
@@ -88,13 +114,6 @@
                         @enderror
                     </div>
                     <div class="col-md-6">
-                        <label for="description" class="form-label">Description</label> <!-- Added Description field -->
-                        <textarea name="description" class="form-control @error('description') is-invalid @enderror" id="description" rows="3" placeholder="Enter tournament description">{{ old('description', $tournament->description) }}</textarea>
-                        @error('description')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <div class="col-md-6">
                         <label for="status" class="form-label">Status</label>
                         <select name="status" class="form-control @error('status') is-invalid @enderror" id="status">
                             @foreach ($statuses as $status)
@@ -115,7 +134,15 @@
                             Tax Rate (%) Between 0-100
                         </small>
                     </div>
-                    <div class="col-12">
+                    <div class="col-12 mb-4">
+                        <label for="description" class="form-label">Description</label>
+                        <div id="description-editor" class="form-control @error('description') is-invalid @enderror"></div>
+                        <textarea name="description" id="description" style="display: none;">{{ old('description', $tournament->description) }}</textarea>
+                        @error('description')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-12 mt-5">
                         <hr>
                         <h5>Items for this Tournament</h5>
                         <div style="margin:6px 0 10px;">
@@ -192,26 +219,51 @@
         </div>
     </div>
 </div>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        function wireSelectAll(masterId, selector) {
-            const master = document.getElementById(masterId);
-            if (!master) return;
-            const syncFromMaster = () => document.querySelectorAll(selector).forEach(c => c.checked = master.checked);
-            const syncMaster = () => {
-                const list = Array.from(document.querySelectorAll(selector));
-                if (list.length === 0) {
-                    master.checked = false;
-                    return;
+@endsection
+
+@section('script')
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const quill = new Quill('#description-editor', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline'],
+                        ['link', 'blockquote'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }]
+                    ]
                 }
-                master.checked = list.every(c => c.checked);
-            };
-            master.addEventListener('change', syncFromMaster);
-            document.querySelectorAll(selector).forEach(c => c.addEventListener('change', syncMaster));
-            syncMaster();
-        }
-        wireSelectAll('select_all_items', 'input[type="checkbox"][name^="items"][name$="[enabled]"]');
-        wireSelectAll('select_all_bundles', 'input[type="checkbox"][name^="bundles"][name$="[enabled]"]');
-    });
-</script>
+            });
+
+            const descriptionInput = document.querySelector('#description');
+            const savedDescription = @json(old('description', $tournament->description));
+            if (savedDescription) {
+                quill.clipboard.dangerouslyPasteHTML(savedDescription);
+            }
+            quill.on('text-change', function() {
+                descriptionInput.value = quill.root.innerHTML;
+            });
+
+            function wireSelectAll(masterId, selector) {
+                const master = document.getElementById(masterId);
+                if (!master) return;
+                const syncFromMaster = () => document.querySelectorAll(selector).forEach(c => c.checked = master.checked);
+                const syncMaster = () => {
+                    const list = Array.from(document.querySelectorAll(selector));
+                    if (list.length === 0) {
+                        master.checked = false;
+                        return;
+                    }
+                    master.checked = list.every(c => c.checked);
+                };
+                master.addEventListener('change', syncFromMaster);
+                document.querySelectorAll(selector).forEach(c => c.addEventListener('change', syncMaster));
+                syncMaster();
+            }
+            wireSelectAll('select_all_items', 'input[type="checkbox"][name^="items"][name$="[enabled]"]');
+            wireSelectAll('select_all_bundles', 'input[type="checkbox"][name^="bundles"][name$="[enabled]"]');
+        });
+    </script>
 @endsection
