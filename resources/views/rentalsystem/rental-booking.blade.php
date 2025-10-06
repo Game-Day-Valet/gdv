@@ -592,7 +592,7 @@
 
                     <div class="card" style="margin-top:18px;">
                         <div class="section-title">Or choose items individually</div>
-                        <div style="color:#b91c1c;font-weight:800;margin:-6px 0 10px;font-size:18px;">**Prices are for the full tournament weekend**</div>
+                        <div style="color:#b91c1c;font-weight:800;margin:-6px 0 10px;font-size:18px;">**Prices are for the entire tournament**</div>
                         <div class="items-grid">
                             @forelse(($availableItems ?? []) as $it)
                             <div class="item-row" data-type="item" data-id="{{ $it->id }}" data-price="{{ (float)($it->effective_price ?? $it->price ?? 0) }}">
