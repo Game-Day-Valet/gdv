@@ -19,12 +19,20 @@ class Bundle extends Model
         'image',
         'price',
         'status',
+        'sort_order',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'status' => ItemStatus::class,
     ];
+
+    protected static function booted()
+    {
+        static::addGlobalScope('sort_order', function ($query) {
+            $query->orderByRaw('COALESCE(sort_order, 999999) ASC')->orderByDesc('created_at');
+        });
+    }
 
     public function items()
     {

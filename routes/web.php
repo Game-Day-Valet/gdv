@@ -182,6 +182,10 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', function ($request, 
 			});
 			return response()->json(['success' => true]);
 		}])->name('item-management.reorder');
+
+		Route::post('bundle-management/reorder', [BundleController::class, 'reorder'])->name('bundle-management.reorder');
+
+		
 		Route::resource('bundle-management', BundleController::class);
 		// Place specific coupon routes BEFORE the resource route to avoid conflicts with `coupon-management/{id}`
 		Route::get('/coupon-management/logs', [CouponManagementController::class, 'logs'])->name('coupon-management.logs');

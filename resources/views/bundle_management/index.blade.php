@@ -4,12 +4,40 @@
     @vite(['node_modules/datatables.net-bs5/css/dataTables.bootstrap5.min.css', 'node_modules/datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css', 'node_modules/datatables.net-keytable-bs5/css/keyTable.bootstrap5.min.css', 'node_modules/datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css', 'node_modules/datatables.net-select-bs5/css/select.bootstrap5.min.css'])
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
-        .table-responsive { overflow-x: auto; }
-        .img-thumbnail { max-width: 50px; max-height: 50px; }
-        @media (max-width: 576px) {
-            .table th, .table td { font-size: 0.85rem; padding: 0.5rem; }
-            .d-flex.gap-2 { flex-direction: column; gap: 0.5rem; }
-            .table { font-size: 0.9rem; }
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .table-container table {
+            min-width: 800px;
+        }
+        
+        .table th, .table td {
+            white-space: nowrap;
+            vertical-align: top;
+        }
+        
+        .table th:nth-child(2), .table td:nth-child(2) {
+            white-space: normal;
+            max-width: 150px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        .description-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
+            max-height: 2.4em;
+        }
+        
+        .img-thumbnail {
+            max-width: 50px;
+            max-height: 50px;
         }
     </style>
 @endsection
@@ -47,10 +75,13 @@
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
-                    <div class="table-responsive">
-                        <table id="datatable" class="table table-bordered table-hover">
+                    <div class="table-container">
+                        <table id="datatable" class="table table-bordered table-hover dt-responsive table-responsive nowrap">
                             <thead>
                                 <tr>
+                                    @can('super_admin')
+                                    <th style="width:32px;"></th>
+                                    @endcan
                                     <th>Image</th>
                                     <th>Name</th>
                                     <th>Description</th>
@@ -60,9 +91,12 @@
                                     <th>Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="bundlesTbody">
                                 @foreach ($bundles as $bundle)
-                                    <tr>
+                                    <tr data-id="{{ $bundle->id }}">
+                                        @can('super_admin')
+                                        <td class="drag-handle" style="cursor:move; text-align:center;">⇅</td>
+                                        @endcan
                                         <td>
                                             @if($bundle->image)
                                                 <img src="{{ asset('storage/'.$bundle->image) }}" alt="{{ $bundle->name }}" class="img-thumbnail" width="50" height="50">
@@ -71,7 +105,11 @@
                                             @endif
                                         </td>
                                         <td>{{ $bundle->name }}</td>
-                                        <td>{{ \Illuminate\Support\Str::limit(strip_tags($bundle->description ?? '-'), 25) }}</td>
+                                        <td>
+                                            <div class="description-text" title="{{ strip_tags($bundle->description ?? 'No description') }}">
+                                                {{ \Illuminate\Support\Str::limit(strip_tags($bundle->description ?? '-'), 25) }}
+                                            </div>
+                                        </td>
                                         <td>{{ number_format($bundle->price, 2) }}</td>
                                         <td>
                                             @if ($bundle->items->isNotEmpty())
@@ -109,6 +147,7 @@
 @section('script')
     @vite(['resources/js/pages/datatable.init.js'])
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             document.querySelectorAll('.delete-bundle-btn').forEach(function(btn) {
@@ -128,6 +167,27 @@
                     });
                 });
             });
+
+            @can('super_admin')
+            const tbody = document.getElementById('bundlesTbody');
+            const sortable = new Sortable(tbody, {
+                handle: '.drag-handle',
+                animation: 150,
+                onEnd: async function() {
+                    const rows = Array.from(tbody.querySelectorAll('tr[data-id]'));
+                    const orders = rows.map((row, idx) => ({ id: parseInt(row.getAttribute('data-id')), sort_order: idx }));
+                    try {
+                        await fetch('{{ route('bundle-management.reorder') }}', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                            body: JSON.stringify({ orders })
+                        });
+                    } catch (e) {
+                        Swal.fire('Error', 'Failed to save order', 'error');
+                    }
+                }
+            });
+            @endcan
         });
     </script>
 @endsection
