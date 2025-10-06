@@ -1,28 +1,8 @@
 @extends('layouts.vertical', ['title' => 'Bundle List'])
 
 @section('css')
+    @vite(['node_modules/datatables.net-bs5/css/dataTables.bootstrap5.min.css', 'node_modules/datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css', 'node_modules/datatables.net-keytable-bs5/css/keyTable.bootstrap5.min.css', 'node_modules/datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css', 'node_modules/datatables.net-select-bs5/css/select.bootstrap5.min.css'])
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <style>
-        .table-responsive {
-            overflow-x: auto;
-        }
-        .table {
-            width: 100% !important;
-            min-width: 1000px; /* Ensures table is wide enough to require scrolling if needed */
-        }
-        .table th, .table td {
-            white-space: nowrap; /* Prevents text wrapping in most cells */
-        }
-        .table td.description {
-            white-space: normal; /* Allows wrapping for description */
-            max-width: 250px; /* Limits width of description column */
-            display: -webkit-box;
-            -webkit-line-clamp: 3; /* Limits to 3 lines */
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis; /* Adds ellipsis for overflow */
-        }
-    </style>
 @endsection
 
 @section('content')
@@ -58,59 +38,57 @@
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
-                    <div class="table-responsive">
-                        <table id="datatable" class="table table-bordered nowrap">
-                            <thead>
+                    <table id="datatable" class="table table-bordered dt-responsive table-responsive nowrap">
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Price</th>
+                                <th>Items</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($bundles as $bundle)
                                 <tr>
-                                    <th>Image</th>
-                                    <th>Name</th>
-                                    <th>Description</th>
-                                    <th>Price</th>
-                                    <th>Items</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
+                                    <td>
+                                        @if($bundle->image)
+                                            <img src="{{ asset('storage/'.$bundle->image) }}" alt="{{ $bundle->name }}" class="img-thumbnail" width="50" height="50">
+                                        @else
+                                            <span class="text-muted">No image</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ $bundle->name }}</td>
+                                    <td>{{ \Illuminate\Support\Str::limit(strip_tags($bundle->description ?? '-'), 25) }}</td>
+                                    <td>{{ number_format($bundle->price, 2) }}</td>
+                                    <td>
+                                        @if ($bundle->items->isNotEmpty())
+                                            <ul class="mb-0">
+                                                @foreach ($bundle->items as $item)
+                                                    <li>{{ $item->name }} (Qty: {{ $item->pivot->quantity }})</li>
+                                                @endforeach
+                                            </ul>
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+                                    <td>{{ \Illuminate\Support\Str::title($bundle->status->value) }}</td>
+                                    <td>
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ route('bundle-management.edit', $bundle->id) }}" class="btn btn-sm btn-primary">Edit</a>
+                                            <form action="{{ route('bundle-management.destroy', $bundle->id) }}" method="POST" class="delete-bundle-form" style="display:inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="button" class="btn btn-sm btn-danger delete-bundle-btn">Delete</button>
+                                            </form>
+                                        </div>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($bundles as $bundle)
-                                    <tr>
-                                        <td>
-                                            @if($bundle->image)
-                                                <img src="{{ asset('storage/'.$bundle->image) }}" alt="{{ $bundle->name }}" class="img-thumbnail" width="50" height="50">
-                                            @else
-                                                <span class="text-muted">No image</span>
-                                            @endif
-                                        </td>
-                                        <td>{{ $bundle->name }}</td>
-                                        <td class="description">{{ \Illuminate\Support\Str::words(strip_tags($bundle->description ?? '-'), 30, '...') }}</td>
-                                        <td>{{ number_format($bundle->price, 2) }}</td>
-                                        <td>
-                                            @if ($bundle->items->isNotEmpty())
-                                                <ul class="mb-0">
-                                                    @foreach ($bundle->items as $item)
-                                                        <li>{{ $item->name }} (Qty: {{ $item->pivot->quantity }})</li>
-                                                    @endforeach
-                                                </ul>
-                                            @else
-                                                -
-                                            @endif
-                                        </td>
-                                        <td>{{ \Illuminate\Support\Str::title($bundle->status->value) }}</td>
-                                        <td>
-                                            <div class="d-flex gap-2">
-                                                <a href="{{ route('bundle-management.edit', $bundle->id) }}" class="btn btn-sm btn-primary">Edit</a>
-                                                <form action="{{ route('bundle-management.destroy', $bundle->id) }}" method="POST" class="delete-bundle-form" style="display:inline;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="button" class="btn btn-sm btn-danger delete-bundle-btn">Delete</button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -118,6 +96,7 @@
 @endsection
 
 @section('script')
+    @vite(['resources/js/pages/datatable.init.js'])
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
