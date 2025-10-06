@@ -3,6 +3,15 @@
 @section('css')
     @vite(['node_modules/datatables.net-bs5/css/dataTables.bootstrap5.min.css', 'node_modules/datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css', 'node_modules/datatables.net-keytable-bs5/css/keyTable.bootstrap5.min.css', 'node_modules/datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css', 'node_modules/datatables.net-select-bs5/css/select.bootstrap5.min.css'])
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <style>
+        .table-responsive { overflow-x: auto; }
+        .img-thumbnail { max-width: 50px; max-height: 50px; }
+        @media (max-width: 576px) {
+            .table th, .table td { font-size: 0.85rem; padding: 0.5rem; }
+            .d-flex.gap-2 { flex-direction: column; gap: 0.5rem; }
+            .table { font-size: 0.9rem; }
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -38,57 +47,59 @@
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
-                    <table id="datatable" class="table table-bordered dt-responsive table-responsive nowrap">
-                        <thead>
-                            <tr>
-                                <th>Image</th>
-                                <th>Name</th>
-                                <th>Description</th>
-                                <th>Price</th>
-                                <th>Items</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($bundles as $bundle)
+                    <div class="table-responsive">
+                        <table id="datatable" class="table table-bordered table-hover">
+                            <thead>
                                 <tr>
-                                    <td>
-                                        @if($bundle->image)
-                                            <img src="{{ asset('storage/'.$bundle->image) }}" alt="{{ $bundle->name }}" class="img-thumbnail" width="50" height="50">
-                                        @else
-                                            <span class="text-muted">No image</span>
-                                        @endif
-                                    </td>
-                                    <td>{{ $bundle->name }}</td>
-                                    <td>{{ \Illuminate\Support\Str::limit(strip_tags($bundle->description ?? '-'), 25) }}</td>
-                                    <td>{{ number_format($bundle->price, 2) }}</td>
-                                    <td>
-                                        @if ($bundle->items->isNotEmpty())
-                                            <ul class="mb-0">
-                                                @foreach ($bundle->items as $item)
-                                                    <li>{{ $item->name }} (Qty: {{ $item->pivot->quantity }})</li>
-                                                @endforeach
-                                            </ul>
-                                        @else
-                                            -
-                                        @endif
-                                    </td>
-                                    <td>{{ \Illuminate\Support\Str::title($bundle->status->value) }}</td>
-                                    <td>
-                                        <div class="d-flex gap-2">
-                                            <a href="{{ route('bundle-management.edit', $bundle->id) }}" class="btn btn-sm btn-primary">Edit</a>
-                                            <form action="{{ route('bundle-management.destroy', $bundle->id) }}" method="POST" class="delete-bundle-form" style="display:inline;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="button" class="btn btn-sm btn-danger delete-bundle-btn">Delete</button>
-                                            </form>
-                                        </div>
-                                    </td>
+                                    <th>Image</th>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Price</th>
+                                    <th>Items</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @foreach ($bundles as $bundle)
+                                    <tr>
+                                        <td>
+                                            @if($bundle->image)
+                                                <img src="{{ asset('storage/'.$bundle->image) }}" alt="{{ $bundle->name }}" class="img-thumbnail" width="50" height="50">
+                                            @else
+                                                <span class="text-muted">No image</span>
+                                            @endif
+                                        </td>
+                                        <td>{{ $bundle->name }}</td>
+                                        <td>{{ \Illuminate\Support\Str::limit(strip_tags($bundle->description ?? '-'), 25) }}</td>
+                                        <td>{{ number_format($bundle->price, 2) }}</td>
+                                        <td>
+                                            @if ($bundle->items->isNotEmpty())
+                                                <ul class="mb-0">
+                                                    @foreach ($bundle->items as $item)
+                                                        <li>{{ $item->name }} (Qty: {{ $item->pivot->quantity }})</li>
+                                                    @endforeach
+                                                </ul>
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+                                        <td>{{ \Illuminate\Support\Str::title($bundle->status->value) }}</td>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <a href="{{ route('bundle-management.edit', $bundle->id) }}" class="btn btn-sm btn-primary">Edit</a>
+                                                <form action="{{ route('bundle-management.destroy', $bundle->id) }}" method="POST" class="delete-bundle-form" style="display:inline;">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="button" class="btn btn-sm btn-danger delete-bundle-btn">Delete</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
