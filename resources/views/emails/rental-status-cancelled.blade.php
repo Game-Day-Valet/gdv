@@ -241,6 +241,13 @@
                 text-align: left;
                 margin-top: 5px;
             }
+
+            .item-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 4px 0;
+            }
+
         }
     </style>
 </head>
