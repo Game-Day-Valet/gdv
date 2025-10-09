@@ -123,7 +123,7 @@
     </div>
 </div>
 
-<div class="card mt-4">
+{{-- <div class="card mt-4">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="card-title mb-0">Chat Initial Message</h5>
     </div>
@@ -137,7 +137,7 @@
             <button type="submit" class="btn btn-primary">Save</button>
         </form>
     </div>
-</div>
+</div> --}}
 
 <div class="card mt-4">
     <div class="card-header d-flex justify-content-between align-items-center">
