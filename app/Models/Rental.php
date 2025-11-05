@@ -36,6 +36,7 @@ class Rental extends Model
         'total_amount',
         'tax_rate',
         'tax_amount',
+        'discount_amount',
         'status',
         'return_instruction',
         'estimated_delivery_time',

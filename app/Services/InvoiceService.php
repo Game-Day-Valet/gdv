@@ -15,13 +15,27 @@ class InvoiceService
     {
         try {
             // Load relationships
-            $rental->load(['user', 'tournament', 'tournament.sport']);
+            $rental->load(['user', 'tournament', 'tournament.sport', 'tournament.items', 'tournament.bundles']);
+
+            // --- START: UPDATED PRICE LOGIC ---
 
             // Build name and price maps for items and bundles
             $itemNames = [];
-            $itemPrices = [];
+            $itemPrices = []; // Yeh prices ab tournament se ayengi
             $bundleNames = [];
-            $bundlePrices = [];
+            $bundlePrices = []; // Yeh prices ab tournament se ayengi
+
+            // Get tournament-specific prices FIRST
+            $tournamentItemPrices = [];
+            foreach (($rental->tournament->items ?? []) as $it) {
+                // Use tournament-specific price (from pivot) if it exists, otherwise fall back to item's base price
+                $tournamentItemPrices[$it->id] = (float) ($it->pivot?->price ?? $it->price ?? 0);
+            }
+            $tournamentBundlePrices = [];
+            foreach (($rental->tournament->bundles ?? []) as $bd) {
+                // Use tournament-specific price (from pivot) if it exists, otherwise fall back to bundle's base price
+                $tournamentBundlePrices[$bd->id] = (float) ($bd->pivot?->price ?? $bd->price ?? 0);
+            }
 
             // Get item names and prices
             if (!empty($rental->items) && is_array($rental->items)) {
@@ -29,7 +43,12 @@ class InvoiceService
                 if (!empty($itemIds)) {
                     $items = \App\Models\Item::whereIn('id', $itemIds)->get();
                     $itemNames = $items->pluck('name', 'id')->toArray();
-                    $itemPrices = $items->pluck('price', 'id')->toArray();
+                    
+                    // Map the correct prices
+                    foreach($itemIds as $id) {
+                        // Use tournament price if available, otherwise fall back to item's default price
+                        $itemPrices[$id] = $tournamentItemPrices[$id] ?? $items->find($id)->price ?? 0;
+                    }
                 }
             }
 
@@ -48,9 +67,16 @@ class InvoiceService
                 if (!empty($bundleIds)) {
                     $bundles = \App\Models\Bundle::whereIn('id', $bundleIds)->get();
                     $bundleNames = $bundles->pluck('name', 'id')->toArray();
-                    $bundlePrices = $bundles->pluck('price', 'id')->toArray();
+
+                    // Map the correct prices
+                    foreach($bundleIds as $id) {
+                        // Use tournament price if available, otherwise fall back to bundle's default price
+                        $bundlePrices[$id] = $tournamentBundlePrices[$id] ?? $bundles->find($id)->price ?? 0;
+                    }
                 }
             }
+            // --- END: UPDATED PRICE LOGIC ---
+
 
             // Prepare data for PDF
             $data = [

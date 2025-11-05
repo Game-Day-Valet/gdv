@@ -17,6 +17,7 @@ use App\Mail\VerifyEmailOTP;
 use App\Mail\PasswordResetEmail;
 use App\Services\ReferralService;
 use App\Enums\Role;
+use App\Models\Coupon;
 use App\Repositories\SportRepositoryInterface;
 use App\Repositories\TournamentRepositoryInterface;
 use App\Repositories\ItemRepositoryInterface;
@@ -430,6 +431,193 @@ class RentalSystemController extends Controller
         ]);
     }
 
+    // public function createRental(Request $request)
+    // {
+    //     // Anonymous booking allowed; no auth required
+
+    //     $validator = Validator::make($request->all(), [
+    //         'tournament_id' => 'required|integer',
+    //         'full_name' => 'nullable|string|max:255',
+    //         'team_name_with_age_group' => 'nullable|string|max:255',
+    //         'coach_name' => 'nullable|string|max:255',
+    //         'phone_number' => 'nullable|string|max:30',
+    //         'email' => 'nullable|email',
+    //         'booking_days' => 'nullable|integer|min:1|max:7',
+    //         // 'field_number' removed
+    //         // drop_off_date/time removed
+    //         'items' => 'nullable|array',
+    //         'bundles' => 'nullable|array',
+    //         'insurance_option' => 'nullable',
+    //         'damage_waiver' => 'nullable',
+    //         'payment_method' => 'required|in:stripe',
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return back()->withErrors($validator)->withInput();
+    //     }
+
+    //     // Additional validation: At least one item or bundle must be selected
+    //     $itemsInput = (array) $request->input('items', []);
+    //     $bundlesInput = (array) $request->input('bundles', []);
+
+    //     $hasItems = false;
+    //     $hasBundles = false;
+
+    //     foreach ($itemsInput as $itemId => $qty) {
+    //         if ((int) $qty > 0) {
+    //             $hasItems = true;
+    //             break;
+    //         }
+    //     }
+
+    //     foreach ($bundlesInput as $bundleId => $qty) {
+    //         if ((int) $qty > 0) {
+    //             $hasBundles = true;
+    //             break;
+    //         }
+    //     }
+
+    //     if (!$hasItems && !$hasBundles) {
+    //         return back()->withErrors(['items' => 'Please select at least one item or bundle.'])->withInput();
+    //     }
+
+    //     $user = Auth::user();
+
+    //     // Tournament-specific allowed items/bundles and prices (override if set)
+    //     $tournament = $this->tournaments->find((int) $request->input('tournament_id'));
+    //     $itemPrices = [];
+    //     foreach (($tournament->items ?? []) as $it) {
+    //         $itemPrices[$it->id] = (float) ($it->pivot?->price ?? $it->price ?? 0);
+    //     }
+    //     $bundlePrices = [];
+    //     foreach (($tournament->bundles ?? []) as $bd) {
+    //         $bundlePrices[$bd->id] = (float) ($bd->pivot?->price ?? $bd->price ?? 0);
+    //     }
+
+    //     // Normalize selections
+    //     $itemsInput = (array) $request->input('items', []);
+    //     $bundlesInput = (array) $request->input('bundles', []);
+    //     $selectedItems = [];
+    //     $selectedBundles = [];
+    //     $itemsSubtotal = 0.0;
+    //     $bundlesSubtotal = 0.0;
+
+    //     // Process items - store as [{"item_id":"1","quantity":3}] using tournament-specific allowed list
+    //     foreach ($itemsInput as $itemId => $qty) {
+    //         $quantity = max(0, (int) $qty);
+    //         if ($quantity > 0) {
+    //             // Only include if associated with tournament
+    //             if (array_key_exists($itemId, $itemPrices)) {
+    //                 $price = (float) $itemPrices[$itemId];
+    //                 $itemsSubtotal += $price * $quantity;
+    //                 $selectedItems[] = [
+    //                     'item_id' => (string) $itemId,
+    //                     'quantity' => $quantity
+    //                 ];
+    //             }
+    //         }
+    //     }
+
+    //     // Process bundles - store as [{"bundle_id":"ID","quantity":N}]
+    //     foreach ($bundlesInput as $bundleId => $qty) {
+    //         $quantity = max(0, (int) $qty);
+    //         if ($quantity > 0) {
+    //             if (array_key_exists($bundleId, $bundlePrices)) {
+    //                 $price = (float) $bundlePrices[$bundleId];
+    //                 $bundlesSubtotal += $price * $quantity;
+    //                 $selectedBundles[] = [
+    //                     'bundle_id' => (string) $bundleId,
+    //                     'quantity' => $quantity,
+    //                 ];
+    //             }
+    //         }
+    //     }
+
+    //     $insurance = $request->input('insurance_option');
+    //     $insuranceAmount = 0.0;
+    //     if (is_numeric($insurance)) {
+    //         $insuranceAmount = (float) $insurance;
+    //     }
+    //     // Sum multiple waiver options if provided as damage_waiver_options[] values
+    //     $waiverAmount = 0.0;
+    //     foreach ((array) $request->input('damage_waiver_options', []) as $waiverVal) {
+    //         $waiverAmount += (float) $waiverVal;
+    //     }
+
+    //     $total = $itemsSubtotal + $bundlesSubtotal + $insuranceAmount + $waiverAmount;
+
+    //     // Get the discounted total from frontend (if coupon was applied)
+    //     $frontendTotal = (float) $request->input('total_amount', 0);
+
+
+    //     // Use frontend total if it's provided and reasonable, otherwise use calculated total (pre-tax)
+    //     $subTotalBeforeTax = ($frontendTotal > 0 && $frontendTotal <= $total) ? $frontendTotal : $total;
+
+    //     // Calculate tax for website flow using tournament tax_rate
+    //     $taxRate = (float) ($tournament->tax_rate ?? 0);
+    //     $taxAmount = round($subTotalBeforeTax * ($taxRate / 100), 2);
+    //     $finalTotal = $subTotalBeforeTax + $taxAmount;
+
+    //     $dropOffDateTime = null;
+
+    //     // Create rental record with pending payment
+    //     $rental = $this->rentals->create([
+    //         'user_id' => $user->id ?? null,
+    //         'booking_source' => 'website',
+    //         'full_name' => $request->input('full_name') ?: null,
+    //         'tournament_id' => (int) $request->input('tournament_id'),
+    //         'team_name_with_age_group' => $request->input('team_name_with_age_group') ?: null,
+    //         'coach_name' => $request->input('coach_name') ?: null,
+    //         'phone_number' => $request->input('phone_number') ?: ($user->contact_number ?? null),
+    //         'email' => $request->input('email') ?: ($user->email ?? null),
+    //         'booking_days' => (int) $request->input('booking_days'),
+    //         'items' => !empty($selectedItems) ? $selectedItems : null,
+    //         'bundles' => !empty($selectedBundles) ? $selectedBundles : null,
+    //         'drop_off_time' => $dropOffDateTime,
+    //         'insurance_option' => $insuranceAmount > 0 ? $insuranceAmount : null,
+    //         'damage_waiver' => $waiverAmount > 0 ? $waiverAmount : null,
+    //         'payment_method' => 'stripe',
+    //         'payment_status' => 'pending',
+    //         'total_amount' => $finalTotal,
+    //         'tax_rate' => $taxRate,
+    //         'tax_amount' => $taxAmount,
+    //         'status' => 'pending',
+    //     ]);
+    //     Log::info('Created rental booking', ['rental' => $rental, 'total_amount' => $finalTotal]);
+
+
+    //     // Do NOT send confirmation on creation. Email/SMS will be sent on payment completed (Stripe webhook or success fallback)
+
+    //     // Start Stripe Checkout session
+    //     try {
+    //         Stripe::setApiKey(config('services.stripe.secret'));
+    //         $session = StripeCheckoutSession::create([
+    //             'mode' => 'payment',
+    //             'payment_method_types' => ['card'],
+    //             'line_items' => [[
+    //                 'price_data' => [
+    //                     'currency' => 'usd',
+    //                     'product_data' => ['name' => 'Tournament Rental Booking'],
+    //                     'unit_amount' => (int) round($finalTotal * 100),
+    //                 ],
+    //                 'quantity' => 1,
+    //             ]],
+    //             'success_url' => route('rentalsystem.checkout.success') . '?session_id={CHECKOUT_SESSION_ID}',
+    //             'cancel_url' => route('rentalsystem.checkout.cancel', ['rental' => $rental->id]),
+    //             'metadata' => [
+    //                 'rental_id' => (string) $rental->id,
+    //                 'user_id' => (string) ($user->id ?? ''),
+    //                 'booking_source' => 'website',
+    //             ],
+    //         ]);
+    //         return redirect($session->url);
+    //     } catch (\Throwable $e) {
+    //         return redirect()->route('rentalsystem.rental-booking', $request->input('tournament_id'))
+    //             ->withErrors(['error' => 'Stripe error: ' . $e->getMessage()]);
+    //     }
+    // }
+
+
     public function createRental(Request $request)
     {
         // Anonymous booking allowed; no auth required
@@ -442,12 +630,11 @@ class RentalSystemController extends Controller
             'phone_number' => 'nullable|string|max:30',
             'email' => 'nullable|email',
             'booking_days' => 'nullable|integer|min:1|max:7',
-            // 'field_number' removed
-            // drop_off_date/time removed
             'items' => 'nullable|array',
             'bundles' => 'nullable|array',
             'insurance_option' => 'nullable',
-            'damage_waiver' => 'nullable',
+            'damage_waiver_options' => 'nullable|array',
+            'promo_code' => 'nullable|string|max:100',
             'payment_method' => 'required|in:stripe',
         ]);
 
@@ -505,7 +692,6 @@ class RentalSystemController extends Controller
         foreach ($itemsInput as $itemId => $qty) {
             $quantity = max(0, (int) $qty);
             if ($quantity > 0) {
-                // Only include if associated with tournament
                 if (array_key_exists($itemId, $itemPrices)) {
                     $price = (float) $itemPrices[$itemId];
                     $itemsSubtotal += $price * $quantity;
@@ -532,29 +718,66 @@ class RentalSystemController extends Controller
             }
         }
 
+        // --- START: New Backend Pricing Logic ---
+
+        // Step 1: Calculate Items & Bundles Subtotal (Taxable Base)
+        $itemsAndBundlesSubtotal = $itemsSubtotal + $bundlesSubtotal;
+
+        // Step 2: Calculate Non-Taxable Fees (Waiver & Insurance)
         $insurance = $request->input('insurance_option');
         $insuranceAmount = 0.0;
         if (is_numeric($insurance)) {
             $insuranceAmount = (float) $insurance;
         }
-        // Sum multiple waiver options if provided as damage_waiver_options[] values
+
         $waiverAmount = 0.0;
         foreach ((array) $request->input('damage_waiver_options', []) as $waiverVal) {
             $waiverAmount += (float) $waiverVal;
         }
+        $totalFees = $insuranceAmount + $waiverAmount; // Yeh non-taxable hain
 
-        $total = $itemsSubtotal + $bundlesSubtotal + $insuranceAmount + $waiverAmount;
+        // Step 3: Calculate Discount (Backend-Only, with full validation)
+        $promoCode = $request->input('promo_code');
+        $discountAmount = 0.0;
+        $coupon = null;
 
-        // Get the discounted total from frontend (if coupon was applied)
-        $frontendTotal = (float) $request->input('total_amount', 0);
+        if ($promoCode) {
+            // Complete validation: check code, active status, and expiry
+            $coupon = Coupon::where('code', $promoCode)
+                // ->where(function ($query) {
+                //     $query->whereNull('expires_at')
+                //         ->orWhere('expires_at', '>', now());
+                // })
+                ->first();
+        }
 
-        // Use frontend total if it's provided and reasonable, otherwise use calculated total (pre-tax)
-        $subTotalBeforeTax = ($frontendTotal > 0 && $frontendTotal <= $total) ? $frontendTotal : $total;
+        // Discount SIRF tab apply hoga jab coupon valid milega
+        if ($coupon) {
+            if ($coupon->type === 'percent') {
+                $discountAmount = $itemsAndBundlesSubtotal * ($coupon->value / 100);
+            } elseif ($coupon->type === 'fixed') {
+                $discountAmount = (float) $coupon->value;
+            }
 
-        // Calculate tax for website flow using tournament tax_rate
+            // Ensure discount isn't more than the subtotal
+            $discountAmount = min($itemsAndBundlesSubtotal, $discountAmount);
+        }
+        // Agar coupon ghalat tha, to $coupon null hoga aur $discountAmount 0.0 rahega
+
+        // Step 4: Calculate Taxable Amount (Discounted Subtotal)
+        $taxableAmount = $itemsAndBundlesSubtotal - $discountAmount;
+
+        // Step 5: Calculate Tax (Sirf Taxable Amount par)
         $taxRate = (float) ($tournament->tax_rate ?? 0);
-        $taxAmount = round($subTotalBeforeTax * ($taxRate / 100), 2);
-        $finalTotal = $subTotalBeforeTax + $taxAmount;
+        $taxAmount = round($taxableAmount * ($taxRate / 100), 2);
+
+
+        // Step 6: Calculate Final Total
+        // Final = (Discounted Subtotal) + Tax + (Non-Taxable Fees)
+
+        $finalTotal = $taxableAmount + $taxAmount + $totalFees;
+
+        // --- END: New Backend Pricing Logic ---
 
         $dropOffDateTime = null;
 
@@ -576,12 +799,21 @@ class RentalSystemController extends Controller
             'damage_waiver' => $waiverAmount > 0 ? $waiverAmount : null,
             'payment_method' => 'stripe',
             'payment_status' => 'pending',
-            'total_amount' => $finalTotal,
+
+            // --- Updated & New Values ---
+            'total_amount' => $finalTotal,      // Secure backend total
             'tax_rate' => $taxRate,
-            'tax_amount' => $taxAmount,
+            'tax_amount' => $taxAmount,         // Secure backend tax
+
+            // (Database migration mein yeh columns add karein)
+            'discount_amount' => $discountAmount > 0 ? $discountAmount : null,
+            'promo_code' => $coupon ? $promoCode : null, // Sirf valid code save karein
+            // ------------------------
+
             'status' => 'pending',
         ]);
 
+        Log::info('Created rental booking', ['rental' => $rental, 'total_amount' => $finalTotal]);
 
         // Do NOT send confirmation on creation. Email/SMS will be sent on payment completed (Stripe webhook or success fallback)
 
@@ -595,7 +827,7 @@ class RentalSystemController extends Controller
                     'price_data' => [
                         'currency' => 'usd',
                         'product_data' => ['name' => 'Tournament Rental Booking'],
-                        'unit_amount' => (int) round($finalTotal * 100),
+                        'unit_amount' => (int) round($finalTotal * 100), // Final backend total
                     ],
                     'quantity' => 1,
                 ]],

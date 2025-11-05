@@ -124,6 +124,7 @@ class SendRentalBookingEmailJob implements ShouldQueue
                         // Generate PDF invoice
                         $invoiceService = new InvoiceService();
                         $invoicePath = $invoiceService->generateInvoice($rental);
+                       
                         
                         Mail::send('emails.rental-booking', $emailData, function ($message) use ($toEmail, $toName, $subject, $invoicePath) {
                             $message->to($toEmail, $toName)

@@ -795,6 +795,7 @@
             container.querySelectorAll('input[type="checkbox"]').forEach(c => c.addEventListener('change', recalc));
         }
 
+        // --- YAHAN SE LOGIC UPDATE KI GAYI HAI ---
         function recalc() {
             let itemsSubtotal = 0,
                 bundlesSubtotal = 0;
@@ -807,47 +808,62 @@
                 itemsSubtotal += line;
             });
 
-            // Calculate bundles subtotal using quantity (supports old and new bundle rows)
+            // Calculate bundles subtotal
             document.querySelectorAll('.item-row[data-type="bundle"], .bundle-row[data-type="bundle"]').forEach(row => {
                 const price = parseFloat(row.getAttribute('data-price')) || 0;
                 const qty = parseInt(row.querySelector('.qty-val').textContent) || 0;
                 bundlesSubtotal += price * qty;
             });
 
-            // Insurance from dynamic radios
+            // --- START: NEW LOGIC (Matching Backend) ---
+
+            // Step 1: Get Items Subtotal (Taxable Base)
+            const itemsAndBundlesSubtotal = itemsSubtotal + bundlesSubtotal;
+
+            // Step 2: Get Non-Taxable Fees (Waiver & Insurance)
             const insuranceInput = document.querySelector('input[name="insurance_option"]:checked');
             let insuranceVal = 0;
             if (insuranceInput && insuranceInput.value !== 'none') {
                 insuranceVal = parseFloat(insuranceInput.value) || 0;
             }
 
-            // Sum all selected waiver checkboxes
             let waiverVal = 0;
             document.querySelectorAll('input[name="damage_waiver_options[]"]:checked').forEach(c => {
                 waiverVal += parseFloat(c.getAttribute('data-price')) || 0;
             });
-            let subtotalBeforeDiscount = itemsSubtotal + bundlesSubtotal + insuranceVal + waiverVal;
+            // Yeh non-taxable hain
+            const totalFees = insuranceVal + waiverVal; 
 
-            // Apply promo discount if available
+            // Step 3: Apply promo discount (ONLY on items/bundles)
             const discountValue = parseFloat(window.__appliedDiscount || 0) || 0;
             const discountType = window.__appliedDiscountType || null; // 'fixed' or 'percent'
             let discountApplied = 0;
+            
             if (discountType === 'percent') {
-                discountApplied = Math.min(subtotalBeforeDiscount, (subtotalBeforeDiscount * (discountValue / 100)));
+                discountApplied = Math.min(itemsAndBundlesSubtotal, (itemsAndBundlesSubtotal * (discountValue / 100)));
             } else if (discountType === 'fixed') {
-                discountApplied = Math.min(subtotalBeforeDiscount, discountValue);
+                discountApplied = Math.min(itemsAndBundlesSubtotal, discountValue);
             }
-            const subtotalAfterDiscount = subtotalBeforeDiscount - discountApplied;
 
-            // Tax calculation
+            // Step 4: Calculate Taxable Amount (This is the 'Discounted Subtotal')
+            const taxableAmount = itemsAndBundlesSubtotal - discountApplied;
+
+            // Step 5: Calculate Tax (ONLY on Taxable Amount)
             const taxRate = parseFloat(document.getElementById('tax_rate_input')?.value || '0') || 0;
-            const taxAmount = +(subtotalAfterDiscount * (taxRate / 100)).toFixed(2);
-            const total = subtotalAfterDiscount + taxAmount;
+            const taxAmount = +(taxableAmount * (taxRate / 100)).toFixed(2);
 
+            // Step 6: Calculate Final Total
+            // (Discounted Subtotal) + (Non-Taxable Fees) + Tax
+            const total = taxableAmount + totalFees + taxAmount;
+            
+            // --- END: NEW LOGIC ---
+
+            // Update UI (This part remains the same)
             document.getElementById('itemsSubtotal').textContent = formatUSD(itemsSubtotal);
             document.getElementById('bundlesSubtotal').textContent = formatUSD(bundlesSubtotal);
             document.getElementById('insuranceAmount').textContent = formatUSD(insuranceVal);
             document.getElementById('waiverAmount').textContent = formatUSD(waiverVal);
+            
             const discountRow = document.getElementById('discountRow');
             const discountAmount = document.getElementById('discountAmount');
             if (discountApplied > 0) {
@@ -856,18 +872,26 @@
             } else {
                 discountRow.style.display = 'none';
             }
+            
             // Update tax UI and hidden inputs
             const taxRateLabel = document.getElementById('taxRateLabel');
             const taxAmountEl = document.getElementById('taxAmount');
             if (taxRateLabel) taxRateLabel.textContent = `${taxRate.toFixed(2)}%`;
             if (taxAmountEl) taxAmountEl.textContent = formatUSD(taxAmount);
+            
             document.getElementById('totalAmount').textContent = formatUSD(total);
+            
             // write final total to hidden input for server/stripe
+            // NOTE: Hum in values par backend mein bharosa nahi kar rahe, 
+            // lekin inhein update karna achi practice hai.
             const totalInput = document.getElementById('total_amount_input');
-            if (totalInput) totalInput.value = total.toFixed(2);
+            if (totalInput) totalInput.value = total.toFixed(2); 
+            
             const taxAmountInput = document.getElementById('tax_amount_input');
             if (taxAmountInput) taxAmountInput.value = taxAmount.toFixed(2);
         }
+        // --- YAHAN TAK LOGIC UPDATE KI GAYI HAI ---
+
 
         // Event listeners for items (quantity buttons)
         document.querySelectorAll('.item-row[data-type="item"]').forEach(row => {
@@ -1093,6 +1117,7 @@
         // Immediately prompt sign-in for guests (with return to this page)
         // No login prompt needed
     </script>
+
 </body>
 
 </html>

@@ -299,7 +299,6 @@
 </head>
 <body>
     <div class="invoice-container">
-        <!-- Header -->
         <div class="invoice-header">
             @if(file_exists(public_path('images/topimage.png')))
                 <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('images/topimage.png'))) }}" class="top-image">
@@ -308,10 +307,8 @@
             @endif
         </div>
 
-        <!-- Invoice Title -->
         <div class="invoice-title">INVOICE</div>
 
-        <!-- Invoice Details -->
         <div class="invoice-details">
             <div class="invoice-info-left">
                 <div class="detail-row">
@@ -320,7 +317,7 @@
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Issued to:</span>
-                    <span class="detail-value">{{ $rental->user->name ?? 'Customer' }}</span>
+                    <span class="detail-value">{{ $rental->full_name ?? ($rental->user->name ?? 'Customer') }}</span>
                 </div>
             </div>
             <div class="invoice-info-right">
@@ -330,12 +327,11 @@
                 </div>
                 <div class="detail-row-right">
                     <span class="detail-label">Due date:</span>
-                    <span class="detail-value">{{ $rental->created_at->addDays(30)->format('M d, Y') }}</span>
+                    <span class="detail-value">{{ $rental->created_at->format('M d, Y') }}</span>
                 </div>
             </div>
         </div>
 
-        <!-- Items Table -->
         <table class="items-table">
             <thead>
                 <tr>
@@ -347,15 +343,15 @@
             </thead>
             <tbody>
                 @php
-                    $subtotal = 0;
+                    $subtotal = 0; // Yeh subtotal discount se pehle ka hai
                 @endphp
 
-                <!-- Rented Items -->
                 @if(!empty($rental->items) && is_array($rental->items))
                     @foreach($rental->items as $item)
                         @if(is_array($item) && isset($item['item_id']) && isset($item['quantity']))
                             @php
                                 $itemName = $itemNames[$item['item_id']] ?? ('Item #' . $item['item_id']);
+                                // Use the correct price from InvoiceService
                                 $itemPrice = $itemPrices[$item['item_id']] ?? 0;
                                 $itemSubtotal = $itemPrice * $item['quantity'];
                                 $subtotal += $itemSubtotal;
@@ -370,12 +366,12 @@
                     @endforeach
                 @endif
 
-                <!-- Rented Bundles -->
                 @if(!empty($rental->bundles) && is_array($rental->bundles))
                     @foreach($rental->bundles as $bundle)
                         @if(is_array($bundle) && isset($bundle['bundle_id']))
                             @php
                                 $bundleName = $bundleNames[$bundle['bundle_id']] ?? ('Bundle #' . $bundle['bundle_id']);
+                                // Use the correct price from InvoiceService
                                 $bundlePrice = $bundlePrices[$bundle['bundle_id']] ?? 0;
                                 $bundleQuantity = $bundle['quantity'] ?? 1;
                                 $bundleSubtotal = $bundlePrice * $bundleQuantity;
@@ -387,37 +383,26 @@
                                 <td>${{ number_format($bundlePrice, 2) }}</td>
                                 <td>${{ number_format($bundleSubtotal, 2) }}</td>
                             </tr>
-                        @elseif(is_numeric($bundle))
-                            @php
-                                $bundleName = $bundleNames[$bundle] ?? ('Bundle #' . $bundle);
-                                $bundlePrice = $bundlePrices[$bundle] ?? 0;
-                                $bundleSubtotal = $bundlePrice;
-                                $subtotal += $bundleSubtotal;
-                            @endphp
-                            <tr>
-                                <td>{{ $bundleName }}</td>
-                                <td>1</td>
-                                <td>${{ number_format($bundlePrice, 2) }}</td>
-                                <td>${{ number_format($bundleSubtotal, 2) }}</td>
-                            </tr>
                         @endif
                     @endforeach
                 @endif
 
-                @php
-                    $tax = 0; // Tax hidden for now
-                    $total = $subtotal; // Total without tax
-                @endphp
             </tbody>
         </table>
 
-        <!-- Summary Section -->
         <div class="summary-section">
             <table class="summary-table">
                 <tr>
                     <td class="label">SUBTOTAL:</td>
                     <td class="amount">${{ number_format($subtotal, 2) }}</td>
                 </tr>
+
+                @if(isset($rental->discount_amount) && $rental->discount_amount > 0)
+                <tr style="color: #C94C4C; font-weight: bold;">
+                    <td class="label">DISCOUNT:</td>
+                    <td class="amount">-${{ number_format((float)($rental->discount_amount), 2) }}</td>
+                </tr>
+                @endif
                 <tr>
                     <td class="label">INSURANCE:</td>
                     <td class="amount">${{ number_format((float)($rental->insurance_option ?? 0), 2) }}</td>
@@ -432,12 +417,11 @@
                 </tr>
                 <tr class="total-row">
                     <td class="label">TOTAL:</td>
-                    <td class="amount">${{ number_format((float)($rental->total_amount ?? ($subtotal + (float)($rental->insurance_option ?? 0) + (float)($rental->damage_waiver ?? 0))), 2) }}</td>
+                    <td class="amount">${{ number_format((float)($rental->total_amount), 2) }}</td>
                 </tr>
             </table>
         </div>
 
-        <!-- Footer -->
         <div class="invoice-footer">
             <div class="footer-content">
                 <div class="payment-info">
@@ -447,7 +431,7 @@
                     @if($rental->payment_status === 'pending' || $rental->payment_status === 'unpaid')
                         <p>Payment due upon delivery</p>
                         <p>Cash, Credit Card, or Check accepted</p>
-                    @elseif($rental->payment_status === 'paid')
+                    @elseif($rental->payment_status === 'paid' || $rental->payment_status === 'completed')
                         <p>Payment completed - Thank you!</p>
                     @endif
                     <p>Contact us for payment arrangements</p>
