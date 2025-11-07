@@ -217,12 +217,24 @@ class SendRentalStatusUpdateEmail implements ShouldQueue
 
     protected function sendSmsForStatus($rental, $status)
     {
+        $cacheKey = 'sms_sent_rental_' . $rental->id . '_status_' . $status;
         $originalTo = $rental->phone_number;
         $sid = config('services.twilio.sid');
         $token = config('services.twilio.token');
         $from = config('services.twilio.from');
         $enabled = (bool) config('services.twilio.enabled', true);
 
+
+        if (!Cache::add($cacheKey, true, now()->addDays(30))) {
+            Log::warning('Duplicate status SMS prevented', [
+                'rental_id' => $rental->id,
+                'status' => $status,
+                'cache_key' => $cacheKey,
+            ]);
+            return;
+        }
+
+        
         // Respect user's text notification preference if a user exists, but bypass for website-origin bookings
         $canText = true;
         if ($rental->user && ($rental->booking_source !== 'website')) {
