@@ -12,7 +12,7 @@ class RentalRepository implements RentalRepositoryInterface
     public function getAll()
     {
         // First 15 should always be most recently created
-        $recentIds = Rental::orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i)=>(int)$i)->toArray();
+        $recentIds = Rental::orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i) => (int) $i)->toArray();
         $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
 
         return Rental::with(['user', 'tournament'])
@@ -30,7 +30,7 @@ class RentalRepository implements RentalRepositoryInterface
     public function getPaid()
     {
         $recentIds = Rental::whereIn('payment_status', ['paid', 'completed'])
-            ->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i)=>(int)$i)->toArray();
+            ->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i) => (int) $i)->toArray();
         $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
 
         return Rental::with(['user', 'tournament'])
@@ -46,7 +46,7 @@ class RentalRepository implements RentalRepositoryInterface
     public function getPending()
     {
         $recentIds = Rental::where('payment_status', 'pending')
-            ->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i)=>(int)$i)->toArray();
+            ->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i) => (int) $i)->toArray();
         $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
 
         return Rental::with(['user', 'tournament'])
@@ -63,7 +63,7 @@ class RentalRepository implements RentalRepositoryInterface
     {
         $query = Rental::with(['user', 'tournament']);
         $result = $query->paginate($perPage);
-        
+
         return $result;
     }
 
@@ -117,6 +117,7 @@ class RentalRepository implements RentalRepositoryInterface
                 'total_amount' => $data['total_amount'] ?? null,
                 'tax_rate' => $data['tax_rate'] ?? null,
                 'tax_amount' => $data['tax_amount'] ?? null,
+                'discount_amount' => $data['discount_amount'] ?? null,
                 'status' => $data['status'] ?? 'pending',
                 'return_instruction' => $data['return_instruction'] ?? null,
             ]);
@@ -125,7 +126,7 @@ class RentalRepository implements RentalRepositoryInterface
                 'rental_id' => $rental->id,
                 'status' => $rental->status,
                 'notes' => null,
-                'image_paths' =>  null,
+                'image_paths' => null,
                 'updated_by' => null,
             ]);
             return $rental;
@@ -245,7 +246,7 @@ class RentalRepository implements RentalRepositoryInterface
     public function getByManager($managerId, $perPage = 15)
     {
         $recentIds = Rental::where('assigned_manager_id', $managerId)
-            ->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i)=>(int)$i)->toArray();
+            ->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i) => (int) $i)->toArray();
         $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
 
         $query = Rental::with(['user', 'tournament'])
@@ -255,9 +256,9 @@ class RentalRepository implements RentalRepositoryInterface
             ->orderBy('created_at', 'desc')
             ->orderByRaw("CASE WHEN sort_order IS NULL THEN 1 ELSE 0 END ASC")
             ->orderByRaw('sort_order ASC');
- 
+
         $result = $query->paginate($perPage);
-        
+
         return $result;
     }
 
@@ -265,7 +266,7 @@ class RentalRepository implements RentalRepositoryInterface
     {
         $recentIds = Rental::where('assigned_manager_id', $managerId)
             ->whereIn('payment_status', ['paid', 'completed'])
-            ->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i)=>(int)$i)->toArray();
+            ->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i) => (int) $i)->toArray();
         $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
 
         $query = Rental::with(['user', 'tournament'])
@@ -284,7 +285,7 @@ class RentalRepository implements RentalRepositoryInterface
     {
         $recentIds = Rental::where('assigned_manager_id', $managerId)
             ->where('payment_status', 'pending')
-            ->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i)=>(int)$i)->toArray();
+            ->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i) => (int) $i)->toArray();
         $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
 
         $query = Rental::with(['user', 'tournament'])
