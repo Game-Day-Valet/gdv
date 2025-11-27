@@ -380,6 +380,7 @@
                                                         <div class="d-flex justify-content-between align-items-center">
                                                             <div>
                                                                 <strong>{{ $bundle->name }}</strong><br>
+                                                                <small class="text-muted">Price: ${{ number_format($bundle->price, 2) }}</small>
                                                             </div>
                                                             <div class="text-end">
                                                                 <span class="badge bg-primary">Qty: {{ $qty }}</span>
@@ -480,7 +481,203 @@
                                     </div>
                                 </div>
                             </div>
+                                </div>
                         </div>
+                    </div>
+
+                    <!-- Price Calculation -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card mb-3 border-left-primary shadow-sm" style="border-left: 4px solid #6f42c1;"> <!-- Using purple or primary color for distinction -->
+                                <div class="card-header bg-white border-bottom-0 pt-3 pb-2">
+                                    <h6 class="card-title mb-0 text-dark">Price Breakdown</h6>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="row g-0">
+                                        <!-- Left Column: Items List -->
+                                        <div class="col-lg-8 border-end">
+                                            <div class="p-3">
+                                                <div class="table-responsive">
+                                                    <table class="table table-borderless align-middle mb-0">
+                                                        <thead class="text-muted small text-uppercase">
+                                                            <tr>
+                                                                <th style="width: 50%;">Product</th>
+                                                                <th class="text-center">Price</th>
+                                                                <th class="text-center">Qty</th>
+                                                                <th class="text-end">Total</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @php
+                                                                $itemsSubtotal = 0;
+                                                                $bundlesSubtotal = 0;
+                                                            @endphp
+
+                                                            {{-- Items --}}
+                                                            @if($rental->items && count($rental->items) > 0)
+                                                                @foreach($rental->items as $rentalItem)
+                                                                    @php
+                                                                        $item = $rental->items_with_data[$rentalItem['item_id']] ?? null;
+                                                                        $qty = $rentalItem['quantity'] ?? 1;
+                                                                        $price = $item ? $item->price : 0;
+                                                                        $total = $price * $qty;
+                                                                        $itemsSubtotal += $total;
+                                                                        $image = $item ? $item->image_url : null;
+                                                                    @endphp
+                                                                    <tr class="border-bottom">
+                                                                        <td class="py-3">
+                                                                            <div class="d-flex align-items-center">
+                                                                                <div class="flex-shrink-0 me-3">
+                                                                                    @if($image)
+                                                                                        <img src="{{ $image }}" alt="{{ $item->name }}" class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                                                                                    @else
+                                                                                        <div class="rounded bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                                                                            <i class="bi bi-box text-muted fs-4"></i>
+                                                                                        </div>
+                                                                                    @endif
+                                                                                </div>
+                                                                                <div>
+                                                                                    <h6 class="mb-0 text-dark fw-semibold">{{ $item->name ?? 'Unknown Item' }}</h6>
+                                                                                    <small class="text-muted">Item</small>
+                                                                                </div>
+                                                                            </div>
+                                                                        </td>
+                                                                        <td class="text-center">${{ number_format($price, 2) }}</td>
+                                                                        <td class="text-center"><span class="badge bg-light text-dark border">{{ $qty }}</span></td>
+                                                                        <td class="text-end fw-medium">${{ number_format($total, 2) }}</td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            @endif
+
+                                                            {{-- Bundles --}}
+                                                            @if($rental->bundles && count($rental->bundles) > 0)
+                                                                @foreach($rental->bundles as $b)
+                                                                    @php
+                                                                        $bundleId = is_array($b) && isset($b['bundle_id']) ? (int) $b['bundle_id'] : (int) $b;
+                                                                        $qty = is_array($b) && isset($b['quantity']) ? (int) $b['quantity'] : 1;
+                                                                        $bundle = optional($rental->bundles_with_data) ? $rental->bundles_with_data->get($bundleId) : null;
+                                                                        $price = $bundle ? $bundle->price : 0;
+                                                                        $total = $price * max(1, $qty);
+                                                                        $bundlesSubtotal += $total;
+                                                                        $image = $bundle ? $bundle->image_url : null;
+                                                                    @endphp
+                                                                    <tr class="border-bottom">
+                                                                        <td class="py-3">
+                                                                            <div class="d-flex align-items-center">
+                                                                                <div class="flex-shrink-0 me-3">
+                                                                                    @if($image)
+                                                                                        <img src="{{ $image }}" alt="{{ $bundle->name }}" class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                                                                                    @else
+                                                                                        <div class="rounded bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                                                                            <i class="bi bi-collection text-muted fs-4"></i>
+                                                                                        </div>
+                                                                                    @endif
+                                                                                </div>
+                                                                                <div>
+                                                                                    <h6 class="mb-0 text-dark fw-semibold">{{ $bundle->name ?? 'Unknown Bundle' }}</h6>
+                                                                                    <small class="text-muted">Bundle</small>
+                                                                                </div>
+                                                                            </div>
+                                                                        </td>
+                                                                        <td class="text-center">${{ number_format($price, 2) }}</td>
+                                                                        <td class="text-center"><span class="badge bg-light text-dark border">{{ $qty }}</span></td>
+                                                                        <td class="text-end fw-medium">${{ number_format($total, 2) }}</td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            @endif
+
+                                                            @if((!$rental->items || count($rental->items) == 0) && (!$rental->bundles || count($rental->bundles) == 0))
+                                                                <tr>
+                                                                    <td colspan="4" class="text-center py-5 text-muted">
+                                                                        <i class="bi bi-cart-x fs-1 d-block mb-2"></i>
+                                                                        No items or bundles selected.
+                                                                    </td>
+                                                                </tr>
+                                                            @endif
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Right Column: Summary -->
+                                        <div class="col-lg-4 bg-light bg-opacity-50">
+                                            <div class="p-4 h-100 d-flex flex-column justify-content-center">
+                                                <h6 class="text-uppercase text-muted mb-4 fw-bold small ls-1">Order Summary</h6>
+                                                
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <span class="text-muted">Subtotal</span>
+                                                    <span class="fw-medium text-dark">${{ number_format($itemsSubtotal + $bundlesSubtotal, 2) }}</span>
+                                                </div>
+
+                                                @if($rental->discount_amount > 0)
+                                                    <div class="d-flex justify-content-between mb-2">
+                                                        <span class="text-success">
+                                                            Discount
+                                                            @if($rental->promo_code)
+                                                                <span class="badge bg-success-subtle text-success border border-success-subtle ms-1">{{ $rental->promo_code }}</span>
+                                                            @endif
+                                                        </span>
+                                                        <span class="fw-medium text-success">-${{ number_format($rental->discount_amount, 2) }}</span>
+                                                    </div>
+                                                    @if(isset($coupon))
+                                                        <div class="text-end mb-2">
+                                                            <small class="text-muted" style="font-size: 0.75rem;">
+                                                                @if(in_array(strtolower($coupon->type), ['percent', 'percentage']))
+                                                                    {{ floatval($coupon->value) }}% Off
+                                                                @else
+                                                                    ${{ number_format($coupon->value, 2) }} Off
+                                                                @endif
+                                                            </small>
+                                                        </div>
+                                                    @endif
+                                                @endif
+
+                                                @if($rental->damage_waiver > 0)
+                                                    <div class="d-flex justify-content-between mb-2">
+                                                        <span class="text-muted">Damage Waiver</span>
+                                                        <span class="fw-medium text-dark">${{ number_format($rental->damage_waiver, 2) }}</span>
+                                                    </div>
+                                                @endif
+
+                                                @if($rental->insurance_option > 0)
+                                                    <div class="d-flex justify-content-between mb-2">
+                                                        <span class="text-muted">Insurance</span>
+                                                        <span class="fw-medium text-dark">${{ number_format($rental->insurance_option, 2) }}</span>
+                                                    </div>
+                                                @endif
+
+                                                <div class="d-flex justify-content-between mb-3">
+                                                    <span class="text-muted">Tax @if($rental->tax_rate) <small>({{ number_format($rental->tax_rate, 2) }}%)</small> @endif</span>
+                                                    <span class="fw-medium text-dark">${{ number_format($rental->tax_amount, 2) }}</span>
+                                                </div>
+
+                                                <hr class="border-secondary opacity-25 my-3">
+
+                                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                                    <span class="fs-5 fw-bold text-dark">Total</span>
+                                                    <span class="fs-4 fw-bold text-primary">${{ number_format($rental->total_amount, 2) }}</span>
+                                                </div>
+
+                                                <div class="d-grid">
+                                                    @php
+                                                        $paymentStatusClass = match($rental->payment_status) {
+                                                            'completed' => 'success',
+                                                            'pending' => 'warning',
+                                                            default => 'secondary'
+                                                        };
+                                                    @endphp
+                                                    <div class="alert alert-{{ $paymentStatusClass }} text-center mb-0 py-2 border-0">
+                                                        <small class="text-uppercase fw-bold">Payment Status: {{ ucfirst($rental->payment_status ?? 'pending') }}</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     </div>
 
                     <!-- Photos and Reviews -->

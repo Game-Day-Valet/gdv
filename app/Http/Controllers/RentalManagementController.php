@@ -81,6 +81,22 @@ class RentalManagementController extends Controller
         if ($rental->items) {
             $itemIds = collect($rental->items)->pluck('item_id')->toArray();
             $items = \App\Models\Item::whereIn('id', $itemIds)->get()->keyBy('id');
+
+            // Check for tournament specific pricing
+            if ($rental->tournament_id) {
+                $tournamentItems = DB::table('tournament_item')
+                    ->where('tournament_id', $rental->tournament_id)
+                    ->whereIn('item_id', $itemIds)
+                    ->get()
+                    ->keyBy('item_id');
+
+                foreach ($items as $itemId => $item) {
+                    if (isset($tournamentItems[$itemId]) && !is_null($tournamentItems[$itemId]->price)) {
+                        $item->price = $tournamentItems[$itemId]->price;
+                    }
+                }
+            }
+
             $rental->items_with_data = $items;
         }
 
@@ -104,11 +120,35 @@ class RentalManagementController extends Controller
             }
             $bundleIds = array_values(array_unique($bundleIds));
             $bundles = \App\Models\Bundle::whereIn('id', $bundleIds)->get()->keyBy('id');
+
+            // Check for tournament specific pricing for bundles
+            if ($rental->tournament_id) {
+                $tournamentBundles = DB::table('tournament_bundle')
+                    ->where('tournament_id', $rental->tournament_id)
+                    ->whereIn('bundle_id', $bundleIds)
+                    ->get()
+                    ->keyBy('bundle_id');
+
+                foreach ($bundles as $bundleId => $bundle) {
+                    if (isset($tournamentBundles[$bundleId]) && !is_null($tournamentBundles[$bundleId]->price)) {
+                        $bundle->price = $tournamentBundles[$bundleId]->price;
+                    }
+                }
+            }
+
             $rental->bundles_with_data = $bundles;
             $rental->bundle_quantities = $bundleQtyMap;
         }
 
-        return view('rental_management.show', compact('rental'));
+
+
+        // Fetch coupon details if promo code exists
+        $coupon = null;
+        if ($rental->promo_code) {
+            $coupon = \App\Models\Coupon::where('code', $rental->promo_code)->first();
+        }
+
+        return view('rental_management.show', compact('rental', 'coupon'));
     }
 
     /**
@@ -130,7 +170,7 @@ class RentalManagementController extends Controller
             $oldStatus = $rental->status;
 
             // Block updates if payment is pending
-            if (strtolower((string)($rental->payment_status ?? 'pending')) === 'pending') {
+            if (strtolower((string) ($rental->payment_status ?? 'pending')) === 'pending') {
                 return response()->json([
                     'success' => false,
                     'message' => 'Not allowed until payment completed'
@@ -235,7 +275,8 @@ class RentalManagementController extends Controller
                     'image_paths' => null,
                     'updated_by' => $user->id,
                 ]);
-            } catch (\Throwable $e) { /* ignore */ }
+            } catch (\Throwable $e) { /* ignore */
+            }
 
             return response()->json(['success' => true, 'message' => 'Assigned manager updated successfully.']);
         } catch (\Throwable $e) {
