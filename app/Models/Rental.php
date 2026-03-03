@@ -42,6 +42,7 @@ class Rental extends Model
         'estimated_delivery_time',
         'assigned_manager_id',
         'sort_order',
+        'airtable_id',
     ];
 
     protected $casts = [

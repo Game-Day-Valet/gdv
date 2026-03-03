@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Rental;
 use App\Models\RentalStatusLog;
+use App\Services\AirtableService;
 use App\Models\User;
 use App\Models\Tournament;
 use App\Models\Item;
@@ -20,10 +21,12 @@ use Illuminate\Support\Facades\Log;
 class RentalManagementController extends Controller
 {
     protected $rentalRepository;
+    protected $airtable;
 
-    public function __construct(RentalRepositoryInterface $rentalRepository)
+    public function __construct(RentalRepositoryInterface $rentalRepository, AirtableService $airtable)
     {
         $this->rentalRepository = $rentalRepository;
+        $this->airtable = $airtable;
     }
 
     /**
@@ -205,8 +208,15 @@ class RentalManagementController extends Controller
                 $request->assigned_manager_id
             );
 
+
             // Refresh the rental model to get updated data
             $rental->refresh();
+
+            try {
+                $this->airtable->updateOrInsertRental($rental);
+            } catch (\Throwable $e) {
+                Log::error('Airtable sync failed on updateStatus', ['error' => $e->getMessage()]);
+            }
 
             // Dispatch the event for real-time updates
             event(new RentalStatusUpdated($rental, $oldStatus, $request->status, Auth::id()));
@@ -233,7 +243,13 @@ class RentalManagementController extends Controller
         ]);
 
         try {
-            $this->rentalRepository->updatePaymentStatus($id, $request->payment_status);
+            $rental = $this->rentalRepository->updatePaymentStatus($id, $request->payment_status);
+
+            try {
+                $this->airtable->updateOrInsertRental($rental);
+            } catch (\Throwable $e) {
+                Log::error('Airtable sync failed on updatePaymentStatus', ['error' => $e->getMessage()]);
+            }
 
             return response()->json([
                 'success' => true,

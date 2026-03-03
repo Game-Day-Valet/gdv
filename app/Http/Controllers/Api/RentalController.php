@@ -11,6 +11,7 @@ use App\Repositories\RentalRepositoryInterface;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Services\ReferralService;
+use App\Services\AirtableService;
 use App\Models\Rental;
 use App\Models\RentalStatusLog;
 use App\Notifications\RentalBookingConfirmationNotification;
@@ -21,11 +22,13 @@ class RentalController extends Controller
 {
     protected $rentalRepository;
     protected $referralService;
+    protected $airtableService;
 
-    public function __construct(RentalRepositoryInterface $rentalRepository, ReferralService $referralService)
+    public function __construct(RentalRepositoryInterface $rentalRepository, ReferralService $referralService, AirtableService $airtableService)
     {
         $this->rentalRepository = $rentalRepository;
         $this->referralService = $referralService;
+        $this->airtableService = $airtableService;
     }
 
     public function index()
@@ -186,6 +189,13 @@ class RentalController extends Controller
                 // For mobile/API: do NOT send confirmation on create. Payment confirmation will be handled on update when payment_status becomes completed
                 $rental = $this->rentalRepository->create($data);
 
+                // Sync to Airtable
+                try {
+                    $this->airtableService->updateOrInsertRental($rental);
+                } catch (\Exception $e) {
+                    Log::error('Airtable sync failed in API store: ' . $e->getMessage());
+                }
+
                 return new RentalResource($rental);
             }
             throw new Exception('Unauthorized');
@@ -224,6 +234,13 @@ class RentalController extends Controller
                     } catch (\Throwable $e) {
                         Log::error('Failed to queue booking confirmation after payment', ['rental_id' => $rental->id, 'error' => $e->getMessage()]);
                     }
+                }
+
+                // Sync to Airtable
+                try {
+                    $this->airtableService->updateOrInsertRental($rental);
+                } catch (\Exception $e) {
+                    Log::error('Airtable sync failed in API update: ' . $e->getMessage());
                 }
 
                 return new RentalResource($rental);

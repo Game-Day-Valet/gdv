@@ -53,9 +53,9 @@ return [
     ],
 
     'twilio' => [
-        'sid'     => env('TWILIO_SID', 'TWILIO_SID_REMOVED'),
-        'token'   => env('TWILIO_TOKEN', 'TWILIO_TOKEN_REMOVED'),
-        'from'    => env('TWILIO_FROM', '+19802917404'),
+        'sid' => env('TWILIO_SID', 'TWILIO_SID_REMOVED'),
+        'token' => env('TWILIO_TOKEN', 'TWILIO_TOKEN_REMOVED'),
+        'from' => env('TWILIO_FROM', '+19802917404'),
         'enabled' => env('TWILIO_ENABLED', true),
     ],
 
@@ -68,5 +68,10 @@ return [
         'redirect' => env('APPLE_REDIRECT_URI', 'https://gdv.devop360.com/rental-system/apple/callback'),
     ],
 
+    'airtable' => [
+        'base_id' => env('AIRTABLE_BASE_ID'),
+        'token' => env('AIRTABLE_TOKEN'),
+        'table' => env('AIRTABLE_TABLE'),
+    ],
 
 ];

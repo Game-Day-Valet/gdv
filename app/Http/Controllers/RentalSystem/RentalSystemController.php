@@ -4,6 +4,7 @@ namespace App\Http\Controllers\RentalSystem;
 
 use App\Events\RentalBookingCreated;
 use App\Http\Controllers\Controller;
+use App\Services\AirtableService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
@@ -44,6 +45,7 @@ class RentalSystemController extends Controller
     protected $rentals;
     protected $privacyPolicies;
     protected $termsConditions;
+    protected $airtable;
 
 
     public function __construct(
@@ -56,6 +58,7 @@ class RentalSystemController extends Controller
         RentalRepositoryInterface $rentals,
         PrivacyPolicyRepositoryInterface $privacyPolicies,
         TermsConditionRepositoryInterface $termsConditions,
+        AirtableService $airtable
     ) {
         $this->referralService = $referralService;
         $this->sports = $sports;
@@ -65,6 +68,7 @@ class RentalSystemController extends Controller
         $this->rentals = $rentals;
         $this->privacyPolicies = $privacyPolicies;
         $this->termsConditions = $termsConditions;
+        $this->airtable = $airtable;
     }
 
     public function showSignup()
@@ -815,6 +819,12 @@ class RentalSystemController extends Controller
 
         Log::info('Created rental booking', ['rental' => $rental, 'total_amount' => $finalTotal]);
 
+        try {
+            $this->airtable->updateOrInsertRental($rental);
+        } catch (\Throwable $e) {
+            Log::error('Airtable sync failed on createRental', ['error' => $e->getMessage()]);
+        }
+
         // Do NOT send confirmation on creation. Email/SMS will be sent on payment completed (Stripe webhook or success fallback)
 
         // Start Stripe Checkout session
@@ -823,14 +833,16 @@ class RentalSystemController extends Controller
             $session = StripeCheckoutSession::create([
                 'mode' => 'payment',
                 'payment_method_types' => ['card'],
-                'line_items' => [[
-                    'price_data' => [
-                        'currency' => 'usd',
-                        'product_data' => ['name' => 'Tournament Rental Booking'],
-                        'unit_amount' => (int) round($finalTotal * 100), // Final backend total
-                    ],
-                    'quantity' => 1,
-                ]],
+                'line_items' => [
+                    [
+                        'price_data' => [
+                            'currency' => 'usd',
+                            'product_data' => ['name' => 'Tournament Rental Booking'],
+                            'unit_amount' => (int) round($finalTotal * 100), // Final backend total
+                        ],
+                        'quantity' => 1,
+                    ]
+                ],
                 'success_url' => route('rentalsystem.checkout.success') . '?session_id={CHECKOUT_SESSION_ID}',
                 'cancel_url' => route('rentalsystem.checkout.cancel', ['rental' => $rental->id]),
                 'metadata' => [
@@ -858,6 +870,13 @@ class RentalSystemController extends Controller
             $rentalId = $session->metadata->rental_id ?? null;
             if ($session->payment_status === 'paid' && $rentalId) {
                 $rental = $this->rentals->update($rentalId, ['payment_status' => 'completed']);
+
+                try {
+                    $this->airtable->updateOrInsertRental($rental);
+                } catch (\Throwable $e) {
+                    Log::error('Airtable sync failed on checkoutSuccess', ['error' => $e->getMessage()]);
+                }
+
                 try {
                     // After payment: send all booking confirmations (email/SMS/FCM) via existing event + notification
                     $user = auth()->user();
