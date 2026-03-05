@@ -13,13 +13,13 @@
     <style>
         :root {
             --primary-color: #bb2a3e;
-            --secondary-color: #a0aec0;
+            --secondary-color: #cbd5e1;
             --dark-color: #111827;
             --light-gray: #f8f9fa;
-            --border-color: #2b3043;
-            --bg-card: #1c1f30;
-            --bg-row: #23273b;
-            --text-gold: #dfb37b;
+            --border-color: #475569;
+            --bg-card: #2f344d;
+            --bg-row: #3b425d;
+            --text-gold: #fbbf24;
             --text-light: #ffffff;
         }
 
@@ -567,10 +567,12 @@
                     <div class="card">
                         <div
                             style="background: rgba(223, 179, 123, 0.15); border: 1px solid rgba(223, 179, 123, 0.3); border-radius: 12px; padding: 12px; margin-bottom: 18px; text-align: center;">
-                            <p style="color: var(--text-gold); font-size: 18px; margin: 0;">⚠️ <strong>LIMITED INVENTORY — RESERVE
+                            <p style="color: var(--text-gold); font-size: 18px; margin: 0;">⚠️ <strong>LIMITED INVENTORY
+                                    — RESERVE
                                     EARLY</strong></p>
                             <p style="color: var(--text-light); font-size: 14px; margin: 12px 0 0; opacity: 0.9;">
-                                {!! $tournament->description !!}</p>
+                                {!! $tournament->description !!}
+                            </p>
                         </div>
                         <div class="row-two">
                             <div>
@@ -673,7 +675,8 @@
 
                     <div class="card" style="margin-top:18px;">
                         <div class="section-title">Or choose items individually</div>
-                        <div style="color:var(--text-light);font-weight:800;margin:-6px 0 10px;font-size:18px;">**Prices are for
+                        <div style="color:var(--text-light);font-weight:800;margin:-6px 0 10px;font-size:18px;">**Prices
+                            are for
                             the entire tournament**</div>
                         <div class="items-grid">
                             @forelse(($availableItems ?? []) as $it)
