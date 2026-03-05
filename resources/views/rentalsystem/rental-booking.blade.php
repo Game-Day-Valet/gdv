@@ -12,11 +12,15 @@
     <link rel="shortcut icon" href="/images/logo-sm.png">
     <style>
         :root {
-            --primary-color: #dc3545;
-            --secondary-color: #6b7280;
+            --primary-color: #bb2a3e;
+            --secondary-color: #a0aec0;
             --dark-color: #111827;
             --light-gray: #f8f9fa;
-            --border-color: #e5e7eb;
+            --border-color: #2b3043;
+            --bg-card: #1c1f30;
+            --bg-row: #23273b;
+            --text-gold: #dfb37b;
+            --text-light: #ffffff;
         }
 
         *,
@@ -78,22 +82,24 @@
 
         /* Right side policy card */
         .policy-card {
-            background: #f9fafb;
+            background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 14px 16px;
+            border-radius: 12px;
+            padding: 16px;
+            color: var(--text-light);
         }
 
         .policy-card .policy-title {
             font-weight: 800;
             text-align: center;
             margin-bottom: 8px;
+            color: var(--text-light);
         }
 
         .policy-card ul {
             list-style: none;
             padding-left: 0;
-            margin: 8px 0 0;
+            margin: 12px 0 0;
         }
 
         .policy-card li {
@@ -101,11 +107,23 @@
             align-items: center;
             gap: 8px;
             color: var(--secondary-color);
-            margin: 6px 0;
+            margin: 8px 0;
+            font-size: 14px;
         }
 
         .policy-card li i {
             color: var(--primary-color);
+        }
+
+        .policy-card p,
+        .policy-card .small,
+        .policy-card div {
+            color: var(--secondary-color) !important;
+        }
+
+        .policy-card a {
+            color: #b1a7d6;
+            text-decoration: underline;
         }
 
         .user-name {
@@ -142,10 +160,11 @@
             font-size: 2.0rem;
             font-weight: 800;
             margin: 0 0 6px;
+            color: var(--dark-color);
         }
 
         .page-title p {
-            color: var(--secondary-color);
+            color: #6b7280;
             margin: 0;
         }
 
@@ -163,22 +182,25 @@
         }
 
         .card {
-            background: #fff;
-            border: 1.6px solid var(--border-color);
-            border-radius: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
             padding: 18px;
+            color: var(--text-light);
         }
 
         .section-title {
-            font-weight: 900;
-            letter-spacing: .08em;
-            font-size: 14px;
-            color: var(--dark-color);
+            font-weight: 800;
+            letter-spacing: .05em;
+            font-size: 15px;
+            color: var(--text-light);
             margin: 6px 0 12px;
         }
 
         .summary .section-title {
             font-size: 16px;
+            text-align: center;
+            margin-bottom: 16px;
         }
 
         .row-two {
@@ -195,19 +217,22 @@
 
         .label {
             display: block;
-            font-size: 12px;
-            letter-spacing: .14em;
-            color: #94a3b8;
+            font-size: 11px;
+            letter-spacing: .1em;
+            color: var(--secondary-color);
             margin: 12px 0 8px;
             font-weight: 800;
+            text-transform: uppercase;
         }
 
         .input,
         .select {
             width: 100%;
             display: block;
-            border: 1.6px solid var(--border-color);
-            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-row);
+            color: var(--text-light);
+            border-radius: 8px;
             padding: 12px 14px;
             font-size: 15px;
             outline: none;
@@ -216,8 +241,8 @@
 
         .input:focus,
         .select:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(220, 53, 69, .15);
+            border-color: var(--text-gold);
+            box-shadow: 0 0 0 3px rgba(223, 179, 123, .15);
         }
 
         .items-grid {
@@ -233,6 +258,7 @@
         }
 
         .item-row {
+            background: var(--bg-row);
             border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 12px;
@@ -258,6 +284,10 @@
 
         .item-title {
             font-weight: 700;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
         }
 
         .rs-thumb {
@@ -268,10 +298,11 @@
             margin-right: 10px;
             vertical-align: middle;
             cursor: pointer;
+            background: #fff;
         }
 
         .item-price {
-            color: var(--primary-color);
+            color: var(--text-light);
             font-weight: 800;
         }
 
@@ -283,12 +314,26 @@
         }
 
         .qty button {
-            width: 34px;
-            height: 34px;
-            border: 1px solid var(--border-color);
-            background: #fff;
-            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--text-gold);
+            background: transparent;
+            border-radius: 6px;
+            color: var(--text-light);
+            font-size: 18px;
+            line-height: 1;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-bottom: 2px;
+        }
+
+        .qty-val {
+            color: var(--text-light);
+            font-weight: 600;
+            width: 20px;
+            text-align: center;
         }
 
         .summary {
@@ -307,40 +352,52 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin: 6px 0;
+            margin: 8px 0;
+            color: var(--secondary-color);
+            font-size: 14px;
+        }
+
+        .sum-row span:last-child {
+            color: var(--text-light);
+            font-weight: 600;
         }
 
         .sum-total {
-            border-top: 2px solid var(--primary-color);
-            padding-top: 12px;
-            margin-top: 6px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 14px;
+            margin-top: 12px;
             font-weight: 900;
-            color: var(--primary-color);
             font-size: 18px;
+        }
+
+        .sum-total span {
+            color: var(--text-light) !important;
         }
 
         .btn-primary {
             width: 100%;
             border: 0;
-            border-radius: 12px;
+            border-radius: 8px;
             padding: 14px;
             background: var(--primary-color);
             color: #fff;
-            font-weight: 900;
+            font-weight: 800;
+            font-size: 15px;
             cursor: pointer;
-            box-shadow: 0 10px 24px rgba(220, 53, 69, .24);
+            box-shadow: 0 4px 12px rgba(187, 42, 62, .25);
+            transition: filter 0.2s;
         }
 
         .btn-primary:hover {
-            filter: brightness(.95);
+            filter: brightness(1.1);
         }
 
         /* Bundles new UI */
         .bundle-section {
-            background: linear-gradient(180deg, #ffe08a 0%, #ffb835 100%);
-            border-radius: 16px;
-            border: 1px solid #ffd166;
-            padding: 16px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 18px;
         }
 
         .bundle-header {
@@ -348,23 +405,23 @@
             align-items: center;
             gap: 10px;
             font-weight: 900;
-            color: #7a4b00;
-            font-size: 22px;
-            margin-bottom: 12px;
+            color: var(--text-light);
+            font-size: 20px;
+            margin-bottom: 6px;
         }
 
         .bundle-header i {
-            color: #ffb300;
+            color: var(--text-gold);
         }
 
         .bundle-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(255, 255, 255, 0.25);
-            border-radius: 14px;
+            background: var(--bg-row);
+            border-radius: 12px;
             padding: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            border: 1px solid var(--border-color);
             margin-bottom: 12px;
         }
 
@@ -376,39 +433,37 @@
         }
 
         .bundle-thumb {
-            width: 96px;
-            height: 96px;
+            width: 80px;
+            height: 80px;
             background: #fff;
-            border-radius: 18px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             border: 1px solid #fff;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
             overflow: hidden;
             flex: 0 0 auto;
         }
 
         .bundle-thumb img.rs-thumb {
-            width: 90px;
-            height: 90px;
-            border-radius: 12px;
+            width: 76px;
+            height: 76px;
+            border-radius: 8px;
             margin: 0;
         }
 
         .bundle-info h3 {
-            margin: 0;
-            font-size: 28px;
+            margin: 0 0 4px 0;
+            font-size: 18px;
             font-weight: 800;
-            color: #ffffff;
-            text-shadow: 0 1px 0 rgba(0, 0, 0, .08);
+            color: var(--text-light);
         }
 
         .bundle-desc {
-            color: #fff;
-            opacity: .9;
-            font-size: 14px;
+            color: var(--secondary-color);
+            font-size: 13px;
             line-height: 1.4;
+            margin-bottom: 6px;
             max-height: 2.8em;
             overflow: hidden;
             display: -webkit-box;
@@ -417,44 +472,47 @@
         }
 
         .bundle-sub {
-            margin-top: 6px;
-            color: #fff;
-            opacity: .95;
-            font-size: 16px;
+            color: var(--secondary-color);
+            font-size: 13px;
         }
 
         .bundle-price {
-            color: #fff;
+            color: var(--text-light);
             font-weight: 800;
-            font-size: 22px;
-            margin-top: 8px;
+            font-size: 18px;
+            margin-top: 6px;
         }
 
         .bundle-qty {
             display: flex;
             align-items: center;
             gap: 12px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px solid #fff;
-            border-radius: 14px;
-            padding: 10px 14px;
+            background: transparent;
+            border: 1px solid var(--text-gold);
+            border-radius: 8px;
+            padding: 6px 12px;
         }
 
         .bundle-qty button {
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             border: 0;
             background: transparent;
-            color: #fff;
-            font-size: 28px;
+            color: var(--text-light);
+            font-size: 24px;
             line-height: 1;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-bottom: 3px;
         }
 
         .bundle-qty .qty-val {
-            font-size: 28px;
-            color: #fff;
-            width: 36px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-light);
+            width: 24px;
             text-align: center;
         }
     </style>
@@ -478,16 +536,20 @@
         </div>
 
         @if(isset($tournament) && $tournament)
-        <div class="tournament-info" style="text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 16px; border: 2px solid #dee2e6;">
-            <h3 style="margin: 0; color: #dc3545; font-size: 1.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; display:inline-flex; align-items:center; gap:10px;">
-                @if(!empty($tournament->image))
-                <img id="tournamentImg" src="{{ asset('storage/'.$tournament->image) }}" data-fullurl="{{ asset('storage/'.$tournament->image) }}" alt="{{ $tournament->name }}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;border:1px solid #dee2e6; margin-right: 8px; cursor:pointer;">
-                @else
-                <i class="fas fa-trophy" style="color: #ffc107;"></i>
-                @endif
-                <span>{{ $tournament->name ?? 'Tournament' }}</span>
-            </h3>
-        </div>
+            <div class="tournament-info"
+                style="text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-row) 100%); border-radius: 12px; border: 1px solid var(--border-color);">
+                <h3
+                    style="margin: 0; color: var(--text-light); font-size: 1.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; display:inline-flex; align-items:center; gap:10px;">
+                    @if(!empty($tournament->image))
+                        <img id="tournamentImg" src="{{ asset('storage/' . $tournament->image) }}"
+                            data-fullurl="{{ asset('storage/' . $tournament->image) }}" alt="{{ $tournament->name }}"
+                            style="width:60px;height:60px;object-fit:cover;border-radius:8px;border:1px solid var(--border-color); margin-right: 8px; cursor:pointer;">
+                    @else
+                        <i class="fas fa-trophy" style="color: #ffc107;"></i>
+                    @endif
+                    <span>{{ $tournament->name ?? 'Tournament' }}</span>
+                </h3>
+            </div>
         @endif
 
         <form id="bookingForm" method="POST" action="{{ route('rentalsystem.rental.create') }}">
@@ -496,15 +558,19 @@
 
             <!-- Hidden field for discounted total -->
             <input type="hidden" name="total_amount" id="total_amount_input" value="0">
-            <input type="hidden" name="tax_rate" id="tax_rate_input" value="{{ isset($tournament) ? (float)($tournament->tax_rate ?? 0) : 0 }}">
+            <input type="hidden" name="tax_rate" id="tax_rate_input"
+                value="{{ isset($tournament) ? (float) ($tournament->tax_rate ?? 0) : 0 }}">
             <input type="hidden" name="tax_amount" id="tax_amount_input" value="0">
 
             <div class="layout">
                 <div>
                     <div class="card">
-                        <div style="background: #fff3cd; border: 1px solid #ffeeba; border-radius: 12px; padding: 12px; margin-bottom: 18px; text-align: center;">
-                            <p style="color: black; font-size: 18px; margin: 0;">⚠️ <strong>LIMITED INVENTORY — RESERVE EARLY</strong></p>
-                            <p style="color: #856404; font-size: 14px; margin: 12px 0 0;">{!! $tournament->description !!}</p>
+                        <div
+                            style="background: rgba(223, 179, 123, 0.15); border: 1px solid rgba(223, 179, 123, 0.3); border-radius: 12px; padding: 12px; margin-bottom: 18px; text-align: center;">
+                            <p style="color: var(--text-gold); font-size: 18px; margin: 0;">⚠️ <strong>LIMITED INVENTORY — RESERVE
+                                    EARLY</strong></p>
+                            <p style="color: var(--text-light); font-size: 14px; margin: 12px 0 0; opacity: 0.9;">
+                                {!! $tournament->description !!}</p>
                         </div>
                         <div class="row-two">
                             <div>
@@ -513,7 +579,8 @@
                             </div>
                             <div>
                                 <label class="label">TEAM NAME WITH AGE GROUP <span class="text-danger">*</span></label>
-                                <input class="input" type="text" name="team_name_with_age_group" placeholder="Team name with age group" required>
+                                <input class="input" type="text" name="team_name_with_age_group"
+                                    placeholder="Team name with age group" required>
                             </div>
                             <div>
                                 <label class="label">COACH NAME <span class="text-danger">*</span></label>
@@ -521,17 +588,21 @@
                             </div>
                             <div>
                                 <label class="label">EMAIL <span class="text-danger">*</span></label>
-                                <input class="input" type="email" name="email" placeholder="you@example.com" value="" required>
+                                <input class="input" type="email" name="email" placeholder="you@example.com" value=""
+                                    required>
                                 <small class="text-muted">Booking confirmation and updates will be emailed here.</small>
                             </div>
                         </div>
                         <div class="row-two">
                             <div>
                                 <label class="label">PHONE NUMBER <span class="text-danger">*</span></label>
-                                <input class="input" type="tel" name="phone_number" placeholder="e.g., +1 555 123 4567" value="" required>
+                                <input class="input" type="tel" name="phone_number" placeholder="e.g., +1 555 123 4567"
+                                    value="" required>
                                 <label style="display:flex;gap:10px;align-items:flex-start;margin-top:10px;">
                                     <input id="sms_opt_in" type="checkbox" name="sms_opt_in" required>
-                                    <span>I agree to receive important text notifications about my rental (confirmations, delivery updates, event-day notices). Message frequency may vary; msg & data rates may apply. Reply STOP to opt out, HELP for help.</span>
+                                    <span>I agree to receive important text notifications about my rental
+                                        (confirmations, delivery updates, event-day notices). Message frequency may
+                                        vary; msg & data rates may apply. Reply STOP to opt out, HELP for help.</span>
                                 </label>
                             </div>
                         </div>
@@ -540,83 +611,98 @@
                     <!-- Bundles first, highlighted as best value -->
                     <div class="bundle-section" style="margin-top:18px;">
                         <div class="bundle-header"><i class="fas fa-star"></i> Best Value Bundles</div>
-                        <div style="color:white;font-weight:800;margin:-6px 0 10px;font-size:18px;">**Prices are for the entire tournament**</div>
+                        <div style="color:white;font-weight:800;margin:-6px 0 10px;font-size:18px;">**Prices are for the
+                            entire tournament**</div>
                         @forelse(($availableBundles ?? []) as $bd)
-                        <div class="bundle-row" data-type="bundle" data-id="{{ $bd->id }}" data-price="{{ (float)($bd->effective_price ?? $bd->price ?? 0) }}">
-                            <div class="bundle-left">
-                                <div class="bundle-thumb">
-                                    @if(!empty($bd->image))
-                                    <img class="rs-thumb" src="{{ asset('storage/'.$bd->image) }}" data-full="{{ asset('storage/'.$bd->image) }}" alt="{{ $bd->name }}">
-                                    @endif
-                                </div>
-                                <div class="bundle-info">
-                                    <h3>{{ $bd->name }}</h3>
-                                    @if(!empty($bd->description))
-                                    <div class="bundle-desc">{!! strip_tags($bd->description) !!}</div>
-                                    @endif
-                                    <div class="bundle-sub">
-                                        @php
-                                        $itemsDesc = [];
-                                        $bundleItems = $bd->items ?? [];
-                                        @endphp
-                                        @if(!empty($bundleItems))
-                                        @foreach($bundleItems as $bi)
-                                        @php
-                                        $iname = is_array($bi) ? ($bi['name'] ?? '') : ($bi->name ?? '');
-                                        $iqty = 1;
-                                        if (is_object($bi) && isset($bi->pivot)) { $iqty = $bi->pivot->quantity ?? 1; }
-                                        elseif (is_array($bi)) { $iqty = (int)($bi['quantity'] ?? 1); }
-                                        if(!empty($iname)) { $itemsDesc[] = $iqty . ' x ' . $iname; }
-                                        @endphp
-                                        @endforeach
-                                        Total Items: {{ implode(', ', $itemsDesc) }}
-                                        @else
-                                        Total Items: 1 x {{ $bd->name }}
+                            <div class="bundle-row" data-type="bundle" data-id="{{ $bd->id }}"
+                                data-price="{{ (float) ($bd->effective_price ?? $bd->price ?? 0) }}">
+                                <div class="bundle-left">
+                                    <div class="bundle-thumb">
+                                        @if(!empty($bd->image))
+                                            <img class="rs-thumb" src="{{ asset('storage/' . $bd->image) }}"
+                                                data-full="{{ asset('storage/' . $bd->image) }}" alt="{{ $bd->name }}">
                                         @endif
                                     </div>
-                                    <div class="bundle-price">${{ number_format((float)($bd->effective_price ?? $bd->price ?? 0), 2) }}</div>
+                                    <div class="bundle-info">
+                                        <h3>{{ $bd->name }}</h3>
+                                        @if(!empty($bd->description))
+                                            <div class="bundle-desc">{!! strip_tags($bd->description) !!}</div>
+                                        @endif
+                                        <div class="bundle-sub">
+                                            @php
+                                                $itemsDesc = [];
+                                                $bundleItems = $bd->items ?? [];
+                                            @endphp
+                                            @if(!empty($bundleItems))
+                                                @foreach($bundleItems as $bi)
+                                                    @php
+                                                        $iname = is_array($bi) ? ($bi['name'] ?? '') : ($bi->name ?? '');
+                                                        $iqty = 1;
+                                                        if (is_object($bi) && isset($bi->pivot)) {
+                                                            $iqty = $bi->pivot->quantity ?? 1;
+                                                        } elseif (is_array($bi)) {
+                                                            $iqty = (int) ($bi['quantity'] ?? 1);
+                                                        }
+                                                        if (!empty($iname)) {
+                                                            $itemsDesc[] = $iqty . ' x ' . $iname;
+                                                        }
+                                                    @endphp
+                                                @endforeach
+                                                Total Items: {{ implode(', ', $itemsDesc) }}
+                                            @else
+                                                Total Items: 1 x {{ $bd->name }}
+                                            @endif
+                                        </div>
+                                        <div class="bundle-price">
+                                            ${{ number_format((float) ($bd->effective_price ?? $bd->price ?? 0), 2) }}</div>
+                                    </div>
+                                </div>
+                                <div class="bundle-qty">
+                                    <button type="button" class="qty-dec">−</button>
+                                    <span class="qty-val">0</span>
+                                    <button type="button" class="qty-inc">+</button>
+                                    <input type="hidden" name="bundles[{{ $bd->id }}]" value="0" class="bundle-input">
                                 </div>
                             </div>
-                            <div class="bundle-qty">
-                                <button type="button" class="qty-dec">−</button>
-                                <span class="qty-val">0</span>
-                                <button type="button" class="qty-inc">+</button>
-                                <input type="hidden" name="bundles[{{ $bd->id }}]" value="0" class="bundle-input">
-                            </div>
-                        </div>
                         @empty
-                        <div class="meta">No bundles available</div>
+                            <div class="meta">No bundles available</div>
                         @endforelse
-                        <div class="text-danger small mt-2" id="bundles-error" style="display: none;">Please select at least one item or bundle</div>
+                        <div class="text-danger small mt-2" id="bundles-error" style="display: none;">Please select at
+                            least one item or bundle</div>
                     </div>
 
                     <div class="card" style="margin-top:18px;">
                         <div class="section-title">Or choose items individually</div>
-                        <div style="color:#b91c1c;font-weight:800;margin:-6px 0 10px;font-size:18px;">**Prices are for the entire tournament**</div>
+                        <div style="color:var(--text-light);font-weight:800;margin:-6px 0 10px;font-size:18px;">**Prices are for
+                            the entire tournament**</div>
                         <div class="items-grid">
                             @forelse(($availableItems ?? []) as $it)
-                            <div class="item-row" data-type="item" data-id="{{ $it->id }}" data-price="{{ (float)($it->effective_price ?? $it->price ?? 0) }}">
-                                <div class="item-meta">
-                                    <div class="item-title">
-                                        @if(!empty($it->image_url))
-                                        <img class="rs-thumb" src="{{ $it->image_url }}" data-full="{{ $it->image_url }}" alt="{{ $it->name }}">
-                                        @endif
-                                        {{ $it->name }}
+                                <div class="item-row" data-type="item" data-id="{{ $it->id }}"
+                                    data-price="{{ (float) ($it->effective_price ?? $it->price ?? 0) }}">
+                                    <div class="item-meta">
+                                        <div class="item-title">
+                                            @if(!empty($it->image_url))
+                                                <img class="rs-thumb" src="{{ $it->image_url }}"
+                                                    data-full="{{ $it->image_url }}" alt="{{ $it->name }}">
+                                            @endif
+                                            {{ $it->name }}
+                                        </div>
+                                        <div class="item-price">
+                                            ${{ number_format((float) ($it->effective_price ?? $it->price ?? 0), 2) }}</div>
                                     </div>
-                                    <div class="item-price">${{ number_format((float)($it->effective_price ?? $it->price ?? 0), 2) }}</div>
+                                    <div class="qty">
+                                        <button type="button" class="qty-dec">-</button>
+                                        <span class="qty-val">0</span>
+                                        <button type="button" class="qty-inc">+</button>
+                                        <input type="hidden" name="items[{{ $it->id }}]" value="0" class="item-input">
+                                    </div>
                                 </div>
-                                <div class="qty">
-                                    <button type="button" class="qty-dec">-</button>
-                                    <span class="qty-val">0</span>
-                                    <button type="button" class="qty-inc">+</button>
-                                    <input type="hidden" name="items[{{ $it->id }}]" value="0" class="item-input">
-                                </div>
-                            </div>
                             @empty
-                            <div class="meta">No items available</div>
+                                <div class="meta">No items available</div>
                             @endforelse
                         </div>
-                        <div class="text-danger small mt-2" id="items-error" style="display: none;">Please select at least one item or bundle</div>
+                        <div class="text-danger small mt-2" id="items-error" style="display: none;">Please select at
+                            least one item or bundle</div>
                     </div>
 
                     <!-- Promo Code - moved here between Bundles and Drop-Off -->
@@ -625,10 +711,12 @@
                         <div class="row-two">
                             <div>
                                 <label class="label">ENTER CODE</label>
-                                <input type="text" class="input" id="promo_code" name="promo_code" placeholder="Enter code">
+                                <input type="text" class="input" id="promo_code" name="promo_code"
+                                    placeholder="Enter code">
                             </div>
                             <div style="display:flex; align-items:flex-end;">
-                                <button type="button" id="validateCouponBtn" class="btn-primary" style="width:auto; padding:12px 18px;">Apply</button>
+                                <button type="button" id="validateCouponBtn" class="btn-primary"
+                                    style="width:auto; padding:12px 18px;">Apply</button>
                             </div>
                         </div>
                     </div>
@@ -644,10 +732,12 @@
 
                     <div class="card" style="margin-top:18px;">
                         <div class="section-title">DAMAGE WAIVER</div>
-                        <div id="waiverSubtitle" class="text-muted" style="margin-top:4px; display:none; font-size:12px;"></div>
+                        <div id="waiverSubtitle" class="text-muted"
+                            style="margin-top:4px; display:none; font-size:12px;"></div>
                         <div data-waiver-container>
                             <label style="display:flex;gap:10px;align-items:center;">
-                                <input type="checkbox" name="damage_waiver_options[]" value="20" data-price="20" id="waiver_20"> Add damage waiver — $20.00
+                                <input type="checkbox" name="damage_waiver_options[]" value="20" data-price="20"
+                                    id="waiver_20"> Add damage waiver — $20.00
                             </label>
                         </div>
                     </div>
@@ -667,7 +757,8 @@
                         <div class="sum-row"><span>Bundles Subtotal</span><span id="bundlesSubtotal">$0.00</span></div>
                         <div class="sum-row"><span>Insurance</span><span id="insuranceAmount">$0.00</span></div>
                         <div class="sum-row"><span>Damage Waiver</span><span id="waiverAmount">$0.00</span></div>
-                        <div class="sum-row" id="discountRow" style="display:none; color: var(--primary-color); font-weight:700;">
+                        <div class="sum-row" id="discountRow"
+                            style="display:none; color: var(--primary-color); font-weight:700;">
                             <span>Discount</span><span id="discountAmount">-$0.00</span>
                         </div>
                         <div class="sum-row" id="taxRow" style="display:flex;">
@@ -679,14 +770,24 @@
                     </div>
                     <div class="policy-card" style="margin-top:12px;">
                         <div class="policy-title">Policies</div>
-                        <p class="small" style="margin:0;color:#6b7280;">By placing your order you agree to Game Day Valet’s terms.</p>
+                        <p class="small" style="margin:0;color:#6b7280;">By placing your order you agree to Game Day
+                            Valet’s terms.</p>
                         <ul>
-                            <li><i class="fas fa-file-contract"></i><a href="{{ route('rentalsystem.terms') }}" target="_blank">Terms & Conditions</a></li>
-                            <li><i class="fas fa-shield-alt"></i><a href="{{ route('rentalsystem.privacy-policy') }}" target="_blank">Privacy Policy</a></li>
+                            <li><i class="fas fa-file-contract"></i><a href="{{ route('rentalsystem.terms') }}"
+                                    target="_blank">Terms & Conditions</a></li>
+                            <li><i class="fas fa-shield-alt"></i><a href="{{ route('rentalsystem.privacy-policy') }}"
+                                    target="_blank">Privacy Policy</a></li>
                         </ul>
-                        <div class="small" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border-color);color:#6b7280;line-height:1.5;font-size:12.5px;">
-                            By entering your mobile number and placing your order, you agree to receive important text notifications from Game Day Valet (GDV) about your rental (booking confirmations, delivery updates, and event-day notices). Message frequency may vary; msg & data rates may apply. Reply STOP to opt out, HELP for help. See our <a href="{{ route('rentalsystem.terms') }}" target="_blank">Terms</a>
-                            &amp; <a href="{{ route('rentalsystem.privacy-policy') }}" target="_blank">Privacy Policy</a>. Consent to receive text notifications is not required to complete your booking.
+                        <div class="small"
+                            style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border-color);color:#6b7280;line-height:1.5;font-size:12.5px;">
+                            By entering your mobile number and placing your order, you agree to receive important text
+                            notifications from Game Day Valet (GDV) about your rental (booking confirmations, delivery
+                            updates, and event-day notices). Message frequency may vary; msg & data rates may apply.
+                            Reply STOP to opt out, HELP for help. See our <a href="{{ route('rentalsystem.terms') }}"
+                                target="_blank">Terms</a>
+                            &amp; <a href="{{ route('rentalsystem.privacy-policy') }}" target="_blank">Privacy
+                                Policy</a>. Consent to receive text notifications is not required to complete your
+                            booking.
                         </div>
                     </div>
                 </div>
@@ -694,10 +795,13 @@
         </form>
     </div>
 
-    <div id="imageModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10000;align-items:center;justify-content:center;">
+    <div id="imageModal"
+        style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10000;align-items:center;justify-content:center;">
         <div style="position:relative;max-width:90vw;max-height:90vh;">
-            <button id="imageModalClose" aria-label="Close" style="position:absolute;right:-10px;top:-10px;background:#fff;border:1px solid #ddd;border-radius:50%;width:32px;height:32px;cursor:pointer;font-weight:900;">×</button>
-            <img id="imageModalImg" src="" alt="Tournament image" style="max-width:90vw;max-height:90vh;border-radius:12px;border:2px solid #fff;box-shadow:0 20px 60px rgba(0,0,0,.35);">
+            <button id="imageModalClose" aria-label="Close"
+                style="position:absolute;right:-10px;top:-10px;background:#fff;border:1px solid #ddd;border-radius:50%;width:32px;height:32px;cursor:pointer;font-weight:900;">×</button>
+            <img id="imageModalImg" src="" alt="Tournament image"
+                style="max-width:90vw;max-height:90vh;border-radius:12px;border:2px solid #fff;box-shadow:0 20px 60px rgba(0,0,0,.35);">
         </div>
     </div>
 
@@ -832,13 +936,13 @@
                 waiverVal += parseFloat(c.getAttribute('data-price')) || 0;
             });
             // Yeh non-taxable hain
-            const totalFees = insuranceVal + waiverVal; 
+            const totalFees = insuranceVal + waiverVal;
 
             // Step 3: Apply promo discount (ONLY on items/bundles)
             const discountValue = parseFloat(window.__appliedDiscount || 0) || 0;
             const discountType = window.__appliedDiscountType || null; // 'fixed' or 'percent'
             let discountApplied = 0;
-            
+
             if (discountType === 'percent') {
                 discountApplied = Math.min(itemsAndBundlesSubtotal, (itemsAndBundlesSubtotal * (discountValue / 100)));
             } else if (discountType === 'fixed') {
@@ -855,7 +959,7 @@
             // Step 6: Calculate Final Total
             // (Discounted Subtotal) + (Non-Taxable Fees) + Tax
             const total = taxableAmount + totalFees + taxAmount;
-            
+
             // --- END: NEW LOGIC ---
 
             // Update UI (This part remains the same)
@@ -863,30 +967,30 @@
             document.getElementById('bundlesSubtotal').textContent = formatUSD(bundlesSubtotal);
             document.getElementById('insuranceAmount').textContent = formatUSD(insuranceVal);
             document.getElementById('waiverAmount').textContent = formatUSD(waiverVal);
-            
+
             const discountRow = document.getElementById('discountRow');
             const discountAmount = document.getElementById('discountAmount');
             if (discountApplied > 0) {
                 discountRow.style.display = 'flex';
-                discountAmount.textContent = `-${formatUSD(discountApplied).replace('$','')}`;
+                discountAmount.textContent = `-${formatUSD(discountApplied).replace('$', '')}`;
             } else {
                 discountRow.style.display = 'none';
             }
-            
+
             // Update tax UI and hidden inputs
             const taxRateLabel = document.getElementById('taxRateLabel');
             const taxAmountEl = document.getElementById('taxAmount');
             if (taxRateLabel) taxRateLabel.textContent = `${taxRate.toFixed(2)}%`;
             if (taxAmountEl) taxAmountEl.textContent = formatUSD(taxAmount);
-            
+
             document.getElementById('totalAmount').textContent = formatUSD(total);
-            
+
             // write final total to hidden input for server/stripe
             // NOTE: Hum in values par backend mein bharosa nahi kar rahe, 
             // lekin inhein update karna achi practice hai.
             const totalInput = document.getElementById('total_amount_input');
-            if (totalInput) totalInput.value = total.toFixed(2); 
-            
+            if (totalInput) totalInput.value = total.toFixed(2);
+
             const taxAmountInput = document.getElementById('tax_amount_input');
             if (taxAmountInput) taxAmountInput.value = taxAmount.toFixed(2);
         }
@@ -974,7 +1078,7 @@
         }
 
         // Form submission validation with login check
-        document.getElementById('bookingForm').addEventListener('submit', function(e) {
+        document.getElementById('bookingForm').addEventListener('submit', function (e) {
             e.preventDefault(); // Prevent default form submission
             if (!validateForm()) {
                 showModal('Please select at least one item or bundle before proceeding.');
@@ -991,7 +1095,7 @@
         });
 
         // Validate coupon via API and apply discount on frontend only
-        document.getElementById('validateCouponBtn').addEventListener('click', async function() {
+        document.getElementById('validateCouponBtn').addEventListener('click', async function () {
             // Require at least one item or bundle selected before validating
             let hasItems = false,
                 hasBundles = false;
@@ -1081,13 +1185,13 @@
 
         loadBookingSettings();
         // Image modal for tournament and item/bundle images
-        (function() {
+        (function () {
             const img = document.getElementById('tournamentImg');
             const modal = document.getElementById('imageModal');
             const modalImg = document.getElementById('imageModalImg');
             const closeBtn = document.getElementById('imageModalClose');
             if (img && modal && modalImg) {
-                img.addEventListener('click', function() {
+                img.addEventListener('click', function () {
                     const fullUrl = img.getAttribute('data-fullurl') || img.src;
                     modalImg.src = fullUrl;
                     modal.style.display = 'flex';
@@ -1096,7 +1200,7 @@
                     modal.style.display = 'none';
                     modalImg.src = '';
                 };
-                modal.addEventListener('click', function(e) {
+                modal.addEventListener('click', function (e) {
                     if (e.target === modal) hide();
                 });
                 if (closeBtn) {
@@ -1104,8 +1208,8 @@
                 }
             }
             // Click-to-zoom for item and bundle thumbnails
-            document.querySelectorAll('.rs-thumb').forEach(function(el) {
-                el.addEventListener('click', function() {
+            document.querySelectorAll('.rs-thumb').forEach(function (el) {
+                el.addEventListener('click', function () {
                     const full = el.getAttribute('data-full') || el.src;
                     modalImg.src = full;
                     modal.style.display = 'flex';
