@@ -144,6 +144,78 @@ class AirtableService
     }
 
     /**
+     * Sync Game Date and Game Time for all rentals of a specific tournament.
+     *
+     * @param \App\Models\Tournament $tournament
+     * @return void
+     */
+    public function syncTournamentGamesToAirtable(\App\Models\Tournament $tournament)
+    {
+        try {
+            // Get all rentals for this tournament that ALREADY have an airtable_id
+            $rentals = Rental::where('tournament_id', $tournament->id)
+                ->whereNotNull('airtable_id')
+                ->get();
+
+            if ($rentals->isEmpty()) {
+                $this->log("No rentals found with Airtable IDs for tournament #{$tournament->id} to perform batch Game Date/Time update.");
+                return;
+            }
+
+            $fields = [
+                'Game Date' => $tournament->game_date ? \Carbon\Carbon::parse($tournament->game_date)->format('Y-m-d') : null,
+            ];
+
+            // If Game Time is provided, add it formatted.
+            // Airtable Time fields require a full ISO 8601 string if the field is configured as Date with Time enabled.
+            if ($tournament->game_time) {
+                $baseDate = $tournament->game_date ? \Carbon\Carbon::parse($tournament->game_date)->format('Y-m-d') : now()->format('Y-m-d');
+                $timeString = \Carbon\Carbon::parse($tournament->game_time)->format('H:i:00');
+                $fields['Game Time'] = "{$baseDate}T{$timeString}.000Z";
+            } else {
+                $fields['Game Time'] = null;
+            }
+
+            // Remove nulls so we don't accidentally clear fields that shouldn't be cleared,
+            // EXCEPT if both game_date and game_time were intentionally set to null.
+            if ($fields['Game Date'] === null) {
+                unset($fields['Game Date']);
+            }
+            if ($fields['Game Time'] === null) {
+                unset($fields['Game Time']);
+            }
+
+            $this->log("Syncing Game Date/Time for tournament #{$tournament->id} to Airtable", $fields);
+
+            $successCount = 0;
+            $failCount = 0;
+
+            /** @var \App\Models\Rental $rental */
+            foreach ($rentals as $rental) {
+                $airtableId = $rental->airtable_id;
+
+                $response = Http::withToken($this->token)
+                    ->patch("https://api.airtable.com/v0/{$this->baseId}/" . urlencode($this->table) . "/{$airtableId}", [
+                        'fields' => $fields,
+                        'typecast' => true
+                    ]);
+
+                if ($response->successful()) {
+                    $successCount++;
+                } else {
+                    $failCount++;
+                    $this->log("Failed to sync Game Date/Time for rental #{$rental->id}", $response->json(), 'error');
+                }
+            }
+
+            $this->log("Finished syncing Game Date/Time for tournament #{$tournament->id}. Success: {$successCount}, Failed: {$failCount}");
+
+        } catch (\Throwable $e) {
+            $this->log("Critical error syncing Game Date/Time for tournament #{$tournament->id}: " . $e->getMessage(), [], 'error');
+        }
+    }
+
+    /**
      * Separate logging for Airtable.
      *
      * @param string $message

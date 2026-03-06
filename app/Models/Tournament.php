@@ -18,6 +18,8 @@ class Tournament extends Model
         'start_date',
         'description',
         'end_date',
+        'game_date',
+        'game_time',
         'location',
         'status',
         'tax_rate',

@@ -21,6 +21,8 @@ class TournamentRequest extends FormRequest
             'name' => 'required|string|max:255',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
+            'game_date' => 'nullable|date',
+            'game_time' => 'nullable|date_format:H:i',
             'location' => 'required|string|max:255',
             'description' => 'nullable|string',
             'status' => 'nullable|in:' . implode(',', array_column(TournamentStatus::cases(), 'value')),

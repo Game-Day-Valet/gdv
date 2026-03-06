@@ -14,10 +14,12 @@ use App\Models\Sport;
 class TournamentController extends Controller
 {
     protected $tournamentRepository;
+    protected $airtableService;
 
-    public function __construct(TournamentRepositoryInterface $tournamentRepository)
+    public function __construct(TournamentRepositoryInterface $tournamentRepository, \App\Services\AirtableService $airtableService)
     {
         $this->tournamentRepository = $tournamentRepository;
+        $this->airtableService = $airtableService;
     }
 
     public function index()
@@ -73,7 +75,20 @@ class TournamentController extends Controller
 
     public function update(TournamentRequest $request, $id)
     {
+        // Check if game date or time was changed by comparing old and new values.
+        $tournamentBeforeUpdate = $this->tournamentRepository->find($id);
+        $oldGameDate = $tournamentBeforeUpdate->game_date;
+        $oldGameTime = $tournamentBeforeUpdate->game_time;
+
         $this->tournamentRepository->update($id, $request->validated());
+
+        $tournamentAfterUpdate = $this->tournamentRepository->find($id);
+
+        // If the game_date or game_time changed, sync to Airtable
+        if ($oldGameDate != $tournamentAfterUpdate->game_date || $oldGameTime != $tournamentAfterUpdate->game_time) {
+            $this->airtableService->syncTournamentGamesToAirtable($tournamentAfterUpdate);
+        }
+
         return redirect()->route('tournament-management.index')->with('success', 'Tournament updated successfully.');
     }
 

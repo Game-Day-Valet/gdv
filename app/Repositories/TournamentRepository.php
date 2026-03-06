@@ -89,8 +89,9 @@ class TournamentRepository implements TournamentRepositoryInterface
         // $orders is array of ['id' => int, 'sort_order' => int]
         DB::transaction(function () use ($orders) {
             foreach ($orders as $o) {
-                if (!isset($o['id']) || !isset($o['sort_order'])) continue;
-                Tournament::where('id', $o['id'])->update(['sort_order' => (int)$o['sort_order']]);
+                if (!isset($o['id']) || !isset($o['sort_order']))
+                    continue;
+                Tournament::where('id', $o['id'])->update(['sort_order' => (int) $o['sort_order']]);
             }
         });
     }
@@ -133,6 +134,8 @@ class TournamentRepository implements TournamentRepositoryInterface
                 'image' => $imagePath, // Store relative path
                 'start_date' => $data['start_date'],
                 'end_date' => $data['end_date'] ?? null,
+                'game_date' => $data['game_date'] ?? null,
+                'game_time' => $data['game_time'] ?? null,
                 'location' => $data['location'],
                 'description' => $data['description'] ?? null,
                 'status' => $data['status'] ?? TournamentStatus::ACTIVE->value,
@@ -143,12 +146,13 @@ class TournamentRepository implements TournamentRepositoryInterface
             if (!empty($data['items']) && is_array($data['items'])) {
                 $syncItems = [];
                 foreach ($data['items'] as $itemId => $payload) {
-                    if (empty($payload['enabled'])) continue; // only when checkbox is checked
+                    if (empty($payload['enabled']))
+                        continue; // only when checkbox is checked
                     $pivot = [];
                     if (isset($payload['price']) && $payload['price'] !== '' && $payload['price'] !== null) {
-                        $pivot['price'] = (float)$payload['price'];
+                        $pivot['price'] = (float) $payload['price'];
                     }
-                    $syncItems[(int)$itemId] = $pivot;
+                    $syncItems[(int) $itemId] = $pivot;
                 }
                 if (!empty($syncItems)) {
                     $tournament->items()->sync($syncItems);
@@ -159,12 +163,13 @@ class TournamentRepository implements TournamentRepositoryInterface
             if (!empty($data['bundles']) && is_array($data['bundles'])) {
                 $syncBundles = [];
                 foreach ($data['bundles'] as $bundleId => $payload) {
-                    if (empty($payload['enabled'])) continue; // only when checkbox is checked
+                    if (empty($payload['enabled']))
+                        continue; // only when checkbox is checked
                     $pivot = [];
                     if (isset($payload['price']) && $payload['price'] !== '' && $payload['price'] !== null) {
-                        $pivot['price'] = (float)$payload['price'];
+                        $pivot['price'] = (float) $payload['price'];
                     }
-                    $syncBundles[(int)$bundleId] = $pivot;
+                    $syncBundles[(int) $bundleId] = $pivot;
                 }
                 if (!empty($syncBundles)) {
                     $tournament->bundles()->sync($syncBundles);
@@ -218,9 +223,11 @@ class TournamentRepository implements TournamentRepositoryInterface
                 'name' => $data['name'] ?? $tournament->name,
                 'image' => $imagePath,
                 'start_date' => $data['start_date'] ?? $tournament->start_date,
-                'end_date' => $data['end_date'] ?? $tournament->end_date,
+                'end_date' => array_key_exists('end_date', $data) ? $data['end_date'] : $tournament->end_date,
+                'game_date' => array_key_exists('game_date', $data) ? $data['game_date'] : $tournament->game_date,
+                'game_time' => array_key_exists('game_time', $data) ? $data['game_time'] : $tournament->game_time,
                 'location' => $data['location'] ?? $tournament->location,
-                'description' => $data['description'] ?? $tournament->description,
+                'description' => array_key_exists('description', $data) ? $data['description'] : $tournament->description,
                 'status' => $data['status'] ?? $tournament->status,
                 'tax_rate' => array_key_exists('tax_rate', $data) ? $data['tax_rate'] : $tournament->tax_rate,
             ]);
@@ -228,13 +235,14 @@ class TournamentRepository implements TournamentRepositoryInterface
             // Sync items if provided
             if (array_key_exists('items', $data)) {
                 $syncItems = [];
-                foreach ((array)$data['items'] as $itemId => $payload) {
-                    if (empty($payload['enabled'])) continue; // only attach checked
+                foreach ((array) $data['items'] as $itemId => $payload) {
+                    if (empty($payload['enabled']))
+                        continue; // only attach checked
                     $pivot = [];
                     if (isset($payload['price']) && $payload['price'] !== '' && $payload['price'] !== null) {
-                        $pivot['price'] = (float)$payload['price'];
+                        $pivot['price'] = (float) $payload['price'];
                     }
-                    $syncItems[(int)$itemId] = $pivot;
+                    $syncItems[(int) $itemId] = $pivot;
                 }
                 $tournament->items()->sync($syncItems);
             }
@@ -242,13 +250,14 @@ class TournamentRepository implements TournamentRepositoryInterface
             // Sync bundles if provided
             if (array_key_exists('bundles', $data)) {
                 $syncBundles = [];
-                foreach ((array)$data['bundles'] as $bundleId => $payload) {
-                    if (empty($payload['enabled'])) continue; // only attach checked
+                foreach ((array) $data['bundles'] as $bundleId => $payload) {
+                    if (empty($payload['enabled']))
+                        continue; // only attach checked
                     $pivot = [];
                     if (isset($payload['price']) && $payload['price'] !== '' && $payload['price'] !== null) {
-                        $pivot['price'] = (float)$payload['price'];
+                        $pivot['price'] = (float) $payload['price'];
                     }
-                    $syncBundles[(int)$bundleId] = $pivot;
+                    $syncBundles[(int) $bundleId] = $pivot;
                 }
                 $tournament->bundles()->sync($syncBundles);
             }
