@@ -625,6 +625,7 @@ class RentalSystemController extends Controller
     public function createRental(Request $request)
     {
         // Anonymous booking allowed; no auth required
+        $expectsJson = $request->expectsJson() || $request->ajax();
 
         $validator = Validator::make($request->all(), [
             'tournament_id' => 'required|integer',
@@ -643,6 +644,12 @@ class RentalSystemController extends Controller
         ]);
 
         if ($validator->fails()) {
+            if ($expectsJson) {
+                return response()->json([
+                    'message' => 'Validation failed.',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
             return back()->withErrors($validator)->withInput();
         }
 
@@ -668,6 +675,12 @@ class RentalSystemController extends Controller
         }
 
         if (!$hasItems && !$hasBundles) {
+            if ($expectsJson) {
+                return response()->json([
+                    'message' => 'Please select at least one item or bundle.',
+                    'errors' => ['items' => ['Please select at least one item or bundle.']],
+                ], 422);
+            }
             return back()->withErrors(['items' => 'Please select at least one item or bundle.'])->withInput();
         }
 
@@ -851,8 +864,19 @@ class RentalSystemController extends Controller
                     'booking_source' => 'website',
                 ],
             ]);
+            if ($expectsJson) {
+                return response()->json([
+                    'success' => true,
+                    'checkout_url' => $session->url,
+                ]);
+            }
             return redirect($session->url);
         } catch (\Throwable $e) {
+            if ($expectsJson) {
+                return response()->json([
+                    'message' => 'Stripe error: ' . $e->getMessage(),
+                ], 500);
+            }
             return redirect()->route('rentalsystem.rental-booking', $request->input('tournament_id'))
                 ->withErrors(['error' => 'Stripe error: ' . $e->getMessage()]);
         }

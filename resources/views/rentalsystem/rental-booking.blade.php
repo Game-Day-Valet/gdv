@@ -769,7 +769,7 @@
                         </div>
                         <div class="sum-total sum-row"><span>Total</span><span id="totalAmount">$0.00</span></div>
                         <div style="height:10px"></div>
-                        <button type="submit" class="btn-primary">Confirm Booking</button>
+                        <button type="submit" class="btn-primary" id="confirmBookingBtn">Confirm Booking</button>
                     </div>
                     <div class="policy-card" style="margin-top:12px;">
                         <div class="policy-title">Policies</div>
@@ -1080,21 +1080,82 @@
             return isValid;
         }
 
-        // Form submission validation with login check
-        document.getElementById('bookingForm').addEventListener('submit', function (e) {
-            e.preventDefault(); // Prevent default form submission
+        function setBookingSubmitLoading(isLoading) {
+            const submitBtn = document.getElementById('confirmBookingBtn');
+            if (!submitBtn) return;
+
+            if (isLoading) {
+                submitBtn.dataset.originalText = submitBtn.textContent;
+                submitBtn.disabled = true;
+                submitBtn.setAttribute('aria-busy', 'true');
+                submitBtn.textContent = 'Loading...';
+            } else {
+                submitBtn.disabled = false;
+                submitBtn.removeAttribute('aria-busy');
+                submitBtn.textContent = submitBtn.dataset.originalText || 'Confirm Booking';
+            }
+        }
+
+        function parseServerErrorMessage(data) {
+            if (!data) return 'Unable to start checkout. Please try again.';
+            if (typeof data.message === 'string' && data.message.trim()) return data.message;
+            if (data.errors && typeof data.errors === 'object') {
+                for (const value of Object.values(data.errors)) {
+                    if (Array.isArray(value) && value.length > 0) return value[0];
+                    if (typeof value === 'string' && value.trim()) return value;
+                }
+            }
+            return 'Unable to start checkout. Please try again.';
+        }
+
+        // Async form submission: keep loading state until Stripe link is generated
+        document.getElementById('bookingForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
             if (!validateForm()) {
                 showModal('Please select at least one item or bundle before proceeding.');
                 return false;
             }
+
             const smsOptIn = document.getElementById('sms_opt_in');
             if (smsOptIn && !smsOptIn.checked) {
                 showModal('Please agree to receive important text notifications to proceed.');
                 return false;
             }
-            // Check if user is logged in
-            // Anonymous booking allowed; submit directly
-            this.submit();
+
+            setBookingSubmitLoading(true);
+
+            try {
+                const formData = new FormData(this);
+                const resp = await fetch(this.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: formData
+                });
+
+                const data = await resp.json().catch(() => null);
+
+                if (!resp.ok) {
+                    showModal(parseServerErrorMessage(data));
+                    return;
+                }
+
+                const checkoutUrl = data?.checkout_url;
+                if (!checkoutUrl) {
+                    showModal('Stripe link generate cannot be generated. Try again.');
+                    return;
+                }
+
+                window.location.href = checkoutUrl;
+            } catch (err) {
+                showModal('Unable to start checkout. Please try again.');
+            } finally {
+                setBookingSubmitLoading(false);
+            }
         });
 
         // Validate coupon via API and apply discount on frontend only
