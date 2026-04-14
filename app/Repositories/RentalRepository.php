@@ -27,32 +27,36 @@ class RentalRepository implements RentalRepositoryInterface
             ->get();
     }
 
-    public function getPaid()
+    public function getPaid(array $filters = [])
     {
-        $recentIds = Rental::whereIn('payment_status', ['paid', 'completed'])
-            ->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i) => (int) $i)->toArray();
+        $query = Rental::with(['user', 'tournament'])
+            ->whereNull('archived_at')
+            ->whereIn('payment_status', ['paid', 'completed']);
+
+        $this->applyFilters($query, $filters);
+
+        $recentIds = (clone $query)->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i) => (int) $i)->toArray();
         $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
 
-        return Rental::with(['user', 'tournament'])
-            ->whereNull('archived_at')
-            ->whereIn('payment_status', ['paid', 'completed'])
-            ->orderByRaw("CASE WHEN id IN ($inList) THEN 0 ELSE 1 END ASC")
+        return $query->orderByRaw("CASE WHEN id IN ($inList) THEN 0 ELSE 1 END ASC")
             ->orderBy('created_at', 'desc')
             ->orderByRaw("CASE WHEN sort_order IS NULL THEN 1 ELSE 0 END ASC")
             ->orderByRaw('sort_order ASC')
             ->get();
     }
 
-    public function getPending()
+    public function getPending(array $filters = [])
     {
-        $recentIds = Rental::where('payment_status', 'pending')
-            ->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i) => (int) $i)->toArray();
+        $query = Rental::with(['user', 'tournament'])
+            ->whereNull('archived_at')
+            ->where('payment_status', 'pending');
+
+        $this->applyFilters($query, $filters);
+
+        $recentIds = (clone $query)->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i) => (int) $i)->toArray();
         $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
 
-        return Rental::with(['user', 'tournament'])
-            ->whereNull('archived_at')
-            ->where('payment_status', 'pending')
-            ->orderByRaw("CASE WHEN id IN ($inList) THEN 0 ELSE 1 END ASC")
+        return $query->orderByRaw("CASE WHEN id IN ($inList) THEN 0 ELSE 1 END ASC")
             ->orderBy('created_at', 'desc')
             ->orderByRaw("CASE WHEN sort_order IS NULL THEN 1 ELSE 0 END ASC")
             ->orderByRaw('sort_order ASC')
@@ -243,37 +247,18 @@ class RentalRepository implements RentalRepositoryInterface
             ->get();
     }
 
-    public function getByManager($managerId, $perPage = 15)
+    public function getByManager($managerId, $perPage = 15, array $filters = [])
     {
-        $recentIds = Rental::where('assigned_manager_id', $managerId)
-            ->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i) => (int) $i)->toArray();
-        $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
-
         $query = Rental::with(['user', 'tournament'])
             ->whereNull('archived_at')
-            ->where('assigned_manager_id', $managerId)
-            ->orderByRaw("CASE WHEN id IN ($inList) THEN 0 ELSE 1 END ASC")
-            ->orderBy('created_at', 'desc')
-            ->orderByRaw("CASE WHEN sort_order IS NULL THEN 1 ELSE 0 END ASC")
-            ->orderByRaw('sort_order ASC');
+            ->where('assigned_manager_id', $managerId);
 
-        $result = $query->paginate($perPage);
+        $this->applyFilters($query, $filters);
 
-        return $result;
-    }
-
-    public function getByManagerPaid($managerId, $perPage = 15)
-    {
-        $recentIds = Rental::where('assigned_manager_id', $managerId)
-            ->whereIn('payment_status', ['paid', 'completed'])
-            ->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i) => (int) $i)->toArray();
+        $recentIds = (clone $query)->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i) => (int) $i)->toArray();
         $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
 
-        $query = Rental::with(['user', 'tournament'])
-            ->whereNull('archived_at')
-            ->where('assigned_manager_id', $managerId)
-            ->whereIn('payment_status', ['paid', 'completed'])
-            ->orderByRaw("CASE WHEN id IN ($inList) THEN 0 ELSE 1 END ASC")
+        $query->orderByRaw("CASE WHEN id IN ($inList) THEN 0 ELSE 1 END ASC")
             ->orderBy('created_at', 'desc')
             ->orderByRaw("CASE WHEN sort_order IS NULL THEN 1 ELSE 0 END ASC")
             ->orderByRaw('sort_order ASC');
@@ -281,22 +266,76 @@ class RentalRepository implements RentalRepositoryInterface
         return $query->paginate($perPage);
     }
 
-    public function getByManagerPending($managerId, $perPage = 15)
+    public function getByManagerPaid($managerId, $perPage = 15, array $filters = [])
     {
-        $recentIds = Rental::where('assigned_manager_id', $managerId)
-            ->where('payment_status', 'pending')
-            ->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i) => (int) $i)->toArray();
-        $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
-
         $query = Rental::with(['user', 'tournament'])
             ->whereNull('archived_at')
             ->where('assigned_manager_id', $managerId)
-            ->where('payment_status', 'pending')
-            ->orderByRaw("CASE WHEN id IN ($inList) THEN 0 ELSE 1 END ASC")
+            ->whereIn('payment_status', ['paid', 'completed']);
+
+        $this->applyFilters($query, $filters);
+
+        $recentIds = (clone $query)->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i) => (int) $i)->toArray();
+        $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
+
+        $query->orderByRaw("CASE WHEN id IN ($inList) THEN 0 ELSE 1 END ASC")
             ->orderBy('created_at', 'desc')
             ->orderByRaw("CASE WHEN sort_order IS NULL THEN 1 ELSE 0 END ASC")
             ->orderByRaw('sort_order ASC');
 
         return $query->paginate($perPage);
+    }
+
+    public function getByManagerPending($managerId, $perPage = 15, array $filters = [])
+    {
+        $query = Rental::with(['user', 'tournament'])
+            ->whereNull('archived_at')
+            ->where('assigned_manager_id', $managerId)
+            ->where('payment_status', 'pending');
+
+        $this->applyFilters($query, $filters);
+
+        $recentIds = (clone $query)->orderBy('created_at', 'desc')->limit(15)->pluck('id')->map(fn($i) => (int) $i)->toArray();
+        $inList = !empty($recentIds) ? implode(',', $recentIds) : 'NULL';
+
+        $query->orderByRaw("CASE WHEN id IN ($inList) THEN 0 ELSE 1 END ASC")
+            ->orderBy('created_at', 'desc')
+            ->orderByRaw("CASE WHEN sort_order IS NULL THEN 1 ELSE 0 END ASC")
+            ->orderByRaw('sort_order ASC');
+
+        return $query->paginate($perPage);
+    }
+
+    private function applyFilters($query, array $filters)
+    {
+        if (!empty($filters['sport_id'])) {
+            $query->whereHas('tournament', function ($q) use ($filters) {
+                $q->withTrashed()->where('sport_id', $filters['sport_id']);
+            });
+        }
+
+        if (!empty($filters['location'])) {
+            $query->whereHas('tournament', function ($q) use ($filters) {
+                $q->withTrashed()->where('location', $filters['location']);
+            });
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['payment_status'])) {
+            $query->where('payment_status', $filters['payment_status']);
+        }
+
+        if (!empty($filters['coach_name'])) {
+            $query->where('coach_name', 'like', '%' . $filters['coach_name'] . '%');
+        }
+
+        if (!empty($filters['team_name'])) {
+            $query->where('team_name_with_age_group', 'like', '%' . $filters['team_name'] . '%');
+        }
+
+        return $query;
     }
 }

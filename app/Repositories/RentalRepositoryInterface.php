@@ -5,8 +5,8 @@ namespace App\Repositories;
 interface RentalRepositoryInterface
 {
     public function getAll();
-    public function getPaid();
-    public function getPending();
+    public function getPaid(array $filters = []);
+    public function getPending(array $filters = []);
     public function getAllPaginated($perPage = 15);
     public function find($id);
     public function findWithRelations($id);
@@ -17,7 +17,7 @@ interface RentalRepositoryInterface
     public function updatePaymentStatus($id, $paymentStatus);
     public function getStatusLogs($rentalId);
     public function getByUser($userId);
-    public function getByManager($managerId, $perPage = 15);
-    public function getByManagerPaid($managerId, $perPage = 15);
-    public function getByManagerPending($managerId, $perPage = 15);
+    public function getByManager($managerId, $perPage = 15, array $filters = []);
+    public function getByManagerPaid($managerId, $perPage = 15, array $filters = []);
+    public function getByManagerPending($managerId, $perPage = 15, array $filters = []);
 }

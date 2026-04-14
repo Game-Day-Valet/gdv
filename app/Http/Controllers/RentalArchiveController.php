@@ -19,14 +19,46 @@ class RentalArchiveController extends Controller
         return view('rental_archive.index', compact('folders'));
     }
 
-    public function folder($tournamentId)
+    public function folder(Request $request, $tournamentId)
     {
-        $rentals = Rental::with(['user','tournament'])
+        $query = Rental::with(['user', 'tournament'])
             ->where('tournament_id', $tournamentId)
-            ->whereNotNull('archived_at')
-            ->orderBy('created_at','desc')
-            ->get();
-        return view('rental_archive.folder', compact('rentals'));
+            ->whereNotNull('archived_at');
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('payment_status')) {
+            $query->where('payment_status', $request->payment_status);
+        }
+
+        if ($request->filled('sport_id')) {
+            $query->whereHas('tournament', function ($q) use ($request) {
+                $q->withTrashed()->where('sport_id', $request->sport_id);
+            });
+        }
+
+        if ($request->filled('location')) {
+            $query->whereHas('tournament', function ($q) use ($request) {
+                $q->withTrashed()->where('location', $request->location);
+            });
+        }
+
+        if ($request->filled('coach_name')) {
+            $query->where('coach_name', 'like', '%' . $request->coach_name . '%');
+        }
+
+        if ($request->filled('team_name')) {
+            $query->where('team_name_with_age_group', 'like', '%' . $request->team_name . '%');
+        }
+
+        $rentals = $query->orderBy('created_at', 'desc')->get();
+
+        $sports = \App\Models\Sport::all();
+        $locations = \App\Models\Tournament::withoutGlobalScopes()->whereNotNull('location')->distinct()->pluck('location');
+
+        return view('rental_archive.folder', compact('rentals', 'sports', 'locations'));
     }
 
     public function archive(Request $request)

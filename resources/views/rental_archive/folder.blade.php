@@ -12,6 +12,60 @@
 
 <div class="card">
   <div class="card-body">
+    <div class="mb-4 p-3 border rounded bg-light">
+      <form action="{{ request()->url() }}" method="GET" class="row g-3">
+          <div class="col-md-2">
+              <label class="form-label">Sport</label>
+              <select name="sport_id" class="form-select form-select-sm">
+                  <option value="">All Sports</option>
+                  @foreach($sports as $sport)
+                      <option value="{{ $sport->id }}" {{ request('sport_id') == $sport->id ? 'selected' : '' }}>{{ $sport->name }}</option>
+                  @endforeach
+              </select>
+          </div>
+          <div class="col-md-2">
+              <label class="form-label">Location</label>
+              <select name="location" class="form-select form-select-sm">
+                  <option value="">All Locations</option>
+                  @foreach($locations as $loc)
+                      <option value="{{ $loc }}" {{ request('location') == $loc ? 'selected' : '' }}>{{ $loc }}</option>
+                  @endforeach
+              </select>
+          </div>
+          <div class="col-md-2">
+              <label class="form-label">Status</label>
+              <select name="status" class="form-select form-select-sm">
+                  <option value="">All Statuses</option>
+                  <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                  <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>Confirmed</option>
+                  <option value="out_for_delivery" {{ request('status') == 'out_for_delivery' ? 'selected' : '' }}>Out for Delivery</option>
+                  <option value="delivered" {{ request('status') == 'delivered' ? 'selected' : '' }}>Delivered</option>
+                  <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+              </select>
+          </div>
+          <div class="col-md-2">
+              <label class="form-label">Payment Status</label>
+              <select name="payment_status" class="form-select form-select-sm">
+                  <option value="">All Payments</option>
+                  <option value="pending" {{ request('payment_status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                  <option value="completed" {{ request('payment_status') == 'completed' ? 'selected' : '' }}>Completed</option>
+                  <option value="paid" {{ request('payment_status') == 'paid' ? 'selected' : '' }}>Paid</option>
+              </select>
+          </div>
+          <div class="col-md-2">
+              <label class="form-label">Coach</label>
+              <input type="text" name="coach_name" class="form-control form-control-sm" value="{{ request('coach_name') }}" placeholder="Coach name...">
+          </div>
+          <div class="col-md-2">
+              <label class="form-label">Team</label>
+              <input type="text" name="team_name" class="form-control form-control-sm" value="{{ request('team_name') }}" placeholder="Team name...">
+          </div>
+          <div class="col-md-2 d-flex align-items-end gap-2">
+              <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+              <a href="{{ request()->url() }}" class="btn btn-sm btn-outline-secondary">Clear</a>
+          </div>
+      </form>
+    </div>
     <div class="table-responsive">
       <table class="table table-bordered">
         <thead>
