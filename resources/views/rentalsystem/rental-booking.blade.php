@@ -10,6 +10,24 @@
 
     <!-- App favicon -->
     <link rel="shortcut icon" href="/images/logo-sm.png">
+
+    <!-- Facebook Pixel Code -->
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '517991158551582');
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=517991158551582&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- End Facebook Pixel Code -->
     <style>
         :root {
             --primary-color: #bb2a3e;
@@ -1281,6 +1299,18 @@
             });
         })();
         validateForm();
+
+        // Facebook Pixel: InitiateCheckout tracking
+        const confirmBtn = document.getElementById('confirmBookingBtn');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', function() {
+                if (typeof fbq === 'function') {
+                    fbq('track', 'InitiateCheckout', {
+                        content_name: '{{ $tournament->name ?? "Tournament" }}'
+                    });
+                }
+            });
+        }
 
         // Immediately prompt sign-in for guests (with return to this page)
         // No login prompt needed

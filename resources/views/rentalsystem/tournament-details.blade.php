@@ -9,6 +9,24 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- App favicon -->
     <link rel="shortcut icon" href="/images/logo-sm.png">
+
+    <!-- Facebook Pixel Code -->
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '517991158551582');
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=517991158551582&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- End Facebook Pixel Code -->
     <style>
         :root {
             --primary-color: #dc3545;
@@ -445,11 +463,11 @@
                     
                     <div class="action-buttons">
                         @if(Auth::check())
-                            <a href="{{ route('rentalsystem.rental-booking', $tournament->id) }}" class="btn-primary-custom">
+                            <a href="{{ route('rentalsystem.rental-booking', $tournament->id) }}" class="btn-primary-custom" onclick="if(typeof fbq === 'function') { fbq('track', 'InitiateCheckout', { content_name: '{{ addslashes($tournament->name) }}' }); }">
                                 <i class="fas fa-shopping-cart"></i> Book Equipment Now
                             </a>
                         @else
-                            <a href="{{ route('rentalsystem.rental-booking', $tournament->id) }}" class="btn-primary-custom">
+                            <a href="{{ route('rentalsystem.rental-booking', $tournament->id) }}" class="btn-primary-custom" onclick="if(typeof fbq === 'function') { fbq('track', 'InitiateCheckout', { content_name: '{{ addslashes($tournament->name) }}' }); }">
                                 <i class="fas fa-shopping-cart"></i> Book Equipment Now
                             </a>
                         @endif
