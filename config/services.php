@@ -53,8 +53,9 @@ return [
     ],
 
     'meta' => [
-        'pixel_id'     => env('META_PIXEL_ID', '1364397922375498'),
-        'access_token' => env('META_ACCESS_TOKEN', ''),
+        'pixel_id'        => env('META_PIXEL_ID', '1364397922375498'),
+        'access_token'    => env('META_ACCESS_TOKEN', ''),
+        'test_event_code' => env('META_TEST_EVENT_CODE', ''),
     ],
 
     'twilio' => [

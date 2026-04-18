@@ -40,11 +40,23 @@ class MetaPixelService
             ]],
         ];
 
+        $testCode = config('services.meta.test_event_code', '');
+        if (!empty($testCode)) {
+            $payload['test_event_code'] = $testCode;
+        }
+
         try {
             $response = Http::post(
                 "https://graph.facebook.com/{$this->apiVersion}/{$this->pixelId}/events?access_token={$this->accessToken}",
                 $payload
             );
+
+            Log::info('Meta CAPI Purchase', [
+                'status'   => $response->status(),
+                'response' => $response->json(),
+                'value'    => $data['value'] ?? 0,
+                'order_id' => $data['order_id'] ?? '',
+            ]);
 
             if (!$response->successful()) {
                 Log::warning('Meta CAPI Purchase failed', ['body' => $response->body()]);
