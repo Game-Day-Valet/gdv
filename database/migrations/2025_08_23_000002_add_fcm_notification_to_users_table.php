@@ -9,6 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
+            if (!Schema::hasColumn('users', 'fcm_token')) {
+                $table->string('fcm_token')->nullable()->after('remember_token');
+            }
             if (!Schema::hasColumn('users', 'fcm_notification')) {
                 $table->boolean('fcm_notification')->default(true)->after('fcm_token');
             }

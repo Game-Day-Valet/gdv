@@ -20,11 +20,16 @@
     t.src=v;s=b.getElementsByTagName(e)[0];
     s.parentNode.insertBefore(t,s)}(window, document,'script',
     'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '517991158551582');
+    fbq('init', '1364397922375498');
     fbq('track', 'PageView');
+    fbq('track', 'ViewContent', {
+        content_name: 'Tournament Listings',
+        content_type: 'product_group',
+        content_category: 'Tournaments'
+    });
     </script>
     <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=517991158551582&ev=PageView&noscript=1"
+    src="https://www.facebook.com/tr?id=1364397922375498&ev=PageView&noscript=1"
     /></noscript>
     <!-- End Facebook Pixel Global Init -->
     <style>
@@ -281,14 +286,14 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function handleBooking(tournamentId, tournamentName) {
-            // Facebook Pixel: InitiateCheckout tracking
             if (typeof fbq === 'function') {
                 fbq('track', 'InitiateCheckout', {
-                    content_name: tournamentName
+                    content_name: tournamentName,
+                    content_type: 'product',
+                    content_ids: [tournamentId.toString()],
+                    currency: 'USD'
                 });
             }
-            
-            // Always go to booking page; login will be enforced on Confirm Booking
             window.location.href = "{{ route('rentalsystem.rental-booking', ':id') }}".replace(':id', tournamentId);
         }
     </script>

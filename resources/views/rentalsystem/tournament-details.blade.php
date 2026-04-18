@@ -20,11 +20,17 @@
     t.src=v;s=b.getElementsByTagName(e)[0];
     s.parentNode.insertBefore(t,s)}(window, document,'script',
     'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '517991158551582');
+    fbq('init', '1364397922375498');
     fbq('track', 'PageView');
+    fbq('track', 'ViewContent', {
+        content_name: '{{ addslashes($tournament->name) }}',
+        content_ids: ['{{ $tournament->id }}'],
+        content_type: 'product',
+        currency: 'USD'
+    });
     </script>
     <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=517991158551582&ev=PageView&noscript=1"
+    src="https://www.facebook.com/tr?id=1364397922375498&ev=PageView&noscript=1"
     /></noscript>
     <!-- End Facebook Pixel Global Init -->
     <style>
@@ -463,11 +469,11 @@
                     
                     <div class="action-buttons">
                         @if(Auth::check())
-                            <a href="{{ route('rentalsystem.rental-booking', $tournament->id) }}" class="btn-primary-custom" onclick="if(typeof fbq === 'function') { fbq('track', 'InitiateCheckout', { content_name: '{{ addslashes($tournament->name) }}' }); }">
+                            <a href="{{ route('rentalsystem.rental-booking', $tournament->id) }}" class="btn-primary-custom" onclick="if(typeof fbq === 'function') { fbq('track', 'InitiateCheckout', { content_name: '{{ addslashes($tournament->name) }}', content_ids: ['{{ $tournament->id }}'], content_type: 'product', currency: 'USD' }); }">
                                 <i class="fas fa-shopping-cart"></i> Book Equipment Now
                             </a>
                         @else
-                            <a href="{{ route('rentalsystem.rental-booking', $tournament->id) }}" class="btn-primary-custom" onclick="if(typeof fbq === 'function') { fbq('track', 'InitiateCheckout', { content_name: '{{ addslashes($tournament->name) }}' }); }">
+                            <a href="{{ route('rentalsystem.rental-booking', $tournament->id) }}" class="btn-primary-custom" onclick="if(typeof fbq === 'function') { fbq('track', 'InitiateCheckout', { content_name: '{{ addslashes($tournament->name) }}', content_ids: ['{{ $tournament->id }}'], content_type: 'product', currency: 'USD' }); }">
                                 <i class="fas fa-shopping-cart"></i> Book Equipment Now
                             </a>
                         @endif

@@ -21,11 +21,17 @@
     t.src=v;s=b.getElementsByTagName(e)[0];
     s.parentNode.insertBefore(t,s)}(window, document,'script',
     'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '517991158551582');
+    fbq('init', '1364397922375498');
     fbq('track', 'PageView');
+    fbq('track', 'ViewContent', {
+        content_name: '{{ addslashes($tournament->name ?? "Tournament Booking") }}',
+        content_ids: ['{{ $tournament->id ?? "" }}'],
+        content_type: 'product',
+        currency: 'USD'
+    });
     </script>
     <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=517991158551582&ev=PageView&noscript=1"
+    src="https://www.facebook.com/tr?id=1364397922375498&ev=PageView&noscript=1"
     /></noscript>
     <!-- End Facebook Pixel Global Init -->
     <style>
@@ -1037,6 +1043,17 @@
                 input.value = q;
                 recalc();
                 validateForm();
+                if (typeof fbq === 'function') {
+                    const itemName = row.querySelector('.item-title, h4, h3')?.textContent?.trim() || 'Item';
+                    const itemPrice = parseFloat(row.dataset.price || 0);
+                    fbq('track', 'AddToCart', {
+                        content_name: itemName,
+                        content_ids: [row.dataset.id || ''],
+                        content_type: 'product',
+                        value: itemPrice,
+                        currency: 'USD'
+                    });
+                }
             });
         });
 
@@ -1059,6 +1076,17 @@
                 input.value = q;
                 recalc();
                 validateForm();
+                if (typeof fbq === 'function') {
+                    const bundleName = row.querySelector('.bundle-info h3, h4, h3')?.textContent?.trim() || 'Bundle';
+                    const bundlePrice = parseFloat(row.dataset.price || 0);
+                    fbq('track', 'AddToCart', {
+                        content_name: bundleName,
+                        content_ids: [row.dataset.id || ''],
+                        content_type: 'product',
+                        value: bundlePrice,
+                        currency: 'USD'
+                    });
+                }
             });
         });
 
@@ -1300,13 +1328,19 @@
         })();
         validateForm();
 
-        // Facebook Pixel: InitiateCheckout tracking
+        // Facebook Pixel: InitiateCheckout — fires only after form validation passes
         const confirmBtn = document.getElementById('confirmBookingBtn');
         if (confirmBtn) {
             confirmBtn.addEventListener('click', function() {
+                if (!validateForm()) return;
                 if (typeof fbq === 'function') {
+                    const total = parseFloat(document.getElementById('total_amount_input')?.value || 0);
                     fbq('track', 'InitiateCheckout', {
-                        content_name: '{{ $tournament->name ?? "Tournament" }}'
+                        content_name: '{{ addslashes($tournament->name ?? "Tournament") }}',
+                        content_ids: ['{{ $tournament->id ?? "" }}'],
+                        content_type: 'product',
+                        value: total,
+                        currency: 'USD'
                     });
                 }
             });
