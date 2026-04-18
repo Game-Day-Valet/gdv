@@ -910,6 +910,7 @@ class RentalSystemController extends Controller
                     event(new \App\Events\RentalBookingCreated($rental));
                 } catch (\Throwable $e) { /* log silently */
                 }
+                $rental->load('tournament');
                 return view('rentalsystem.checkout-success', ['rental' => $rental]);
             }
             return redirect()->route('rentalsystem.sports')->with('info', 'Payment not completed yet.');

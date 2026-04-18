@@ -179,19 +179,27 @@
     </script>
     <!-- Facebook Pixel Purchase Event -->
     <script>
-    @if(isset($rental) && (float)($rental->total_amount ?? 0) > 0)
-    window.addEventListener('load', function() {
-        if (typeof fbq === 'function') {
+    var _gdvPurchase = {
+        value: {{ (float)($rental->total_amount ?? 0) }},
+        id: '{{ $rental->id ?? "" }}',
+        name: '{{ addslashes(optional($rental->tournament)->name ?? "Tournament Rental") }}'
+    };
+    function _gdvTrackPurchase() {
+        if (typeof fbq === 'function' && _gdvPurchase.value > 0) {
             fbq('track', 'Purchase', {
-                value: {{ (float)$rental->total_amount }},
+                value: _gdvPurchase.value,
                 currency: 'USD',
-                content_ids: ['{{ $rental->id }}'],
+                content_ids: [_gdvPurchase.id],
                 content_type: 'product',
-                content_name: '{{ addslashes(optional($rental->tournament)->name ?? "Tournament Rental") }}'
+                content_name: _gdvPurchase.name
             });
         }
-    });
-    @endif
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', _gdvTrackPurchase);
+    } else {
+        _gdvTrackPurchase();
+    }
     </script>
     <!-- End Facebook Pixel Purchase Event -->
     <meta name="robots" content="noindex">
