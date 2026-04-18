@@ -10,7 +10,7 @@
     <!-- App favicon -->
     <link rel="shortcut icon" href="/images/logo-sm.png">
 
-    <!-- Facebook Pixel Code -->
+    <!-- Facebook Pixel Global Init -->
     <script>
     !function(f,b,e,v,n,t,s)
     {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -26,7 +26,7 @@
     <noscript><img height="1" width="1" style="display:none"
     src="https://www.facebook.com/tr?id=517991158551582&ev=PageView&noscript=1"
     /></noscript>
-    <!-- End Facebook Pixel Code -->
+    <!-- End Facebook Pixel Global Init -->
     <style>
         :root {
             --primary-color: #dc3545; /* match sports page */

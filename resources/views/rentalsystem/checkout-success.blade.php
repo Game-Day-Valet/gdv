@@ -7,6 +7,24 @@
     <title>Successfully Booked - Game Day Valet</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link rel="shortcut icon" href="/images/logo-sm.png">
+    
+    <!-- Facebook Pixel Global Init -->
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '517991158551582');
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=517991158551582&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- End Facebook Pixel Global Init -->
     <style>
         :root {
             --primary-color: #dc3545;
@@ -159,29 +177,55 @@
         // Optional soft redirect after 15s
         // setTimeout(function(){ window.location.href = '{{ route('rentalsystem.sports') }}'; }, 150000);
     </script>
-    <!-- Facebook Pixel Code -->
+    <!-- Facebook Pixel Purchase Tracking (Base init is now global in layout/head) -->
     <script>
-    !function(f,b,e,v,n,t,s)
-    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-    n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t,s)}(window, document,'script',
-    'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '517991158551582');
-    fbq('track', 'PageView');
-    @if(isset($rental))
-    fbq('track', 'Purchase', {
-        value: {{ (float)($rental->total_amount ?? 0) }},
-        currency: 'USD'
-    });
-    @endif
+    // Ensure fbq is available before tracking Purchase
+    // It should already be initialized globally, but this adds a safety check
+    if (typeof fbq === 'function') {
+        // Wait for page load before firing Purchase event for maximum reliability
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                window.setTimeout(function() {
+                    @if(isset($rental))
+                    const purchaseValue = {{ (float)($rental->total_amount ?? 0) }};
+                    if (purchaseValue > 0) {
+                        fbq('track', 'Purchase', {
+                            value: purchaseValue,
+                            currency: 'USD'
+                        });
+                        console.log('✓ Facebook Pixel Purchase event tracked AFTER page load:', { value: purchaseValue, currency: 'USD' });
+                    } else {
+                        console.warn('⚠ Facebook Pixel: Purchase value is 0 or invalid - rental:', '{{ $rental->id ?? "N/A" }}');
+                    }
+                    @else
+                    console.warn('⚠ Facebook Pixel: Rental data not available for Purchase tracking');
+                    @endif
+                }, 100); // Small delay ensures all DOM content is ready
+            });
+        } else {
+            // DOM already loaded, fire immediately
+            window.setTimeout(function() {
+                @if(isset($rental))
+                const purchaseValue = {{ (float)($rental->total_amount ?? 0) }};
+                if (purchaseValue > 0) {
+                    fbq('track', 'Purchase', {
+                        value: purchaseValue,
+                        currency: 'USD'
+                    });
+                    console.log('✓ Facebook Pixel Purchase event tracked (DOM ready):', { value: purchaseValue, currency: 'USD' });
+                } else {
+                    console.warn('⚠ Facebook Pixel: Purchase value is 0 or invalid - rental:', '{{ $rental->id ?? "N/A" }}');
+                }
+                @else
+                console.warn('⚠ Facebook Pixel: Rental data not available for Purchase tracking');
+                @endif
+            }, 100);
+        }
+    } else {
+        console.error('✗ Facebook Pixel: fbq not found - pixel may not be loaded');
+    }
     </script>
-    <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=517991158551582&ev=PageView&noscript=1"
-    /></noscript>
-    <!-- End Facebook Pixel Code -->
+    <!-- End Facebook Pixel Purchase Tracking -->
     <meta name="robots" content="noindex">
     <meta name="googlebot" content="noindex">
 </head>
