@@ -52,6 +52,11 @@ return [
         'secret' => env('STRIPE_SECRET'),
     ],
 
+    'meta' => [
+        'pixel_id'     => env('META_PIXEL_ID', '1364397922375498'),
+        'access_token' => env('META_ACCESS_TOKEN', ''),
+    ],
+
     'twilio' => [
         'sid' => env('TWILIO_SID', 'TWILIO_SID_REMOVED'),
         'token' => env('TWILIO_TOKEN', 'TWILIO_TOKEN_REMOVED'),

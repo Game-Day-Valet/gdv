@@ -911,6 +911,22 @@ class RentalSystemController extends Controller
                 } catch (\Throwable $e) { /* log silently */
                 }
                 $rental->load('tournament');
+
+                // Fire Purchase event server-side via Meta Conversions API
+                try {
+                    (new \App\Services\MetaPixelService())->trackPurchase([
+                        'value'        => $rental->total_amount,
+                        'order_id'     => (string) $rental->id,
+                        'content_name' => optional($rental->tournament)->name ?? 'Tournament Rental',
+                        'email'        => $rental->email ?? optional($rental->user)->email,
+                        'phone'        => $rental->phone_number ?? optional($rental->user)->contact_number,
+                        'ip'           => request()->ip(),
+                        'url'          => request()->url(),
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::error('Meta CAPI error', ['error' => $e->getMessage()]);
+                }
+
                 return view('rentalsystem.checkout-success', ['rental' => $rental]);
             }
             return redirect()->route('rentalsystem.sports')->with('info', 'Payment not completed yet.');
