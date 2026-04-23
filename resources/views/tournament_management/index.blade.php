@@ -26,6 +26,34 @@
                     <a href="{{ route('tournament-management.create') }}" class="btn btn-primary" id="createButton">Create</a>
                 </div>
                 <div class="card-body">
+                    <form action="{{ route('tournament-management.index') }}" method="GET" class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <label for="sport_id" class="form-label">Sport</label>
+                            <select name="sport_id" id="sport_id" class="form-select">
+                                <option value="">All Sports</option>
+                                @foreach($sports as $sport)
+                                    <option value="{{ $sport->id }}" {{ request('sport_id') == $sport->id ? 'selected' : '' }}>{{ $sport->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="">All Statuses</option>
+                                <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
+                                <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
+                                <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="location" class="form-label">Location</label>
+                            <input type="text" name="location" id="location" class="form-control" placeholder="Search by location..." value="{{ request('location') }}">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">Filter</button>
+                        </div>
+                    </form>
+
                     @if (session('success'))
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             {{ session('success') }}

@@ -22,16 +22,36 @@ class TournamentController extends Controller
         $this->airtableService = $airtableService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        // In admin, show ALL tournaments (active and inactive)
-        if (method_exists($this->tournamentRepository, 'getAll')) {
-            $tournaments = $this->tournamentRepository->getAll();
-        } else {
-            // fallback if repository lacks getAll: query directly
-            $tournaments = \App\Models\Tournament::with('sport')->get();
+        $sportId = $request->get('sport_id');
+        $status = $request->get('status');
+        $location = $request->get('location');
+
+        $query = \App\Models\Tournament::with('sport');
+
+        if ($sportId) {
+            $query->where('sport_id', $sportId);
         }
-        return view('tournament_management.index', compact('tournaments'));
+        if ($status) {
+            $query->where('status', $status);
+        }
+        if ($location) {
+            $query->where('location', 'like', "%$location%");
+        }
+
+        // Custom sort: Active first, then Completed, then Inactive
+        // We use orderByRaw to ensure status priority
+        $tournaments = $query->orderByRaw("CASE 
+                                WHEN status = 'active' THEN 1 
+                                WHEN status = 'completed' THEN 2 
+                                ELSE 3 
+                             END ASC")
+                             ->get();
+                             
+        $sports = Sport::all();
+
+        return view('tournament_management.index', compact('tournaments', 'sports'));
     }
 
     public function reorder(Request $request)
