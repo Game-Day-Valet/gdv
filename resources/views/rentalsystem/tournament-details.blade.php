@@ -156,34 +156,49 @@
         /* Info Items */
         .info-item {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 15px;
-            padding: 12px 0;
+            padding: 15px 0;
             border-bottom: 1px solid var(--light-gray);
         }
         .info-item:last-child { border-bottom: none; }
         .info-icon {
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             background: var(--light-gray);
-            border-radius: 10px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--primary-color);
-            font-size: 1.1rem;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .info-content {
+            flex: 1;
         }
         .info-content h4 {
-            font-size: 1rem;
-            font-weight: 600;
-            margin: 0 0 4px 0;
-            color: var(--dark-color);
-        }
-        .info-content p {
             font-size: 0.9rem;
-            margin: 0;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 0 0 8px 0;
             color: var(--secondary-color);
         }
+        .info-content .rich-text {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #374151;
+        }
+        .rich-text p { margin-bottom: 1rem; }
+        .rich-text p:last-child { margin-bottom: 0; }
+        .rich-text h1, .rich-text h2, .rich-text h3 { 
+            color: var(--dark-color); 
+            margin: 1.5rem 0 0.75rem; 
+            font-weight: 800;
+        }
+        .rich-text h3 { font-size: 1.25rem; }
+        .rich-text strong { font-weight: 700; color: var(--dark-color); }
 
         /* Action Card */
         .action-card {
@@ -391,44 +406,39 @@
                 @endif
 
                 <!-- Additional Details -->
-                @if($tournament->description || $tournament->rules || $tournament->prize_pool)
                 <div class="info-card">
                     <h3><i class="fas fa-file-alt"></i> Additional Details</h3>
+                    
                     @if($tournament->description)
                     <div class="info-item">
-                        <div class="info-icon">
-                            <i class="fas fa-align-left"></i>
-                        </div>
+                        <div class="info-icon"><i class="fas fa-align-left"></i></div>
                         <div class="info-content">
                             <h4>Description</h4>
-                            <p>{{ $tournament->description }}</p>
+                            <div class="rich-text">{!! $tournament->description !!}</div>
                         </div>
                     </div>
                     @endif
+
                     @if($tournament->rules)
                     <div class="info-item">
-                        <div class="info-icon">
-                            <i class="fas fa-gavel"></i>
-                        </div>
+                        <div class="info-icon"><i class="fas fa-gavel"></i></div>
                         <div class="info-content">
                             <h4>Rules</h4>
-                            <p>{{ $tournament->rules }}</p>
+                            <div class="rich-text">{!! $tournament->rules !!}</div>
                         </div>
                     </div>
                     @endif
+
                     @if($tournament->prize_pool)
                     <div class="info-item">
-                        <div class="info-icon">
-                            <i class="fas fa-dollar-sign"></i>
-                        </div>
+                        <div class="info-icon"><i class="fas fa-dollar-sign"></i></div>
                         <div class="info-content">
                             <h4>Prize Pool</h4>
-                            <p>{{ $tournament->prize_pool }}</p>
+                            <div class="rich-text">{!! $tournament->prize_pool !!}</div>
                         </div>
                     </div>
                     @endif
                 </div>
-                @endif
 
                 <!-- Contact Information - Hidden/Commented -->
                 {{-- 
