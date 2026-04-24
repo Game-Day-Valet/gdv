@@ -45,6 +45,9 @@ class AirtableService
                 'Payment Status' => $rental->payment_status ?? 'pending',
                 'Field Number' => $rental->field_number ?? 'N/A',
                 'Game Date' => optional($rental->tournament)->game_date ? \Carbon\Carbon::parse($rental->tournament->game_date)->format('Y-m-d') : null,
+                'Customer Email' => $rental->email ?? 'N/A',
+                'Customer Phone' => $rental->phone_number ?? 'N/A',
+                'Sports' => optional($rental->tournament->sport)->name ?? 'N/A',
             ];
 
             if (optional($rental->tournament)->game_time) {
