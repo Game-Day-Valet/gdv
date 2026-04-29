@@ -1120,6 +1120,11 @@
         <i class="fas fa-exclamation-triangle" style="color: #f5b942; margin-right: 8px;"></i> PREVIEW MODE: This is a template preview. Booking and payments are disabled.
     </div>
 
+    <div style="background: #141414; border-bottom: 1px solid rgba(217, 34, 49, 0.4); color: #f4f4f4; text-align: center; padding: 10px 24px; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; letter-spacing: 0.03em;">
+        <i class="fas fa-fire" style="color: #ef3445; font-size: 16px;"></i>
+        <span>Limited setups available for this weekend. <strong>Most tournaments sell out.</strong></span>
+    </div>
+
     {{-- ==================== TOP BAR ==================== --}}
     <div class="topbar">
         <div class="topbar-inner">
@@ -1162,8 +1167,7 @@
                 </div>
 
                 <p class="hero-pitch">Your sideline setup is<br><span class="em">already there</span><br>when you arrive.</p>
-
-                <div class="hero-divider"></div>
+                <p style="font-size: 16px; color: var(--gdv-muted); margin: 0 0 12px; font-weight: 500; line-height: 1.4;">Perfect for families traveling in and staying in hotels.</p>
 
                 <ul class="hero-bullets">
                     <li><i class="fas fa-truck-fast"></i> Delivered to your first field</li>
@@ -1190,11 +1194,11 @@
                 @endif
 
                 <a href="#tiers" class="hero-cta">
-                    <span>Reserve Your Setup</span>
+                    <span>Reserve My Setup</span>
                     <i class="fas fa-chevron-right"></i>
                 </a>
-                <div class="hero-cta-meta">
-                    <i class="fas fa-lock"></i>Secure checkout · Takes 30 seconds
+                <div class="hero-cta-meta" style="font-size: 14px;">
+                    Reserve now. We’ll text you to confirm your field and game time.
                 </div>
             </div>
             <div class="hero-right" role="img" aria-label="Game Day Valet sideline setup"></div>
@@ -1226,6 +1230,13 @@
                         $bundleCount = count($availableBundles);
                         $featuredIndex = $bundleCount > 1 ? (int) floor($bundleCount / 2) : 0;
                     @endphp
+
+                    <div style="text-align: center; margin-bottom: 40px; background: var(--gdv-black-2); border: 1px solid var(--gdv-border); padding: 24px; border-radius: 16px; max-width: 650px; margin-left: auto; margin-right: auto; box-shadow: var(--shadow-card);">
+                        <div style="color: var(--gdv-gold); font-size: 18px; margin-bottom: 10px; letter-spacing: 2px;">★★★★★</div>
+                        <p style="font-size: 18px; font-style: italic; color: var(--gdv-white); margin: 0 0 10px; line-height: 1.5; font-weight: 500;">“Everything was waiting for us. Super easy and worth every penny.”</p>
+                        <span style="color: var(--gdv-red); font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em;">— Baseball Mom</span>
+                    </div>
+
                     <div class="tiers-grid">
                         @foreach($availableBundles as $idx => $bd)
                             <div class="tier {{ $idx === $featuredIndex ? 'featured' : '' }}" data-bundle-id="{{ $bd->id }}" data-bundle-price="{{ (float) $bd->effective_price }}" data-bundle-name="{{ $bd->name }}">
@@ -1247,7 +1258,7 @@
                                     <div class="tier-perday">Less than ${{ number_format(ceil($perDay), 0) }}/day!</div>
                                 @endif
                                 <button type="button" class="tier-cta" data-select-bundle="{{ $bd->id }}">
-                                    Reserve {{ \Illuminate\Support\Str::limit($bd->name, 12, '') }}
+                                    Reserve My Setup
                                 </button>
                             </div>
                         @endforeach
@@ -1309,7 +1320,8 @@
                     @endif
 
                     <div class="order-card">
-                        <h2 class="order-card-title">Lock In Your Setup</h2>
+                        <h2 class="order-card-title" style="margin-bottom: 8px;">Lock In Your Setup</h2>
+                        <p style="font-size: 15px; color: var(--gdv-muted); margin: 0 0 20px; font-weight: 500;">Takes 30 seconds. We’ll text you to confirm details.</p>
 
                         <div class="field-row">
                             <div class="field">
@@ -1497,7 +1509,7 @@
                 </div>
             </div>
             <a href="#tiers" class="footer-cta-btn">
-                Reserve Now <i class="fas fa-chevron-right"></i>
+                Reserve My Setup <i class="fas fa-chevron-right"></i>
             </a>
         </div>
     </div>
