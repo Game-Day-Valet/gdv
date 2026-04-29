@@ -44,8 +44,8 @@ Route::prefix('')->name('rentalsystem.')->group(function () {
     Route::get('', [RentalSystemController::class, 'showSports'])->name('sports');
 	Route::get('/sports/{sportId}/tournaments', [RentalSystemController::class, 'showTournaments'])->name('tournaments');
 	Route::get('/tournaments/{tournamentId}/details', [RentalSystemController::class, 'showTournamentDetails'])->name('tournament.details');
-	// Allow anonymous to open booking page and submit; controller will enforce login on submit
 	Route::get('/tournaments/{tournamentId}/rental', [RentalSystemController::class, 'showRentalBooking'])->name('rental-booking');
+	Route::get('/tournaments/{tournamentId}/rental-preview', [RentalSystemController::class, 'showRentalBookingPreview'])->name('rental-booking-preview');
 	Route::post('/rentals', [RentalSystemController::class, 'createRental'])->name('rental.create');
 
     // Authentication routes hidden/disabled for website booking (kept for backward compat if linked)

@@ -435,6 +435,30 @@ class RentalSystemController extends Controller
         ]);
     }
 
+    public function showRentalBookingPreview($tournamentId)
+    {
+        $tournament = $this->tournaments->find($tournamentId);
+
+        $availableItems = collect($tournament->items ?? [])->map(function ($item) {
+            $override = $item->pivot?->price;
+            $item->effective_price = $override !== null ? (float) $override : (float) ($item->price ?? 0);
+            return $item;
+        });
+
+        $availableBundles = collect($tournament->bundles ?? [])->map(function ($bundle) {
+            $override = $bundle->pivot?->price;
+            $bundle->effective_price = $override !== null ? (float) $override : (float) ($bundle->price ?? 0);
+            return $bundle;
+        });
+
+        return view('rentalsystem.layouts.rental-booking-preview', [
+            'tournament' => $tournament,
+            'tournamentId' => $tournamentId,
+            'availableItems' => $availableItems,
+            'availableBundles' => $availableBundles,
+        ]);
+    }
+
     // public function createRental(Request $request)
     // {
     //     // Anonymous booking allowed; no auth required
