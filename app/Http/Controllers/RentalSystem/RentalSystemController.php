@@ -451,11 +451,17 @@ class RentalSystemController extends Controller
             return $bundle;
         });
 
+        // Fetch testimonial and contact settings
+        $testimonialQuote = \App\Models\BookingOption::where('type', 'testimonial_quote')->first();
+        $supportPhoneNumber = \App\Models\BookingOption::where('type', 'support_phone_number')->first();
+
         return view('rentalsystem.layouts.rental-booking-preview', [
             'tournament' => $tournament,
             'tournamentId' => $tournamentId,
             'availableItems' => $availableItems,
             'availableBundles' => $availableBundles,
+            'testimonialQuote' => $testimonialQuote,
+            'supportPhoneNumber' => $supportPhoneNumber,
         ]);
     }
 

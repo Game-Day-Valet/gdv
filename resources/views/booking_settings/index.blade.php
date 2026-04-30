@@ -237,6 +237,31 @@
         </form>
     </div>
 </div>
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Testimonial & Contact Settings</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ route('booking-settings.save-testimonial') }}">
+            @csrf
+            <div class="mb-3">
+                <label class="form-label" for="testimonial_quote">Testimonial Quote</label>
+                <textarea name="testimonial_quote" id="testimonial_quote" class="form-control" rows="3" placeholder="Everything was waiting for us. Super easy and worth every penny!" required>{{ old('testimonial_quote', $testimonialQuote?->testimonial_quote ?? 'Everything was waiting for us. Super easy and worth every penny!') }}</textarea>
+                <small class="text-muted">This quote appears on the rental booking page</small>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="testimonial_author">Testimonial Author</label>
+                <input type="text" name="testimonial_author" id="testimonial_author" class="form-control" placeholder="e.g., Baseball Mom" value="{{ old('testimonial_author', $testimonialQuote?->testimonial_author ?? 'Baseball Mom') }}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="support_phone_number">Support Phone Number</label>
+                <input type="text" name="support_phone_number" id="support_phone_number" class="form-control" placeholder="e.g., (470) 428-8440" value="{{ old('support_phone_number', $supportPhoneNumber?->support_phone_number ?? '(470) 428-8440') }}" required>
+                <small class="text-muted">Format: (XXX) XXX-XXXX</small>
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+        </form>
+    </div>
+</div>
 @endsection
 
 @section('script')

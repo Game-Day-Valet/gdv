@@ -11,6 +11,7 @@ class BookingOption extends Model
 
     protected $fillable = [
         'type', 'label', 'description', 'price', 'enabled', 'sort_order',
+        'testimonial_quote', 'testimonial_author', 'support_phone_number',
     ];
 
     protected $casts = [

@@ -1136,10 +1136,10 @@
                 @endif
             </a>
             <div class="topbar-tag">WHERE THE FANS ARE THE <span class="accent">MVP</span></div>
-            <a href="tel:+14704288440" class="topbar-phone">
+            <a href="tel:+{{ str_replace([' ', '(', ')', '-'], '', $supportPhoneNumber?->support_phone_number ?? '14704288440') }}" class="topbar-phone">
                 <i class="fas fa-phone"></i>
                 <div>
-                    <span class="num">(470) 428-8440</span>
+                    <span class="num">{{ $supportPhoneNumber?->support_phone_number ?? '(470) 428-8440' }}</span>
                     <span class="sub">Text us anytime</span>
                 </div>
             </a>
@@ -1233,8 +1233,8 @@
 
                     <div style="text-align: center; margin-bottom: 40px; background: var(--gdv-black-2); border: 1px solid var(--gdv-border); padding: 24px; border-radius: 16px; max-width: 650px; margin-left: auto; margin-right: auto; box-shadow: var(--shadow-card);">
                         <div style="color: var(--gdv-gold); font-size: 18px; margin-bottom: 10px; letter-spacing: 2px;">★★★★★</div>
-                        <p style="font-size: 18px; font-style: italic; color: var(--gdv-white); margin: 0 0 10px; line-height: 1.5; font-weight: 500;">“Everything was waiting for us. Super easy and worth every penny.”</p>
-                        <span style="color: var(--gdv-red); font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em;">— Baseball Mom</span>
+                        <p style="font-size: 18px; font-style: italic; color: var(--gdv-white); margin: 0 0 10px; line-height: 1.5; font-weight: 500;">{{ $testimonialQuote?->testimonial_quote ?? '"Everything was waiting for us. Super easy and worth every penny."' }}</p>
+                        <span style="color: var(--gdv-red); font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em;">— {{ $testimonialQuote?->testimonial_author ?? 'Baseball Mom' }}</span>
                     </div>
 
                     <div class="tiers-grid">
@@ -1338,12 +1338,10 @@
                             </div>
                         </div>
 
-                        <div class="field-row">
-                            <div class="field">
-                                <div class="input-wrap">
-                                    <i class="fas fa-people-group"></i>
-                                    <input type="text" name="team_name_with_age_group" placeholder="Team Name (e.g. 12U)" value="{{ old('team_name_with_age_group') }}" required>
-                                </div>
+                        <div class="field">
+                            <div class="input-wrap">
+                                <i class="fas fa-people-group"></i>
+                                <input type="text" name="team_name_with_age_group" placeholder="Team Name (e.g. 12U)" value="{{ old('team_name_with_age_group') }}" required>
                             </div>
                         </div>
 

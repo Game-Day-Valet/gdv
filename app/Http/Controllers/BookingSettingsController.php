@@ -34,7 +34,12 @@ class BookingSettingsController extends Controller
         $emailStatusDeliveredHtml = BookingOption::where('type', 'email_status_delivered_html')->value('description');
         $emailStatusCancelledHtml = BookingOption::where('type', 'email_status_cancelled_html')->value('description');
         $notif = SettingNotification::current();
-        return view('booking_settings.index', compact('options', 'emailContent', 'emailContentHtml', 'chatInitial', 'smsBooking', 'smsConfirmed', 'smsOutForDelivery', 'smsDelivered', 'smsCancelled', 'notif', 'emailPreEndReminder', 'smsPreEndReminder', 'emailEndDayMorning', 'smsEndDayMorning', 'emailStatusConfirmedHtml', 'emailStatusDeliveredHtml', 'emailStatusCancelledHtml'));
+       
+           // Testimonial and contact settings
+           $testimonialQuote = BookingOption::where('type', 'testimonial_quote')->first();
+           $supportPhoneNumber = BookingOption::where('type', 'support_phone_number')->first();
+       
+           return view('booking_settings.index', compact('options', 'emailContent', 'emailContentHtml', 'chatInitial', 'smsBooking', 'smsConfirmed', 'smsOutForDelivery', 'smsDelivered', 'smsCancelled', 'notif', 'emailPreEndReminder', 'smsPreEndReminder', 'emailEndDayMorning', 'smsEndDayMorning', 'emailStatusConfirmedHtml', 'emailStatusDeliveredHtml', 'emailStatusCancelledHtml', 'testimonialQuote', 'supportPhoneNumber'));
     }
 
     public function saveNotifications(Request $request)
@@ -264,5 +269,38 @@ class BookingSettingsController extends Controller
         }
 
         return redirect()->route('booking-settings.index')->with('success', 'End-day morning templates saved.');
+    }
+    public function saveTestimonialSettings(Request $request)
+    {
+        $data = $request->validate([
+            'testimonial_quote' => 'required|string',
+            'testimonial_author' => 'required|string|max:255',
+            'support_phone_number' => 'required|string|max:20',
+        ]);
+
+        BookingOption::updateOrCreate(
+            ['type' => 'testimonial_quote'],
+            [
+                'label' => 'Testimonial Quote',
+                'description' => '',
+                'testimonial_quote' => $data['testimonial_quote'],
+                'testimonial_author' => $data['testimonial_author'],
+                'price' => 0,
+                'enabled' => true,
+            ]
+        );
+
+        BookingOption::updateOrCreate(
+            ['type' => 'support_phone_number'],
+            [
+                'label' => 'Support Phone Number',
+                'description' => '',
+                'support_phone_number' => $data['support_phone_number'],
+                'price' => 0,
+                'enabled' => true,
+            ]
+        );
+
+        return redirect()->route('booking-settings.index')->with('success', 'Testimonial and contact settings saved.');
     }
 }

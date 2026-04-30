@@ -168,6 +168,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', function ($request, 
 		Route::post('booking-settings/save-pre-end-reminders', [\App\Http\Controllers\BookingSettingsController::class, 'savePreEndReminders'])->name('booking-settings.save-pre-end-reminders');
 		Route::post('booking-settings/save-end-day-morning', [\App\Http\Controllers\BookingSettingsController::class, 'saveEndDayMorning'])->name('booking-settings.save-end-day-morning');
 		Route::post('booking-settings/save-notifications', [\App\Http\Controllers\BookingSettingsController::class, 'saveNotifications'])->name('booking-settings.save-notifications');
+				Route::post('booking-settings/save-testimonial', [\App\Http\Controllers\BookingSettingsController::class, 'saveTestimonialSettings'])->name('booking-settings.save-testimonial');
 		Route::get('twilio/logs', [\App\Http\Controllers\TwilioLogsController::class, 'index'])->name('twilio.logs');
 		Route::get('email/logs', [\App\Http\Controllers\EmailLogsController::class, 'index'])->name('email.logs');
 		Route::resource('user-management', UserController::class);
