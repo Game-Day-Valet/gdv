@@ -1210,7 +1210,7 @@
                         <div class="field">
                             <div class="input-wrap">
                                 <i class="fas fa-people-group"></i>
-                                <input type="text" name="team_name_with_age_group" placeholder="Team Name + Age Group" value="{{ old('team_name_with_age_group') }}" required>
+                                <input type="text" name="team_name_with_age_group" placeholder="Team Name (e.g. 12U)" value="{{ old('team_name_with_age_group') }}" required>
                             </div>
                         </div>
 

@@ -1122,7 +1122,7 @@
 
     <div style="background: #141414; border-bottom: 1px solid rgba(217, 34, 49, 0.4); color: #f4f4f4; text-align: center; padding: 10px 24px; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; letter-spacing: 0.03em;">
         <i class="fas fa-fire" style="color: #ef3445; font-size: 16px;"></i>
-        <span>Limited setups available for this weekend. <strong>Most tournaments sell out.</strong></span>
+        <span>Everything was waiting for us. <strong>Super easy and worth every penny!</strong></span>
     </div>
 
     {{-- ==================== TOP BAR ==================== --}}
@@ -1342,23 +1342,11 @@
                             <div class="field">
                                 <div class="input-wrap">
                                     <i class="fas fa-people-group"></i>
-                                    <input type="text" name="team_name" placeholder="Team Name" value="{{ old('team_name') }}" required>
-                                </div>
-                            </div>
-                            <div class="field">
-                                <div class="input-wrap">
-                                    <i class="fas fa-hashtag"></i>
-                                    <input type="text" name="age_group" placeholder="Age Group (e.g. 12U)" value="{{ old('age_group') }}" required>
+                                    <input type="text" name="team_name_with_age_group" placeholder="Team Name (e.g. 12U)" value="{{ old('team_name_with_age_group') }}" required>
                                 </div>
                             </div>
                         </div>
 
-                                                <div class="field">
-                            <div class="input-wrap">
-                                <i class="fas fa-user-tie"></i>
-                                <input type="text" name="coach_name" placeholder="Coach Name" value="{{ old('coach_name') }}" required>
-                            </div>
-                        </div>
                         <div class="field">
                             <div class="input-wrap">
                                 <i class="fas fa-envelope"></i>
