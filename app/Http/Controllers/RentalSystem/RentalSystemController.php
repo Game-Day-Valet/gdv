@@ -654,7 +654,8 @@ class RentalSystemController extends Controller
         $validator = Validator::make($request->all(), [
             'tournament_id' => 'required|integer',
             'full_name' => 'nullable|string|max:255',
-            'team_name_with_age_group' => 'nullable|string|max:255',
+            'team_name' => 'nullable|string|max:255',
+            'age_group' => 'nullable|string|max:255',
             'coach_name' => 'nullable|string|max:255',
             'phone_number' => 'nullable|string|max:30',
             'email' => 'nullable|email',
@@ -828,7 +829,9 @@ class RentalSystemController extends Controller
             'booking_source' => 'website',
             'full_name' => $request->input('full_name') ?: null,
             'tournament_id' => (int) $request->input('tournament_id'),
-            'team_name_with_age_group' => $request->input('team_name_with_age_group') ?: null,
+            'team_name' => $request->input('team_name') ?: null,
+            'age_group' => $request->input('age_group') ?: null,
+            'team_name_with_age_group' => ($request->input('team_name') . ' ' . $request->input('age_group')) ?: null,
             'coach_name' => $request->input('coach_name') ?: null,
             'phone_number' => $request->input('phone_number') ?: ($user->contact_number ?? null),
             'email' => $request->input('email') ?: ($user->email ?? null),
@@ -917,7 +920,10 @@ class RentalSystemController extends Controller
             $session = \Stripe\Checkout\Session::retrieve($sessionId);
             $rentalId = $session->metadata->rental_id ?? null;
             if ($session->payment_status === 'paid' && $rentalId) {
-                $rental = $this->rentals->update($rentalId, ['payment_status' => 'completed']);
+                $rental = $this->rentals->update($rentalId, [
+                    'payment_status' => 'completed',
+                    'stripe_payment_id' => $session->payment_intent ?? null
+                ]);
 
                 try {
                     $this->airtable->updateOrInsertRental($rental);
@@ -939,13 +945,13 @@ class RentalSystemController extends Controller
                 // Fire Purchase event server-side via Meta Conversions API
                 try {
                     (new \App\Services\MetaPixelService())->trackPurchase([
-                        'value'        => $rental->total_amount,
-                        'order_id'     => (string) $rental->id,
+                        'value' => $rental->total_amount,
+                        'order_id' => (string) $rental->id,
                         'content_name' => optional($rental->tournament)->name ?? 'Tournament Rental',
-                        'email'        => $rental->email ?? optional($rental->user)->email,
-                        'phone'        => $rental->phone_number ?? optional($rental->user)->contact_number,
-                        'ip'           => request()->ip(),
-                        'url'          => request()->url(),
+                        'email' => $rental->email ?? optional($rental->user)->email,
+                        'phone' => $rental->phone_number ?? optional($rental->user)->contact_number,
+                        'ip' => request()->ip(),
+                        'url' => request()->url(),
                     ]);
                 } catch (\Throwable $e) {
                     Log::error('Meta CAPI error', ['error' => $e->getMessage()]);

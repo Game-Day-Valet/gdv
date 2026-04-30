@@ -1338,10 +1338,18 @@
                             </div>
                         </div>
 
-                        <div class="field">
-                            <div class="input-wrap">
-                                <i class="fas fa-people-group"></i>
-                                <input type="text" name="team_name_with_age_group" placeholder="Team Name + Age Group" value="{{ old('team_name_with_age_group') }}" required>
+                        <div class="field-row">
+                            <div class="field">
+                                <div class="input-wrap">
+                                    <i class="fas fa-people-group"></i>
+                                    <input type="text" name="team_name" placeholder="Team Name" value="{{ old('team_name') }}" required>
+                                </div>
+                            </div>
+                            <div class="field">
+                                <div class="input-wrap">
+                                    <i class="fas fa-hashtag"></i>
+                                    <input type="text" name="age_group" placeholder="Age Group (e.g. 12U)" value="{{ old('age_group') }}" required>
+                                </div>
                             </div>
                         </div>
 

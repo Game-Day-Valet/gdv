@@ -11,6 +11,7 @@ class AirtableService
     protected $baseId;
     protected $token;
     protected $table;
+    protected $customersTable;
     protected $logger;
 
     public function __construct()
@@ -18,6 +19,7 @@ class AirtableService
         $this->baseId = config('services.airtable.base_id');
         $this->token = config('services.airtable.token');
         $this->table = config('services.airtable.table');
+        $this->customersTable = config('services.airtable.customers_table');
     }
 
     /**
@@ -31,24 +33,39 @@ class AirtableService
         try {
             $rental->loadMissing('tournament.sport');
 
+            // 1. Get or Create Customer in Airtable
+            $customerRecordId = $this->findOrCreateAirtableCustomer($rental);
+
+            // 2. Find Tournament ID in Airtable Tournament Tracker table
+            $tournamentAirtableId = $this->findAirtableTournamentId(optional($rental->tournament)->name);
+
             $fields = [
-                'Customer' => [$rental->full_name ?? 'N/A'],
+                'Customer Name' => $rental->full_name ?? 'N/A',
                 'Order Date' => $rental->created_at ? $rental->created_at->format('Y-m-d H:i:s') : now()->format('Y-m-d H:i:s'),
                 'Complex' => optional($rental->tournament)->location ?? 'N/A',
-                'Tournament Name' => optional($rental->tournament)->name ?? 'N/A',
+                'Tournament' => optional($rental->tournament)->name ?? 'N/A',
                 'Order Total' => (float) ($rental->total_amount ?? 0),
+                'Subtotal' => (float) (($rental->total_amount ?? 0) - ($rental->tax_amount ?? 0)),
                 'Order Status' => $rental->status ?? 'pending',
                 'Delivery Method' => $rental->booking_source ?? 'website',
-                'Tournament Tracker' => (string) ($rental->tournament_id ?? ''),
-                'Tax Amount' => (float) ($rental->tax_amount ?? 0),
-                'Items + Quantities' => $this->formatItemsAndBundles($rental),
-                'Payment Status' => $rental->payment_status ?? 'pending',
+                'Tax' => (float) ($rental->tax_amount ?? 0),
+                'Items Ordered' => $this->formatItemsAndBundles($rental),
                 'Field Number' => $rental->field_number ?? 'N/A',
-                'Game Date' => optional($rental->tournament)->game_date ? \Carbon\Carbon::parse($rental->tournament->game_date)->format('Y-m-d') : null,
-                'Customer Email' => $rental->email ?? 'N/A',
-                'Customer Phone' => $rental->phone_number ?? 'N/A',
-                'Sports' => optional($rental->tournament->sport)->name ?? 'N/A',
+                'First Game Time' => optional($rental->tournament)->game_date ? \Carbon\Carbon::parse($rental->tournament->game_date)->format('Y-m-d') : null,
+                'Email' => $rental->email ?? 'N/A',
+                'Phone Number' => $rental->phone_number ?? 'N/A',
+
+                // Fields from screenshots
+                'Team Name' => $rental->team_name ?? 'N/A',
+                'Age Group' => $rental->age_group ?? 'N/A',
+                'Stripe Payment ID' => $rental->stripe_payment_id ?? 'N/A',
+                'Coach Name' => $rental->coach_name ?? 'N/A',
             ];
+
+            // If you still have a hidden "Customer" link field, you can add it here:
+            if ($customerRecordId) {
+                $fields['Customer'] = [$customerRecordId];
+            }
 
             if (optional($rental->tournament)->game_time) {
                 $baseDate = $rental->tournament->game_date ? \Carbon\Carbon::parse($rental->tournament->game_date)->format('Y-m-d') : now()->format('Y-m-d');
@@ -56,17 +73,15 @@ class AirtableService
                 $fields['Game Time'] = "{$baseDate}T{$timeString}.000Z";
             }
 
-            $this->log("Syncing rental #{$rental->id} to Airtable", $fields);
+            $this->log("Syncing rental #{$rental->id} to Airtable Web Orders", $fields);
 
             $existingRecordId = $rental->airtable_id;
 
-            // 1. If we don't have an ID, try to search for one (fallback for existing records)
+            // Search for existing record if airtable_id is missing
             if (!$existingRecordId) {
                 $formattedDate = $rental->created_at ? $rental->created_at->format('Y-m-d H:i') : null;
-
                 if ($formattedDate) {
-                    $filter = "AND({Tournament Tracker} = '{$rental->tournament_id}', DATETIME_FORMAT({Order Date}, 'YYYY-MM-DD HH:mm') = '{$formattedDate}')";
-
+                    $filter = "AND({Customer Email} = '{$rental->email}', DATETIME_FORMAT({Order Date}, 'YYYY-MM-DD HH:mm') = '{$formattedDate}')";
                     $searchResponse = Http::withToken($this->token)
                         ->get("https://api.airtable.com/v0/{$this->baseId}/" . urlencode($this->table), [
                             'filterByFormula' => $filter
@@ -74,26 +89,18 @@ class AirtableService
 
                     if ($searchResponse->successful() && !empty($searchResponse->json()['records'])) {
                         $existingRecordId = $searchResponse->json()['records'][0]['id'];
-                        $this->log("Found existing record ID via search: {$existingRecordId} for rental #{$rental->id}");
-
-                        // Save the ID to the rental for future use
                         $rental->update(['airtable_id' => $existingRecordId]);
                     }
                 }
             }
 
             if ($existingRecordId) {
-                // PATCH (Update existing)
                 $response = Http::withToken($this->token)
                     ->patch("https://api.airtable.com/v0/{$this->baseId}/" . urlencode($this->table) . "/{$existingRecordId}", [
                         'fields' => $fields,
                         'typecast' => true
                     ]);
-
-                // If PATCH fails because record was deleted, we might want to try POST, 
-                // but let's keep it simple for now as per user request.
             } else {
-                // POST (Create new)
                 $response = Http::withToken($this->token)
                     ->post("https://api.airtable.com/v0/{$this->baseId}/" . urlencode($this->table), [
                         'fields' => $fields,
@@ -102,11 +109,9 @@ class AirtableService
 
                 if ($response->successful()) {
                     $newId = $response->json()['id'];
-                    $this->log("Created new Airtable record with ID: {$newId} for rental #{$rental->id}");
                     $rental->update(['airtable_id' => $newId]);
                 }
             }
-
 
             if ($response->successful()) {
                 $this->log("Successfully synced rental #{$rental->id} to Airtable", $response->json());
@@ -119,14 +124,125 @@ class AirtableService
     }
 
     /**
+     * Map bundle to tier name (Basic/Pro/VIP).
+     */
+    protected function getBundleSelectedTier(Rental $rental)
+    {
+        if (empty($rental->bundles) || !is_array($rental->bundles)) {
+            return 'N/A';
+        }
+
+        foreach ($rental->bundles as $bundle) {
+            $bundleId = is_array($bundle) ? ($bundle['bundle_id'] ?? null) : $bundle;
+            if (!$bundleId)
+                continue;
+
+            // Mapping based on provided bundle list
+            // 10: Sideline Setup -> Basic
+            // 12: Family Sideline Setup -> Pro
+            // 11: Ultimate Sideline Setup -> VIP
+            // Including "with Tent Sides" versions
+            switch ((int) $bundleId) {
+                case 10:
+                    return 'Basic';
+                case 12:
+                case 17:
+                    return 'Pro';
+                case 11:
+                case 15:
+                    return 'VIP';
+                case 13:
+                case 18:
+                    return 'Team'; // Team package
+                case 14:
+                    return 'Chairs';
+            }
+        }
+
+        return 'N/A';
+    }
+
+    /**
+     * Find or create a customer record in Airtable.
+     */
+    protected function findOrCreateAirtableCustomer(Rental $rental)
+    {
+        if (!$this->customersTable)
+            return null;
+
+        $email = $rental->email;
+        if (!$email)
+            return null;
+
+        try {
+            // Search by email
+            $filter = "{Email} = '{$email}'";
+            $response = Http::withToken($this->token)
+                ->get("https://api.airtable.com/v0/{$this->baseId}/" . urlencode($this->customersTable), [
+                    'filterByFormula' => $filter
+                ]);
+
+            if ($response->successful() && !empty($response->json()['records'])) {
+                return $response->json()['records'][0]['id'];
+            }
+
+            // Create new customer if not found
+            $createResponse = Http::withToken($this->token)
+                ->post("https://api.airtable.com/v0/{$this->baseId}/" . urlencode($this->customersTable), [
+                    'fields' => [
+                        'Name' => $rental->full_name ?? 'N/A',
+                        'Email' => $email,
+                        'Phone' => $rental->phone_number ?? 'N/A',
+                    ],
+                    'typecast' => true
+                ]);
+
+            if ($createResponse->successful()) {
+                return $createResponse->json()['id'];
+            }
+        } catch (\Throwable $e) {
+            $this->log("Error in findOrCreateAirtableCustomer: " . $e->getMessage(), [], 'error');
+        }
+
+        return null;
+    }
+
+    /**
+     * Find Tournament ID in Tournament Tracker table.
+     */
+    protected function findAirtableTournamentId($name)
+    {
+        if (!$name)
+            return null;
+
+        try {
+            $filter = "{Name} = '" . addslashes($name) . "'";
+            $response = Http::withToken($this->token)
+                ->get("https://api.airtable.com/v0/{$this->baseId}/" . urlencode('Tournament Tracker'), [
+                    'filterByFormula' => $filter
+                ]);
+
+            if ($response->successful() && !empty($response->json()['records'])) {
+                return $response->json()['records'][0]['id'];
+            }
+        } catch (\Throwable $e) {
+            $this->log("Error in findAirtableTournamentId: " . $e->getMessage(), [], 'error');
+        }
+
+        return null;
+    }
+
+    /**
      * Format items and bundles for Airtable.
-     *
-     * @param Rental $rental
-     * @return string
      */
     protected function formatItemsAndBundles(Rental $rental)
     {
         $items = [];
+        $tier = $this->getBundleSelectedTier($rental);
+        if ($tier !== 'N/A') {
+            $items[] = "Tier: {$tier}";
+        }
+
         if (is_array($rental->items)) {
             foreach ($rental->items as $item) {
                 $itemModel = \App\Models\Item::find($item['item_id']);
@@ -150,84 +266,39 @@ class AirtableService
 
     /**
      * Sync Game Date and Game Time for all rentals of a specific tournament.
-     *
-     * @param \App\Models\Tournament $tournament
-     * @return void
      */
     public function syncTournamentGamesToAirtable(\App\Models\Tournament $tournament)
     {
         try {
-            // Get all rentals for this tournament that ALREADY have an airtable_id
             $rentals = Rental::where('tournament_id', $tournament->id)
                 ->whereNotNull('airtable_id')
                 ->get();
 
-            if ($rentals->isEmpty()) {
-                $this->log("No rentals found with Airtable IDs for tournament #{$tournament->id} to perform batch Game Date/Time update.");
+            if ($rentals->isEmpty())
                 return;
-            }
 
             $fields = [
                 'Game Date' => $tournament->game_date ? \Carbon\Carbon::parse($tournament->game_date)->format('Y-m-d') : null,
             ];
 
-            // If Game Time is provided, add it formatted.
-            // Airtable Time fields require a full ISO 8601 string if the field is configured as Date with Time enabled.
             if ($tournament->game_time) {
                 $baseDate = $tournament->game_date ? \Carbon\Carbon::parse($tournament->game_date)->format('Y-m-d') : now()->format('Y-m-d');
                 $timeString = \Carbon\Carbon::parse($tournament->game_time)->format('H:i:00');
                 $fields['Game Time'] = "{$baseDate}T{$timeString}.000Z";
-            } else {
-                $fields['Game Time'] = null;
             }
 
-            // Remove nulls so we don't accidentally clear fields that shouldn't be cleared,
-            // EXCEPT if both game_date and game_time were intentionally set to null.
-            if ($fields['Game Date'] === null) {
-                unset($fields['Game Date']);
-            }
-            if ($fields['Game Time'] === null) {
-                unset($fields['Game Time']);
-            }
-
-            $this->log("Syncing Game Date/Time for tournament #{$tournament->id} to Airtable", $fields);
-
-            $successCount = 0;
-            $failCount = 0;
-
-            /** @var \App\Models\Rental $rental */
             foreach ($rentals as $rental) {
-                $airtableId = $rental->airtable_id;
-
-                $response = Http::withToken($this->token)
-                    ->patch("https://api.airtable.com/v0/{$this->baseId}/" . urlencode($this->table) . "/{$airtableId}", [
+                Http::withToken($this->token)
+                    ->patch("https://api.airtable.com/v0/{$this->baseId}/" . urlencode($this->table) . "/{$rental->airtable_id}", [
                         'fields' => $fields,
                         'typecast' => true
                     ]);
-
-                if ($response->successful()) {
-                    $successCount++;
-                } else {
-                    $failCount++;
-                    $this->log("Failed to sync Game Date/Time for rental #{$rental->id}", $response->json(), 'error');
-                }
             }
-
-            $this->log("Finished syncing Game Date/Time for tournament #{$tournament->id}. Success: {$successCount}, Failed: {$failCount}");
-
         } catch (\Throwable $e) {
-            $this->log("Critical error syncing Game Date/Time for tournament #{$tournament->id}: " . $e->getMessage(), [], 'error');
+            $this->log("Critical error syncing Game Date/Time: " . $e->getMessage(), [], 'error');
         }
     }
 
-    /**
-     * Separate logging for Airtable.
-     *
-     * @param string $message
-     * @param array $data
-     * @param string $level
-     * @return void
-     */
     public function log($message, $data = [], $level = 'info')
     {
         $logMessage = "[" . now() . "] {$level}: {$message} " . json_encode($data);

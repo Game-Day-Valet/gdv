@@ -78,6 +78,7 @@ return [
         'base_id' => env('AIRTABLE_BASE_ID'),
         'token' => env('AIRTABLE_TOKEN'),
         'table' => env('AIRTABLE_TABLE'),
+        'customers_table' => env('AIRTABLE_CUSTOMERS_TABLE'),
     ],
 
 ];

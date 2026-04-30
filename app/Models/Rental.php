@@ -43,6 +43,9 @@ class Rental extends Model
         'assigned_manager_id',
         'sort_order',
         'airtable_id',
+        'stripe_payment_id',
+        'team_name',
+        'age_group',
     ];
 
     protected $casts = [

@@ -101,8 +101,10 @@ class RentalRepository implements RentalRepositoryInterface
                 'full_name' => $data['full_name'] ?? null,
                 'tournament_id' => $data['tournament_id'],
                 'booking_source' => $data['booking_source'] ?? null,
-                'team_name_with_age_group' => $data['team_name_with_age_group'],
-                'coach_name' => $data['coach_name'],
+                'team_name' => $data['team_name'] ?? null,
+                'age_group' => $data['age_group'] ?? null,
+                'team_name_with_age_group' => $data['team_name_with_age_group'] ?? null,
+                'coach_name' => $data['coach_name'] ?? null,
                 'phone_number' => $data['phone_number'] ?? null,
                 'email' => $data['email'] ?? null,
                 'field_number' => $data['field_number'] ?? null,
@@ -124,6 +126,7 @@ class RentalRepository implements RentalRepositoryInterface
                 'discount_amount' => $data['discount_amount'] ?? null,
                 'status' => $data['status'] ?? 'pending',
                 'return_instruction' => $data['return_instruction'] ?? null,
+                'stripe_payment_id' => $data['stripe_payment_id'] ?? null,
             ]);
 
             RentalStatusLog::create([
@@ -146,6 +149,8 @@ class RentalRepository implements RentalRepositoryInterface
                 'full_name' => $data['full_name'] ?? $rental->full_name,
                 'tournament_id' => $data['tournament_id'] ?? $rental->tournament_id,
                 'booking_source' => array_key_exists('booking_source', $data) ? $data['booking_source'] : $rental->booking_source,
+                'team_name' => $data['team_name'] ?? $rental->team_name,
+                'age_group' => $data['age_group'] ?? $rental->age_group,
                 'team_name_with_age_group' => $data['team_name_with_age_group'] ?? $rental->team_name_with_age_group,
                 'coach_name' => $data['coach_name'] ?? $rental->coach_name,
                 'phone_number' => $data['phone_number'] ?? $rental->phone_number,
@@ -168,6 +173,7 @@ class RentalRepository implements RentalRepositoryInterface
                 'tax_amount' => array_key_exists('tax_amount', $data) ? $data['tax_amount'] : $rental->tax_amount,
                 'status' => $data['status'] ?? $rental->status,
                 'return_instruction' => $data['return_instruction'] ?? $rental->return_instruction,
+                'stripe_payment_id' => $data['stripe_payment_id'] ?? $rental->stripe_payment_id,
             ]);
             return $rental;
         });

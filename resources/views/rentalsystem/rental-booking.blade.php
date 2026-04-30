@@ -604,9 +604,14 @@
                                 <input class="input" type="text" name="full_name" placeholder="Full name" required>
                             </div>
                             <div>
-                                <label class="label">TEAM NAME WITH AGE GROUP <span class="text-danger">*</span></label>
-                                <input class="input" type="text" name="team_name_with_age_group"
-                                    placeholder="Team name with age group" required>
+                                <label class="label">TEAM NAME <span class="text-danger">*</span></label>
+                                <input class="input" type="text" name="team_name"
+                                    placeholder="Team Name" required>
+                            </div>
+                            <div>
+                                <label class="label">AGE GROUP <span class="text-danger">*</span></label>
+                                <input class="input" type="text" name="age_group"
+                                    placeholder="e.g. 12U" required>
                             </div>
                             <div>
                                 <label class="label">COACH NAME <span class="text-danger">*</span></label>
