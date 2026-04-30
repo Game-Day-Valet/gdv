@@ -1171,7 +1171,7 @@
 
                 <ul class="hero-bullets">
                     <li><i class="fas fa-truck-fast"></i> Delivered to your first field</li>
-                    <li><i class="fas fa-campground"></i> Set up anywhere. Use all day</li>
+                    <li><i class="fas fa-campground"></i> You can set up anywhere. Use all day</li>
                     <li><i class="fas fa-comments"></i> Text us when you’re done — we pick it up</li>
                 </ul>
 
@@ -1249,7 +1249,7 @@
                                     @if(empty($bd->image))<i class="fas fa-box-open"></i>@endif
                                 </div>
                                 <div class="tier-price">${{ number_format((float) $bd->effective_price, 0) }}</div>
-                                <div class="tier-price-sub">Total (All Weekend)</div>
+                                <div class="tier-price-sub">Total (Entire Weekend)</div>
                                 @if(!empty($tournament->start_date) && !empty($tournament->end_date))
                                     @php
                                         $days = max(1, \Carbon\Carbon::parse($tournament->start_date)->diffInDays(\Carbon\Carbon::parse($tournament->end_date)) + 1);
@@ -1428,6 +1428,7 @@
 
                     <div class="addons-card utility-card" id="waiverCard">
                         <h2 class="order-card-title">Damage Waiver</h2>
+                        <p style="font-size: 13px; color: var(--gdv-muted); margin: 0 0 8px; line-height: 1.4;">Optional coverage for accidental damage to rental items. Excludes loss or theft.</p>
                         <div id="waiverSubtitle" class="waiver-subtitle"></div>
                         <div data-waiver-container class="waiver-options">
                             <label style="display:flex;gap:10px;align-items:center;">
@@ -1444,7 +1445,6 @@
                         <div class="summary-divider"></div>
                         <div class="summary-line"><span class="muted">Setup</span><span id="bundleSubtotal">$0</span></div>
                         <div class="summary-line"><span class="muted">Add-ons</span><span id="itemsSubtotal">$0</span></div>
-                        <div class="summary-line"><span class="muted">Insurance</span><span id="insuranceAmount">$0</span></div>
                         <div class="summary-line"><span class="muted">Damage Waiver</span><span id="waiverAmount">$0</span></div>
                         <div class="summary-line" id="discountRow" style="display:none; color: var(--gdv-success); font-weight:700;">
                             <span>Discount</span><span id="discountAmount">-$0</span>
@@ -1453,7 +1453,7 @@
                             <div class="summary-line" id="taxRow"><span class="muted">Tax</span><span id="taxAmount">$0</span></div>
                         @endif
                         <div class="summary-divider"></div>
-                        <div class="summary-line total"><span>Total</span><span id="totalAmount">$0 <span class="accent">ALL WEEKEND</span></span></div>
+                        <div class="summary-line total"><span>Total</span><span id="totalAmount">$0 <span class="accent">Entire WEEKEND</span></span></div>
 
                         <button type="button" class="apple-pay-btn" id="applePayBtn" disabled aria-label="Pay with Apple Pay">
                             <span class="apple-pay-inner"><span class="apple-logo">&#63743;</span> Pay</span>
