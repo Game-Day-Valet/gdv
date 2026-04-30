@@ -427,11 +427,17 @@ class RentalSystemController extends Controller
             return $bundle;
         });
 
-        return view('rentalsystem.rental-booking', [
+        $testimonialQuote = \App\Models\BookingOption::where('type', 'testimonial_quote')->first();
+        $supportPhoneNumber = \App\Models\BookingOption::where('type', 'support_phone_number')->first();
+
+        return view('rentalsystem.layouts.rental-booking-preview', [
             'tournament' => $tournament,
             'tournamentId' => $tournamentId,
             'availableItems' => $availableItems,
             'availableBundles' => $availableBundles,
+            'testimonialQuote' => $testimonialQuote,
+            'supportPhoneNumber' => $supportPhoneNumber,
+            'isPreviewMode' => false,
         ]);
     }
 
@@ -462,6 +468,7 @@ class RentalSystemController extends Controller
             'availableBundles' => $availableBundles,
             'testimonialQuote' => $testimonialQuote,
             'supportPhoneNumber' => $supportPhoneNumber,
+            'isPreviewMode' => true,
         ]);
     }
 

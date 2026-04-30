@@ -1116,9 +1116,11 @@
 </head>
 
 <body>
-    <div style="background: #d92231; color: white; text-align: center; padding: 12px; font-weight: 800; font-size: 16px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); text-transform: uppercase; letter-spacing: 0.1em;">
-        <i class="fas fa-exclamation-triangle" style="color: #f5b942; margin-right: 8px;"></i> PREVIEW MODE: This is a template preview. Booking and payments are disabled.
-    </div>
+    @if(!empty($isPreviewMode))
+        <div style="background: #d92231; color: white; text-align: center; padding: 12px; font-weight: 800; font-size: 16px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); text-transform: uppercase; letter-spacing: 0.1em;">
+            <i class="fas fa-exclamation-triangle" style="color: #f5b942; margin-right: 8px;"></i> PREVIEW MODE: This is a template preview. Booking and payments are disabled.
+        </div>
+    @endif
 
     <div style="background: #141414; border-bottom: 1px solid rgba(217, 34, 49, 0.4); color: #f4f4f4; text-align: center; padding: 10px 24px; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; letter-spacing: 0.03em;">
         <i class="fas fa-fire" style="color: #ef3445; font-size: 16px;"></i>
@@ -1512,6 +1514,7 @@
     <script>
         (function () {
             'use strict';
+            const isPreviewMode = @json(!empty($isPreviewMode));
 
             const TAX_RATE = parseFloat(document.getElementById('tax_rate_input').value || '0') / 100;
             const fmt = n => '$' + (Math.round(n * 100) / 100).toFixed(2).replace(/\.00$/, '');
@@ -1631,8 +1634,10 @@
                 const tax = taxableAmount * TAX_RATE;
                 const total = taxableAmount + totalFees + tax;
                 
-                document.getElementById('insuranceAmount').textContent = fmt(insuranceVal);
-                document.getElementById('waiverAmount').textContent = fmt(waiverVal);
+                const insuranceAmountEl = document.getElementById('insuranceAmount');
+                if (insuranceAmountEl) insuranceAmountEl.textContent = fmt(insuranceVal);
+                const waiverAmountEl = document.getElementById('waiverAmount');
+                if (waiverAmountEl) waiverAmountEl.textContent = fmt(waiverVal);
                 const discountRow = document.getElementById('discountRow');
                 const discountAmount = document.getElementById('discountAmount');
                 if (discountApplied > 0) {
@@ -1647,7 +1652,7 @@
                 document.getElementById('itemsSubtotal').textContent = fmt(itemsSubtotal);
                 const taxEl = document.getElementById('taxAmount');
                 if (taxEl) taxEl.textContent = fmt(tax);
-                document.getElementById('totalAmount').innerHTML = fmt(total) + ' <span class="accent">ALL WEEKEND</span>';
+                document.getElementById('totalAmount').innerHTML = fmt(total) + ' <span class="accent">ENTIRE TOURNAMENT</span>';
 
                 // Hidden inputs for backend
                 document.getElementById('total_amount_input').value = total.toFixed(2);
@@ -1668,7 +1673,11 @@
                 payBtn.disabled = !selectedBundle;
                 if (applePayBtn) applePayBtn.disabled = !selectedBundle;
                 if (payBtnText) {
-                    payBtnText.textContent = selectedBundle ? ('Preview Mode (' + fmt(total) + ')') : 'Preview Mode';
+                    if (selectedBundle) {
+                        payBtnText.textContent = isPreviewMode ? ('Preview Mode (' + fmt(total) + ')') : ('Pay Now (' + fmt(total) + ')');
+                    } else {
+                        payBtnText.textContent = isPreviewMode ? 'Preview Mode' : 'Pay Now';
+                    }
                 }
 
                 // Update sticky footer text dynamically
@@ -1710,9 +1719,12 @@
 
             document.getElementById('bookingForm').addEventListener('submit', async function (e) {
                 e.preventDefault();
-                alert('This is a template preview. Booking is disabled.');
-                return false;
-                
+
+                if (isPreviewMode) {
+                    alert('This is a template preview. Booking is disabled.');
+                    return false;
+                }
+
                 const smsOptIn = document.getElementById('sms_opt_in');
                 if (smsOptIn && !smsOptIn.checked) {
                     alert('Please agree to receive important text notifications to proceed.');
