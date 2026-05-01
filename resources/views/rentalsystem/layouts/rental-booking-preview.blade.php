@@ -1769,11 +1769,12 @@
                 const payBtn = document.getElementById('payBtn');
                 const applePayBtn = document.getElementById('applePayBtn');
                 const payBtnText = document.getElementById('payBtnText');
-                const hasBundle = totalBundleQty > 0;
-                payBtn.disabled = !hasBundle;
-                if (applePayBtn) applePayBtn.disabled = !hasBundle;
+                // Allow checkout when at least one bundle OR at least one add-on is selected
+                const hasSelection = (totalBundleQty > 0) || (itemsSubtotal > 0);
+                payBtn.disabled = !hasSelection;
+                if (applePayBtn) applePayBtn.disabled = !hasSelection;
                 if (payBtnText) {
-                    if (hasBundle) {
+                    if (hasSelection) {
                         payBtnText.textContent = isPreviewMode ? ('Preview Mode (' + fmt(total) + ')') : ('Pay Now (' + fmt(total) + ')');
                     } else {
                         payBtnText.textContent = isPreviewMode ? 'Preview Mode' : 'Pay Now';
@@ -1783,9 +1784,11 @@
                 // Update sticky footer text dynamically
                 const footerHead = document.querySelector('.footer-cta-text .head');
                 const footerBtn = document.querySelector('.footer-cta-btn');
-                if (hasBundle && footerHead && footerBtn) {
+                if (hasSelection && footerHead && footerBtn) {
                     let title = null;
-                    if (totalBundleQty === 1) {
+                    if (totalBundleQty === 0 && itemsSubtotal > 0) {
+                        title = 'Items selected';
+                    } else if (totalBundleQty === 1) {
                         Object.keys(bundleQtyInputs).forEach(id => { if ((parseInt(bundleQtyInputs[id].value,10)||0) === 1 && !title) title = (bundleMeta[id]||{}).name; });
                         title = title || 'Setup';
                     } else {
