@@ -1193,7 +1193,7 @@
 
     <div style="background: #141414; border-bottom: 1px solid rgba(217, 34, 49, 0.4); color: #f4f4f4; text-align: center; padding: 10px 24px; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; letter-spacing: 0.03em;">
         <i class="fas fa-fire" style="color: #ef3445; font-size: 16px;"></i>
-        <span>{{ $testimonialQuote?->testimonial_quote ?? 'Everything was waiting for us. Super easy and worth every penny!' }}</span>
+        <span>{{ $testimonialQuote?->testimonial_quote ?? 'Highly recommended to anyone traveling for sports tournaments.' }}</span>
     </div>
 
     {{-- ==================== TOP BAR ==================== --}}
@@ -1297,11 +1297,7 @@
         <section class="tiers-section" id="tiers">
             <div class="tiers-wrap">
                 @if(count($availableBundles) > 0)
-                    <div style="text-align: center; margin-bottom: 40px; background: var(--gdv-black-2); border: 1px solid var(--gdv-border); padding: 24px; border-radius: 16px; max-width: 650px; margin-left: auto; margin-right: auto; box-shadow: var(--shadow-card);">
-                        <div style="color: var(--gdv-gold); font-size: 18px; margin-bottom: 10px; letter-spacing: 2px;">★★★★★</div>
-                        <p style="font-size: 18px; font-style: italic; color: var(--gdv-white); margin: 0 0 10px; line-height: 1.5; font-weight: 500;">{{ $testimonialQuote?->testimonial_quote ?? '"Everything was waiting for us. Super easy and worth every penny."' }}</p>
-                        <span style="color: var(--gdv-red); font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em;">— {{ $testimonialQuote?->testimonial_author ?? 'Baseball Mom' }}</span>
-                    </div>
+
 
                     <div class="tiers-grid">
                         @foreach($availableBundles as $bd)
@@ -1539,7 +1535,7 @@
                     <span class="proof-rating">5.0</span>
                 </div>
                 <p class="proof-quote">
-                    “Everything was waiting for us. Super easy and worth every penny!”
+                    <span>{{ $testimonialQuote?->testimonial_quote ?? 'Highly recommended to anyone traveling for sports tournaments.' }}</span>
                     <span class="author">— Baseball Mom</span>
                 </p>
             </div>
