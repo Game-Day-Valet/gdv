@@ -1211,7 +1211,7 @@
                 <i class="fas fa-phone"></i>
                 <div>
                     <span class="num">{{ $supportPhoneNumber?->support_phone_number ?? '(470) 428-8440' }}</span>
-                    <span class="sub">Text us anytime</span>
+                        <div class="text"><strong>Text with </strong>Questions</div>
                 </div>
             </a>
         </div>
@@ -1238,7 +1238,7 @@
                 </div>
 
                 <p class="hero-pitch">Your sideline setup is<br><span class="em">already there</span><br>when you arrive.</p>
-                <p style="font-size: 16px; color: var(--gdv-muted); margin: 0 0 12px; font-weight: 500; line-height: 1.4;">Perfect for families traveling in and staying in hotels.</p>
+                <p style="font-size: 16px; color: var(--gdv-muted); margin: 0 0 12px; font-weight: 500; line-height: 1.4;">Skip hauling gear across the complex.</p>
 
                 <ul class="hero-bullets">
                     <li><i class="fas fa-truck-fast"></i> Delivered to your first field</li>
@@ -1412,7 +1412,7 @@
 
                     <div class="order-card">
                         <h2 class="order-card-title" style="margin-bottom: 8px;">Lock In Your Setup</h2>
-                        <p style="font-size: 15px; color: var(--gdv-muted); margin: 0 0 20px; font-weight: 500;">Takes 30 seconds. We’ll text you to confirm details.</p>
+                        <p style="font-size: 15px; color: var(--gdv-muted); margin: 0 0 20px; font-weight: 500;">Change lock in your setup to: Reserve your setup in 30 seconds.</p>
 
                         <div class="field-row">
                             <div class="field">

@@ -1016,7 +1016,7 @@
                 <i class="fas fa-phone"></i>
                 <div>
                     <span class="num">(470) 428-8440</span>
-                    <span class="sub">Text us anytime</span>
+                    <div class="text"><strong>Text with </strong>Questions</div>
                 </div>
             </a>
         </div>
@@ -1163,7 +1163,7 @@
                     <div class="how-arrow"><i class="fas fa-arrow-right"></i></div>
                     <div class="how-step">
                         <i class="fas fa-comment-dots icon"></i>
-                        <div class="text"><strong>Text us</strong>when done</div>
+                        <div class="text"><strong>Text with</strong>Question</div>
                     </div>
                     <div class="how-arrow"><i class="fas fa-arrow-right"></i></div>
                     <div class="how-step">
