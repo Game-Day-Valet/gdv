@@ -20,6 +20,7 @@ class Bundle extends Model
         'price',
         'status',
         'sort_order',
+        'is_most_popular',
     ];
 
     protected $casts = [

@@ -34,6 +34,7 @@ use Firebase\JWT\JWK;
 use Firebase\JWT\JWT;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class RentalSystemController extends Controller
 {
@@ -427,8 +428,16 @@ class RentalSystemController extends Controller
             return $bundle;
         });
 
-        $testimonialQuote = \App\Models\BookingOption::where('type', 'testimonial_quote')->first();
-        $supportPhoneNumber = \App\Models\BookingOption::where('type', 'support_phone_number')->first();
+        $testimonialQuoteRow = \App\Models\BookingOption::where('type', 'testimonial_quote')->latest('updated_at')->first();
+        $supportPhoneRow = \App\Models\BookingOption::where('type', 'support_phone_number')->latest('updated_at')->first();
+
+        $testimonialQuote = (object) [
+            'testimonial_quote' => Cache::get('booking_testimonial_quote', $testimonialQuoteRow?->testimonial_quote),
+            'testimonial_author' => Cache::get('booking_testimonial_author', $testimonialQuoteRow?->testimonial_author),
+        ];
+        $supportPhoneNumber = (object) [
+            'support_phone_number' => Cache::get('booking_support_phone_number', $supportPhoneRow?->support_phone_number),
+        ];
 
         return view('rentalsystem.layouts.rental-booking-preview', [
             'tournament' => $tournament,
@@ -458,8 +467,16 @@ class RentalSystemController extends Controller
         });
 
         // Fetch testimonial and contact settings
-        $testimonialQuote = \App\Models\BookingOption::where('type', 'testimonial_quote')->first();
-        $supportPhoneNumber = \App\Models\BookingOption::where('type', 'support_phone_number')->first();
+        $testimonialQuoteRow = \App\Models\BookingOption::where('type', 'testimonial_quote')->latest('updated_at')->first();
+        $supportPhoneRow = \App\Models\BookingOption::where('type', 'support_phone_number')->latest('updated_at')->first();
+
+        $testimonialQuote = (object) [
+            'testimonial_quote' => Cache::get('booking_testimonial_quote', $testimonialQuoteRow?->testimonial_quote),
+            'testimonial_author' => Cache::get('booking_testimonial_author', $testimonialQuoteRow?->testimonial_author),
+        ];
+        $supportPhoneNumber = (object) [
+            'support_phone_number' => Cache::get('booking_support_phone_number', $supportPhoneRow?->support_phone_number),
+        ];
 
         return view('rentalsystem.layouts.rental-booking-preview', [
             'tournament' => $tournament,

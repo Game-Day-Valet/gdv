@@ -35,7 +35,8 @@ class BundleController extends Controller
     public function store(BundleRequest $request)
     {
         try {
-            $data = $request->only(['name', 'description', 'price', 'status']);
+            $data = $request->only(['name', 'description', 'price', 'status', 'is_most_popular']);
+            $data['is_most_popular'] = $request->has('is_most_popular') ? (bool) $request->input('is_most_popular') : false;
             if ($request->hasFile('image')) {
                 $data['image'] = $request->file('image');
             }
@@ -57,7 +58,8 @@ class BundleController extends Controller
     public function update(BundleRequest $request, $id)
     {
         try {
-            $data = $request->only(['name', 'description', 'price', 'status']);
+            $data = $request->only(['name', 'description', 'price', 'status', 'is_most_popular']);
+            $data['is_most_popular'] = $request->has('is_most_popular') ? (bool) $request->input('is_most_popular') : false;
             if ($request->hasFile('image')) {
                 $data['image'] = $request->file('image');
             }

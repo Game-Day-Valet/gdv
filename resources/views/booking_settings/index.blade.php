@@ -242,7 +242,7 @@
         <h5 class="card-title mb-0">Testimonial & Contact Settings</h5>
     </div>
     <div class="card-body">
-        <form method="POST" action="{{ route('booking-settings.save-testimonial') }}">
+        <form method="POST" action="{{ route('booking-settings.save-testimonial') }}" id="testimonialSettingsForm">
             @csrf
             <div class="mb-3">
                 <label class="form-label" for="testimonial_quote">Testimonial Quote</label>
@@ -393,5 +393,33 @@
       });
     });
   });
+
+    const testimonialForm = document.getElementById('testimonialSettingsForm');
+    if (testimonialForm) {
+        testimonialForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(testimonialForm);
+            try {
+                const response = await fetch(testimonialForm.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                    return;
+                }
+
+                alert('Failed to save testimonial settings.');
+            } catch (error) {
+                alert('Failed to save testimonial settings.');
+            }
+        });
+    }
 </script>
 @endsection

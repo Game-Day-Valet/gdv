@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BookingOption;
 use Illuminate\Http\Request;
 use App\Models\SettingNotification;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class BookingSettingsController extends Controller
@@ -36,8 +37,8 @@ class BookingSettingsController extends Controller
         $notif = SettingNotification::current();
        
            // Testimonial and contact settings
-           $testimonialQuote = BookingOption::where('type', 'testimonial_quote')->first();
-           $supportPhoneNumber = BookingOption::where('type', 'support_phone_number')->first();
+           $testimonialQuote = BookingOption::where('type', 'testimonial_quote')->latest('updated_at')->first();
+           $supportPhoneNumber = BookingOption::where('type', 'support_phone_number')->latest('updated_at')->first();
        
            return view('booking_settings.index', compact('options', 'emailContent', 'emailContentHtml', 'chatInitial', 'smsBooking', 'smsConfirmed', 'smsOutForDelivery', 'smsDelivered', 'smsCancelled', 'notif', 'emailPreEndReminder', 'smsPreEndReminder', 'emailEndDayMorning', 'smsEndDayMorning', 'emailStatusConfirmedHtml', 'emailStatusDeliveredHtml', 'emailStatusCancelledHtml', 'testimonialQuote', 'supportPhoneNumber'));
     }
@@ -289,6 +290,10 @@ class BookingSettingsController extends Controller
                 'enabled' => true,
             ]
         );
+
+        Cache::put('booking_testimonial_quote', $data['testimonial_quote']);
+        Cache::put('booking_testimonial_author', $data['testimonial_author']);
+        Cache::put('booking_support_phone_number', $data['support_phone_number']);
 
         BookingOption::updateOrCreate(
             ['type' => 'support_phone_number'],

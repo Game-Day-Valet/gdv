@@ -486,6 +486,78 @@
             outline-offset: 2px;
         }
 
+        /* Quantity / remove controls on tier cards */
+        .tier-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+            padding: 6px 8px;
+            background: transparent;
+        }
+        .tier-controls button {
+            background: var(--gdv-black-3);
+            border: 1px solid var(--gdv-border);
+            color: var(--gdv-white);
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .tier-controls button:hover { background: var(--gdv-black-2); color: var(--gdv-gold); }
+        .tier-controls input.bundle-qty {
+            width: 56px;
+            height: 34px;
+            text-align: center;
+            background: var(--gdv-white);
+            color: var(--gdv-black);
+            border: 1px solid var(--gdv-border);
+            border-radius: 6px;
+            font-weight: 800;
+        }
+        .tier-controls .tier-remove {
+            background: transparent;
+            border: none;
+            color: var(--gdv-muted);
+            font-size: 18px;
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .tier-controls .tier-remove:hover { color: var(--gdv-red); background: rgba(217,34,49,0.06); border-radius:6px; }
+
+        /* Tier footer keeps controls + CTA aligned */
+        .tier-footer {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            min-height: 96px; /* reserve space so cards align */
+            padding-top: 6px;
+        }
+        .tier-cta { margin-top: 0; }
+
+        /* Responsive adjustments for controls */
+        @media (max-width: 980px) {
+            .tier-footer { min-height: 84px; }
+            .tier-controls input.bundle-qty { width: 46px; height: 32px; }
+            .tier-controls button { width: 28px; height: 28px; }
+        }
+        @media (max-width: 480px) {
+            .tier-controls { gap: 6px; }
+            .tier-controls input.bundle-qty { width: 40px; }
+            .tier-controls button { width: 28px; height: 28px; font-size: 14px; }
+            .tier-footer { min-height: 74px; }
+        }
+
         .tiers-empty {
             text-align: center;
             padding: 60px 20px;
@@ -582,6 +654,7 @@
             border: 1px solid var(--gdv-border);
             border-radius: 16px;
             padding: 28px;
+            margin-top: 20px;
         }
         .order-card-title {
             font-family: 'Anton', sans-serif;
@@ -1116,15 +1189,11 @@
 </head>
 
 <body>
-    @if(!empty($isPreviewMode))
-        <div style="background: #d92231; color: white; text-align: center; padding: 12px; font-weight: 800; font-size: 16px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); text-transform: uppercase; letter-spacing: 0.1em;">
-            <i class="fas fa-exclamation-triangle" style="color: #f5b942; margin-right: 8px;"></i> PREVIEW MODE: This is a template preview. Booking and payments are disabled.
-        </div>
-    @endif
+    {{-- Preview banner removed for live booking --}}
 
     <div style="background: #141414; border-bottom: 1px solid rgba(217, 34, 49, 0.4); color: #f4f4f4; text-align: center; padding: 10px 24px; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; letter-spacing: 0.03em;">
         <i class="fas fa-fire" style="color: #ef3445; font-size: 16px;"></i>
-        <span>Everything was waiting for us. <strong>Super easy and worth every penny!</strong></span>
+        <span>{{ $testimonialQuote?->testimonial_quote ?? 'Everything was waiting for us. Super easy and worth every penny!' }}</span>
     </div>
 
     {{-- ==================== TOP BAR ==================== --}}
@@ -1228,11 +1297,6 @@
         <section class="tiers-section" id="tiers">
             <div class="tiers-wrap">
                 @if(count($availableBundles) > 0)
-                    @php
-                        $bundleCount = count($availableBundles);
-                        $featuredIndex = $bundleCount > 1 ? (int) floor($bundleCount / 2) : 0;
-                    @endphp
-
                     <div style="text-align: center; margin-bottom: 40px; background: var(--gdv-black-2); border: 1px solid var(--gdv-border); padding: 24px; border-radius: 16px; max-width: 650px; margin-left: auto; margin-right: auto; box-shadow: var(--shadow-card);">
                         <div style="color: var(--gdv-gold); font-size: 18px; margin-bottom: 10px; letter-spacing: 2px;">★★★★★</div>
                         <p style="font-size: 18px; font-style: italic; color: var(--gdv-white); margin: 0 0 10px; line-height: 1.5; font-weight: 500;">{{ $testimonialQuote?->testimonial_quote ?? '"Everything was waiting for us. Super easy and worth every penny."' }}</p>
@@ -1240,9 +1304,9 @@
                     </div>
 
                     <div class="tiers-grid">
-                        @foreach($availableBundles as $idx => $bd)
-                            <div class="tier {{ $idx === $featuredIndex ? 'featured' : '' }}" data-bundle-id="{{ $bd->id }}" data-bundle-price="{{ (float) $bd->effective_price }}" data-bundle-name="{{ $bd->name }}">
-                                @if($idx === $featuredIndex)
+                        @foreach($availableBundles as $bd)
+                            <div class="tier {{ $bd->is_most_popular ? 'featured' : '' }}" data-bundle-id="{{ $bd->id }}" data-bundle-price="{{ (float) $bd->effective_price }}" data-bundle-name="{{ $bd->name }}">
+                                @if($bd->is_most_popular)
                                     <div class="tier-badge"><i class="fas fa-star"></i> Most Popular</div>
                                 @endif
                                 <h3 class="tier-name">{{ $bd->name }}</h3>
@@ -1259,9 +1323,17 @@
                                     @endphp
                                     <div class="tier-perday">Less than ${{ number_format(ceil($perDay), 0) }}/day!</div>
                                 @endif
-                                <button type="button" class="tier-cta" data-select-bundle="{{ $bd->id }}">
-                                    Reserve My Setup
-                                </button>
+                                <div class="tier-footer">
+                                    <div class="tier-controls">
+                                        <button type="button" class="tier-dec" aria-label="Decrease">−</button>
+                                        <input type="number" name="bundles[{{ $bd->id }}]" id="bundle_qty_{{ $bd->id }}" class="bundle-qty" value="0" min="0" max="10" />
+                                        <button type="button" class="tier-inc" aria-label="Increase">+</button>
+                                        <button type="button" class="tier-remove" title="Remove" aria-label="Remove">✕</button>
+                                    </div>
+                                    <button type="button" class="tier-cta" data-select-bundle="{{ $bd->id }}">
+                                        Reserve My Setup
+                                    </button>
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -1272,10 +1344,7 @@
                     </div>
                 @endif
 
-                {{-- Hidden bundle quantity inputs (one per bundle, value 0 or 1) --}}
-                @foreach($availableBundles as $bd)
-                    <input type="hidden" name="bundles[{{ $bd->id }}]" id="bundle_qty_{{ $bd->id }}" value="0">
-                @endforeach
+                {{-- Bundle quantity inputs are embedded in each tier card --}}
             </div>
         </section>
 
@@ -1321,50 +1390,6 @@
                         <div class="alert">{{ session('error') }}</div>
                     @endif
 
-                    <div class="order-card">
-                        <h2 class="order-card-title" style="margin-bottom: 8px;">Lock In Your Setup</h2>
-                        <p style="font-size: 15px; color: var(--gdv-muted); margin: 0 0 20px; font-weight: 500;">Takes 30 seconds. We’ll text you to confirm details.</p>
-
-                        <div class="field-row">
-                            <div class="field">
-                                <div class="input-wrap">
-                                    <i class="fas fa-user"></i>
-                                    <input type="text" name="full_name" placeholder="Full Name" value="{{ old('full_name') }}" required>
-                                </div>
-                            </div>
-                            <div class="field">
-                                <div class="input-wrap">
-                                    <i class="fas fa-phone"></i>
-                                    <input type="tel" name="phone_number" placeholder="Phone Number" value="{{ old('phone_number') }}" required>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="field">
-                            <div class="input-wrap">
-                                <i class="fas fa-people-group"></i>
-                                <input type="text" name="team_name_with_age_group" placeholder="Team Name (e.g. 12U)" value="{{ old('team_name_with_age_group') }}" required>
-                            </div>
-                        </div>
-
-                        <div class="field">
-                            <div class="input-wrap">
-                                <i class="fas fa-envelope"></i>
-                                <input type="email" name="email" placeholder="Email (optional)" value="{{ old('email') }}">
-                            </div>
-                        </div>
-
-                        <label style="display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:13px;color:var(--gdv-muted);line-height:1.5;">
-                            <input type="checkbox" name="sms_opt_in" id="sms_opt_in" required style="margin-top:3px;flex-shrink:0;">
-                            <span>I agree to receive text notifications about my rental (booking confirmations, delivery updates, event-day notices). Msg & data rates may apply. Reply STOP to opt out.</span>
-                        </label>
-
-                        <div style="margin-top:16px;padding:12px 14px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:8px;font-size:13px;color:var(--gdv-text);display:flex;align-items:center;gap:10px;">
-                            <i class="fas fa-shield-halved" style="color:var(--gdv-success);"></i>
-                            <span>Secure & encrypted checkout</span>
-                        </div>
-                    </div>
-
                     {{-- Optional Add-Ons (à la carte items) --}}
                     @if(count($availableItems) > 0)
                         <div class="addons-card">
@@ -1389,6 +1414,45 @@
                             </div>
                         </div>
                     @endif
+
+                    <div class="order-card">
+                        <h2 class="order-card-title" style="margin-bottom: 8px;">Lock In Your Setup</h2>
+                        <p style="font-size: 15px; color: var(--gdv-muted); margin: 0 0 20px; font-weight: 500;">Takes 30 seconds. We’ll text you to confirm details.</p>
+
+                        <div class="field-row">
+                            <div class="field">
+                                <div class="input-wrap">
+                                    <i class="fas fa-user"></i>
+                                    <input type="text" name="full_name" placeholder="Full Name" value="{{ old('full_name') }}" required>
+                                </div>
+                            </div>
+                            <div class="field">
+                                <div class="input-wrap">
+                                    <i class="fas fa-phone"></i>
+                                    <input type="tel" name="phone_number" placeholder="Phone Number" value="{{ old('phone_number') }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Team name removed per request --}}
+
+                        <div class="field">
+                            <div class="input-wrap">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" name="email" placeholder="Email (optional)" value="{{ old('email') }}">
+                            </div>
+                        </div>
+
+                        <label style="display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:13px;color:var(--gdv-muted);line-height:1.5;">
+                            <input type="checkbox" name="sms_opt_in" id="sms_opt_in" required style="margin-top:3px;flex-shrink:0;">
+                            <span>I agree to receive text notifications about my rental (booking confirmations, delivery updates, event-day notices). Msg & data rates may apply. Reply STOP to opt out.</span>
+                        </label>
+
+                        <div style="margin-top:16px;padding:12px 14px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:8px;font-size:13px;color:var(--gdv-text);display:flex;align-items:center;gap:10px;">
+                            <i class="fas fa-shield-halved" style="color:var(--gdv-success);"></i>
+                            <span>Secure & encrypted checkout</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="order-sidebar">
@@ -1522,27 +1586,32 @@
             // ===== Bundle (tier) selection =====
             const tierCards = document.querySelectorAll('.tier');
             const bundleQtyInputs = {};
+            const bundleMeta = {};
             document.querySelectorAll('input[name^="bundles["]').forEach(el => {
                 const m = el.name.match(/bundles\[(\d+)\]/);
                 if (m) bundleQtyInputs[m[1]] = el;
             });
 
-            let selectedBundle = null;
+            // Build meta map from DOM cards
+            tierCards.forEach(card => {
+                const id = card.dataset.bundleId;
+                bundleMeta[id] = { price: parseFloat(card.dataset.bundlePrice || '0'), name: card.dataset.bundleName, card };
+            });
 
             function selectTier(card) {
                 const id = card.dataset.bundleId;
-                const price = parseFloat(card.dataset.bundlePrice || '0');
-                const name = card.dataset.bundleName;
+                if (!id || !bundleQtyInputs[id]) return;
 
-                // Reset all bundle quantities to 0
-                Object.values(bundleQtyInputs).forEach(inp => inp.value = '0');
-                document.querySelectorAll('.tier').forEach(t => t.classList.remove('is-selected'));
+                // Toggle: if selected remove, otherwise add one
+                const cur = parseInt(bundleQtyInputs[id].value, 10) || 0;
+                if (cur > 0) {
+                    bundleQtyInputs[id].value = '0';
+                    card.classList.remove('is-selected');
+                } else {
+                    bundleQtyInputs[id].value = '1';
+                    card.classList.add('is-selected');
+                }
 
-                // Set this one to 1
-                if (bundleQtyInputs[id]) bundleQtyInputs[id].value = '1';
-                card.classList.add('is-selected');
-
-                selectedBundle = { id, price, name };
                 recalc();
 
                 // Smooth scroll to the order form
@@ -1552,11 +1621,7 @@
                 setTimeout(() => {
                     const firstField = document.querySelector('input[name="full_name"]');
                     if (firstField) {
-                        try {
-                            firstField.focus({ preventScroll: true });
-                        } catch (_) {
-                            firstField.focus();
-                        }
+                        try { firstField.focus({ preventScroll: true }); } catch (_) { firstField.focus(); }
                     }
                 }, 700);
             }
@@ -1564,8 +1629,11 @@
             tierCards.forEach(card => {
                 const btn = card.querySelector('.tier-cta');
                 if (btn) btn.addEventListener('click', (e) => { e.stopPropagation(); selectTier(card); });
-                // Whole card is clickable
-                card.addEventListener('click', () => selectTier(card));
+                // Whole card is clickable (but clicks on controls should not toggle)
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('.tier-controls')) return;
+                    selectTier(card);
+                });
                 // Keyboard accessible
                 card.setAttribute('tabindex', '0');
                 card.setAttribute('role', 'button');
@@ -1575,6 +1643,17 @@
                         selectTier(card);
                     }
                 });
+
+                // Wire up per-card controls if present
+                const inc = card.querySelector('.tier-inc');
+                const dec = card.querySelector('.tier-dec');
+                const rem = card.querySelector('.tier-remove');
+                const qtyInput = card.querySelector('input.bundle-qty');
+                const bid = card.dataset.bundleId;
+                if (inc && qtyInput) inc.addEventListener('click', (e) => { e.stopPropagation(); const max = parseInt(qtyInput.max, 10) || 10; qtyInput.value = Math.min(max, (parseInt(qtyInput.value, 10) || 0) + 1); if (bundleQtyInputs[bid]) bundleQtyInputs[bid].value = qtyInput.value; card.classList.add('is-selected'); recalc(); });
+                if (dec && qtyInput) dec.addEventListener('click', (e) => { e.stopPropagation(); qtyInput.value = Math.max(0, (parseInt(qtyInput.value, 10) || 0) - 1); if (bundleQtyInputs[bid]) bundleQtyInputs[bid].value = qtyInput.value; if (parseInt(qtyInput.value,10) === 0) card.classList.remove('is-selected'); recalc(); });
+                if (rem && qtyInput) rem.addEventListener('click', (e) => { e.stopPropagation(); qtyInput.value = '0'; if (bundleQtyInputs[bid]) bundleQtyInputs[bid].value = '0'; card.classList.remove('is-selected'); recalc(); });
+                if (qtyInput) qtyInput.addEventListener('change', (e) => { const v = Math.max(0, parseInt(qtyInput.value,10) || 0); qtyInput.value = v; if (bundleQtyInputs[bid]) bundleQtyInputs[bid].value = v; if (v>0) card.classList.add('is-selected'); else card.classList.remove('is-selected'); recalc(); });
             });
 
             // ===== Add-on quantity controls =====
@@ -1595,7 +1674,22 @@
 
             // ===== Recalc totals =====
             function recalc() {
-                let bundleSubtotal = selectedBundle ? selectedBundle.price : 0;
+                let bundleSubtotal = 0;
+                let totalBundleQty = 0;
+
+                // Sum bundles by quantity
+                Object.keys(bundleQtyInputs).forEach(id => {
+                    const qty = parseInt(bundleQtyInputs[id].value, 10) || 0;
+                    const meta = bundleMeta[id] || {};
+                    const price = parseFloat(meta.price || 0);
+                    bundleSubtotal += qty * price;
+                    totalBundleQty += qty;
+                    if (meta.card) {
+                        if (qty > 0) meta.card.classList.add('is-selected'); else meta.card.classList.remove('is-selected');
+                        const localInput = meta.card.querySelector('input.bundle-qty');
+                        if (localInput && localInput.value != qty) localInput.value = qty;
+                    }
+                });
 
                 let itemsSubtotal = 0;
                 document.querySelectorAll('.addon-row').forEach(row => {
@@ -1660,20 +1754,26 @@
 
                 // Selected tier label
                 const tierLabel = document.getElementById('selectedTierName');
-                if (selectedBundle) {
-                    tierLabel.innerHTML = '<span class="tier-tag">' + escapeHtml(selectedBundle.name) + '</span> Setup';
-                } else {
+                if (totalBundleQty === 0) {
                     tierLabel.innerHTML = '<span class="tier-tag">No setup</span> selected';
+                } else if (totalBundleQty === 1) {
+                    // find the single selected name
+                    let name = null;
+                    Object.keys(bundleQtyInputs).forEach(id => { if ((parseInt(bundleQtyInputs[id].value,10)||0) === 1 && !name) { name = (bundleMeta[id]||{}).name; } });
+                    tierLabel.innerHTML = '<span class="tier-tag">' + escapeHtml(name || 'Setup') + '</span> Setup';
+                } else {
+                    tierLabel.innerHTML = '<span class="tier-tag">' + totalBundleQty + '</span> setups selected';
                 }
 
                 // Enable/disable buttons + dynamic Pay Now text
                 const payBtn = document.getElementById('payBtn');
                 const applePayBtn = document.getElementById('applePayBtn');
                 const payBtnText = document.getElementById('payBtnText');
-                payBtn.disabled = !selectedBundle;
-                if (applePayBtn) applePayBtn.disabled = !selectedBundle;
+                const hasBundle = totalBundleQty > 0;
+                payBtn.disabled = !hasBundle;
+                if (applePayBtn) applePayBtn.disabled = !hasBundle;
                 if (payBtnText) {
-                    if (selectedBundle) {
+                    if (hasBundle) {
                         payBtnText.textContent = isPreviewMode ? ('Preview Mode (' + fmt(total) + ')') : ('Pay Now (' + fmt(total) + ')');
                     } else {
                         payBtnText.textContent = isPreviewMode ? 'Preview Mode' : 'Pay Now';
@@ -1683,8 +1783,15 @@
                 // Update sticky footer text dynamically
                 const footerHead = document.querySelector('.footer-cta-text .head');
                 const footerBtn = document.querySelector('.footer-cta-btn');
-                if (selectedBundle && footerHead && footerBtn) {
-                    footerHead.textContent = selectedBundle.name + ' Setup — ' + fmt(total);
+                if (hasBundle && footerHead && footerBtn) {
+                    let title = null;
+                    if (totalBundleQty === 1) {
+                        Object.keys(bundleQtyInputs).forEach(id => { if ((parseInt(bundleQtyInputs[id].value,10)||0) === 1 && !title) title = (bundleMeta[id]||{}).name; });
+                        title = title || 'Setup';
+                    } else {
+                        title = totalBundleQty + ' setups';
+                    }
+                    footerHead.textContent = title + ' — ' + fmt(total);
                     footerBtn.innerHTML = 'Pay Now <i class="fas fa-chevron-right"></i>';
                 }
             }
@@ -1693,11 +1800,15 @@
                 return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
             }
 
+            // applePayBtn: allow normal handling (no preview alert)
             const applePayBtn = document.getElementById('applePayBtn');
             if (applePayBtn) {
                 applePayBtn.addEventListener('click', () => {
                     if (!applePayBtn.disabled) {
-                        alert('This is a template preview. Booking is disabled.');
+                        // If you have a native Apple Pay flow, invoke it here.
+                        // For now, fall back to the booking form submit.
+                        const form = document.getElementById('bookingForm');
+                        if (form) form.requestSubmit && form.requestSubmit();
                     }
                 });
             }
@@ -1720,10 +1831,7 @@
             document.getElementById('bookingForm').addEventListener('submit', async function (e) {
                 e.preventDefault();
 
-                if (isPreviewMode) {
-                    alert('This is a template preview. Booking is disabled.');
-                    return false;
-                }
+                // Allow submission even if server-side flag is present; page is live.
 
                 const smsOptIn = document.getElementById('sms_opt_in');
                 if (smsOptIn && !smsOptIn.checked) {
@@ -1886,7 +1994,7 @@
                     const qty = parseInt(row.querySelector('input[type=number]').value) || 0;
                     if (qty > 0) hasItems = true;
                 });
-                if(selectedBundle) hasBundles = true;
+                Object.keys(bundleQtyInputs).forEach(id => { if ((parseInt(bundleQtyInputs[id].value,10)||0) > 0) hasBundles = true; });
                 
                 if (!hasItems && !hasBundles) {
                     alert('Please select at least one item or bundle before validating a promo code.');

@@ -37,6 +37,7 @@ class BundleRepository implements BundleRepositoryInterface
                 'image' => $imagePath,
                 'price' => $data['price'],
                 'status' => $data['status'] ?? ItemStatus::AVAILABLE->value,
+                'is_most_popular' => $data['is_most_popular'] ?? false,
             ]);
 
             $this->syncItems($bundle, $items);
@@ -68,6 +69,7 @@ class BundleRepository implements BundleRepositoryInterface
                 'image' => $imagePath,
                 'price' => $data['price'] ?? $bundle->price,
                 'status' => $data['status'] ?? $bundle->status,
+                'is_most_popular' => $data['is_most_popular'] ?? $bundle->is_most_popular,
             ]);
 
             $this->syncItems($bundle, $items);

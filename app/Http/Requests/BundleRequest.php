@@ -29,6 +29,7 @@ class BundleRequest extends FormRequest
             'items.*.quantity' => 'required|integer|min:1',
 
             'status' => 'nullable|in:' . implode(',', array_column(ItemStatus::cases(), 'value')),
+            'is_most_popular' => 'nullable|boolean',
         ];
     }
 }

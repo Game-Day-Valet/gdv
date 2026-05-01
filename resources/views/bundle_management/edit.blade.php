@@ -81,6 +81,15 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+                        <div class="col-md-6">
+                            <div class="form-check pt-2">
+                                <input type="hidden" name="is_most_popular" value="0">
+                                <input type="checkbox" name="is_most_popular" class="form-check-input" id="is_most_popular" value="1" {{ old('is_most_popular', $bundle->is_most_popular) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="is_most_popular">
+                                    Mark as Most Popular
+                                </label>
+                            </div>
+                        </div>
                         <div class="col-md-12">
                             <label class="form-label">Items</label>
                             <table class="table table-bordered" id="items-table">
