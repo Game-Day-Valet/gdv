@@ -1317,7 +1317,6 @@
                                         $days = max(1, \Carbon\Carbon::parse($tournament->start_date)->diffInDays(\Carbon\Carbon::parse($tournament->end_date)) + 1);
                                         $perDay = (float) $bd->effective_price / $days;
                                     @endphp
-                                    <div class="tier-perday">Less than ${{ number_format(ceil($perDay), 0) }}/day!</div>
                                 @endif
                                 <div class="tier-footer">
                                     <div class="tier-controls">
