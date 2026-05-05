@@ -185,7 +185,10 @@ class SendRentalBookingEmailJob implements ShouldQueue
                 $canText = $rental->user->text_notification !== false;
             }
 
-            if ($canText && $enabled && !empty($originalTo) && $sid && $token && $from) {
+            // Global SMS toggle — respect admin setting before sending any Twilio SMS
+            if (!SettingNotification::current()->sms_enabled) {
+                Log::info('Global SMS disabled; skipping booking confirmation SMS', ['rental_id' => $rental->id]);
+            } elseif ($canText && $enabled && !empty($originalTo) && $sid && $token && $from) {
                 try {
                     $twilio = new TwilioClient($sid, $token);
                     $rawBody = (string) (\App\Models\BookingOption::where('type', 'email_content')->value('description') ?? '');
@@ -200,7 +203,6 @@ class SendRentalBookingEmailJob implements ShouldQueue
                         'sms_body' => $body,
                     ]);
 
-                    // Respect user SMS preference if such a flag is ever added; for now SMS independent of email flag
                     $twilio->messages->create($originalTo, ['from' => $from, 'body' => $body]);
           
                 } catch (\Throwable $e) {
