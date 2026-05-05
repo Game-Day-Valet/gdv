@@ -77,24 +77,31 @@ class SendFcmRentalNotification implements ShouldQueue
         } else {
         }
 
-        // Always attempt SMS regardless of FCM, but honor user text preference
-        // Original destination pulled from rental record (temporarily overridden per request)
+        // Always attempt SMS regardless of FCM, but honor user text preference and global toggle
         $originalTo = $event->rental->phone_number;
-        // $to = '+18777804236';
         $sid = config('services.twilio.sid');
         $token = config('services.twilio.token');
         $from = config('services.twilio.from');
-        $globalSms = (bool) \App\Models\SettingNotification::current()->sms_enabled;
-        $enabled = $globalSms && (bool) config('services.twilio.enabled', true);
-        // if ($enabled && $to && $sid && $token && $from) {
-        $canText = true;
-        // Per requirement: do NOT send SMS for confirmed or out_for_delivery
-        if (in_array($event->newStatus, ['confirmed', 'out_for_delivery'], true)) {
-            $canText = false;
+
+        // Global SMS toggle — if admin disabled SMS, skip entirely
+        if (!\App\Models\SettingNotification::current()->sms_enabled) {
+            Log::info('Global SMS disabled; skipping FCM rental status SMS', [
+                'rental_id' => $event->rental->id,
+                'status'    => $event->newStatus,
+            ]);
+            return;
         }
-        if ($user) {
+
+        $enabled = (bool) config('services.twilio.enabled', true);
+
+        // Per requirement: do NOT send SMS for confirmed or out_for_delivery
+        $canText = !in_array($event->newStatus, ['confirmed', 'out_for_delivery'], true);
+
+        // Also respect user's individual text notification preference (&&= keeps both conditions)
+        if ($canText && $user) {
             $canText = $user->text_notification !== false;
         }
+
         if ($canText && $enabled && $originalTo && $sid && $token && $from) {
             try {
                 $twilio = new \Twilio\Rest\Client($sid, $token);
