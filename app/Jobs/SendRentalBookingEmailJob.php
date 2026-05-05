@@ -99,6 +99,9 @@ class SendRentalBookingEmailJob implements ShouldQueue
             if ($canEmail) {
                 // Global email toggle
                 if (!SettingNotification::current()->email_enabled) {
+                    Log::warning('Booking customer email skipped: global email notifications disabled', [
+                        'rental_id' => $rental->id,
+                    ]);
                     return;
                 }
                 $toEmail = $rental->email;
@@ -118,6 +121,11 @@ class SendRentalBookingEmailJob implements ShouldQueue
                     $smtpReady = (bool) (config('mail.mailers.smtp.host') && config('mail.mailers.smtp.username') && config('mail.mailers.smtp.password') && config('mail.from.address'));
                     if (!$smtpReady) {
                         $emailLog->update(['status' => 'failed', 'error_reason' => 'Email not sent: SMTP configuration incomplete.']);
+                        Log::warning('Booking customer email failed: SMTP configuration incomplete', [
+                            'rental_id' => $rental->id,
+                            'to_email' => $toEmail,
+                            'email_log_id' => $emailLog->id,
+                        ]);
                         return;
                     }
                     try {
@@ -135,12 +143,32 @@ class SendRentalBookingEmailJob implements ShouldQueue
                                     ]);
                         });
                         $emailLog->update(['status' => 'sent', 'sent_at' => now()]);
+                        Log::info('Booking customer email sent', [
+                            'rental_id' => $rental->id,
+                            'to_email' => $toEmail,
+                            'email_log_id' => $emailLog->id,
+                        ]);
                     } catch (\Throwable $mailErr) {
                         $short = collect(preg_split("/\r?\n/", (string) $mailErr->getMessage()))->filter()->take(3)->implode(" \n");
                         $emailLog->update(['status' => 'failed', 'error_reason' => $short]);
+                        Log::error('Booking customer email failed', [
+                            'rental_id' => $rental->id,
+                            'to_email' => $toEmail,
+                            'email_log_id' => $emailLog->id,
+                            'error' => $short,
+                        ]);
                         return; // do not bubble up transport errors
                     }
+                } else {
+                    Log::warning('Booking customer email skipped: recipient email missing', [
+                        'rental_id' => $rental->id,
+                    ]);
                 }
+            } else {
+                Log::warning('Booking customer email skipped: user email notifications disabled', [
+                    'rental_id' => $rental->id,
+                    'user_id' => optional($rental->user)->id,
+                ]);
             }
 
             // Send SMS via Twilio if phone number is present and service is enabled
@@ -207,6 +235,10 @@ class SendRentalBookingEmailJob implements ShouldQueue
                     $lockKey = 'admin_notify_throttle';
                     if (!Cache::add($lockKey, true, now()->addSeconds(2))) {
                         // If locked, delay send a bit via re-dispatch
+                        Log::info('Admin booking email delayed due to throttle lock', [
+                            'rental_id' => $this->rental->id,
+                            'admin_email' => $adminEmail,
+                        ]);
                         self::dispatch($this->rental)->delay(now()->addSeconds(3));
                         return;
                     }
@@ -245,10 +277,28 @@ class SendRentalBookingEmailJob implements ShouldQueue
                                     ]);
                         });
                         $log->update(['status' => 'sent', 'sent_at' => now()]);
+                        Log::info('Admin booking email sent', [
+                            'rental_id' => $this->rental->id,
+                            'to_email' => $adminEmail,
+                            'email_log_id' => $log->id,
+                        ]);
                     } else {
                         $log->update(['status' => 'failed', 'error_reason' => 'SMTP configuration incomplete']);
+                        Log::warning('Admin booking email failed: SMTP configuration incomplete', [
+                            'rental_id' => $this->rental->id,
+                            'to_email' => $adminEmail,
+                            'email_log_id' => $log->id,
+                        ]);
                     }
+                } else {
+                    Log::warning('Admin booking email skipped: admin recipient email missing', [
+                        'rental_id' => $this->rental->id,
+                    ]);
                 }
+            } else {
+                Log::warning('Admin booking email skipped: global email notifications disabled', [
+                    'rental_id' => $this->rental->id,
+                ]);
             }
         } catch (\Throwable $e) {
             Log::error('Admin booking email failed', ['rental_id' => $this->rental->id, 'error' => $e->getMessage()]);
