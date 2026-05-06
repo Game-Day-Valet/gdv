@@ -401,8 +401,8 @@ class RentalSystemController extends Controller
         // Get tournament details
         $tournament = $this->tournaments->find($tournamentId);
 
-        if (!$tournament) {
-            abort(404, 'Tournament not found');
+        if (!$tournament || $tournament->status->value !== \App\Enums\TournamentStatus::ACTIVE->value) {
+            abort(404, 'Tournament not found or is currently inactive');
         }
 
         // Get sport information
@@ -415,6 +415,10 @@ class RentalSystemController extends Controller
     {
         // Fetch tournament with associated items/bundles and apply per-tournament override pricing
         $tournament = $this->tournaments->find($tournamentId);
+
+        if (!$tournament || $tournament->status->value !== \App\Enums\TournamentStatus::ACTIVE->value) {
+            abort(404, 'Tournament booking is currently closed or inactive');
+        }
 
         $availableItems = collect($tournament->items ?? [])->map(function ($item) {
             $override = $item->pivot?->price;
@@ -453,6 +457,10 @@ class RentalSystemController extends Controller
     public function showRentalBookingPreview($tournamentId)
     {
         $tournament = $this->tournaments->find($tournamentId);
+
+        if (!$tournament || $tournament->status->value !== \App\Enums\TournamentStatus::ACTIVE->value) {
+            abort(404, 'Tournament preview is not available for inactive tournaments');
+        }
 
         $availableItems = collect($tournament->items ?? [])->map(function ($item) {
             $override = $item->pivot?->price;
@@ -743,6 +751,16 @@ class RentalSystemController extends Controller
 
         // Tournament-specific allowed items/bundles and prices (override if set)
         $tournament = $this->tournaments->find((int) $request->input('tournament_id'));
+
+        if (!$tournament || $tournament->status->value !== \App\Enums\TournamentStatus::ACTIVE->value) {
+            if ($expectsJson) {
+                return response()->json([
+                    'message' => 'This tournament is no longer accepting bookings.',
+                ], 422);
+            }
+            return back()->withErrors(['tournament_id' => 'This tournament is no longer accepting bookings.'])->withInput();
+        }
+
         $itemPrices = [];
         foreach (($tournament->items ?? []) as $it) {
             $itemPrices[$it->id] = (float) ($it->pivot?->price ?? $it->price ?? 0);
