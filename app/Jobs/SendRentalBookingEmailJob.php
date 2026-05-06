@@ -231,71 +231,75 @@ class SendRentalBookingEmailJob implements ShouldQueue
         // Admin notification email (new booking)
         try {
             if (SettingNotification::current()->email_enabled) {
-                $adminEmail = trim((string) env('ADMIN_NOTIFY_EMAIL', config('mail.from.address')));
-                if (!empty($adminEmail)) {
-                    // Throttle to avoid SMTP rate limits (e.g., Mailtrap: 1 msg/sec on free tier)
-                    $lockKey = 'admin_notify_throttle';
-                    if (!Cache::add($lockKey, true, now()->addSeconds(2))) {
-                        // If locked, delay send a bit via re-dispatch
-                        Log::info('Admin booking email delayed due to throttle lock', [
-                            'rental_id' => $this->rental->id,
-                            'admin_email' => $adminEmail,
-                        ]);
-                        self::dispatch($this->rental)->delay(now()->addSeconds(3));
-                        return;
-                    }
-                    $subject = 'New Rental Booking Received';
-                    $adminData = [
-                        'rental' => $this->rental->load(['user','tournament','tournament.sport']),
-                        'user' => $this->rental->user,
-                        'tournament' => $this->rental->tournament,
-                        'sport' => optional($this->rental->tournament)->sport,
-                        'email_content' => 'A new booking has been placed. View it in the admin panel: ' . route('rental-management.index'),
-                        'itemNames' => [],
-                        'bundleNames' => [],
-                        'title' => 'New Booking Notification',
-                    ];
+                $adminEmailsRaw = trim((string) config('mail.admin_notify_emails', config('mail.from.address')));
+                $adminEmails = array_filter(array_map('trim', explode(',', $adminEmailsRaw)));
+                
+                foreach ($adminEmails as $adminEmail) {
+                    if (!empty($adminEmail)) {
+                        // Throttle to avoid SMTP rate limits (e.g., Mailtrap: 1 msg/sec on free tier)
+                        $lockKey = 'admin_notify_throttle_' . md5($adminEmail);
+                        if (!Cache::add($lockKey, true, now()->addSeconds(2))) {
+                            // If locked, delay send a bit via re-dispatch
+                            Log::info('Admin booking email delayed due to throttle lock', [
+                                'rental_id' => $this->rental->id,
+                                'admin_email' => $adminEmail,
+                            ]);
+                            self::dispatch($this->rental)->delay(now()->addSeconds(3));
+                            continue;
+                        }
+                        $subject = 'New Rental Booking Received';
+                        $adminData = [
+                            'rental' => $this->rental->load(['user','tournament','tournament.sport']),
+                            'user' => $this->rental->user,
+                            'tournament' => $this->rental->tournament,
+                            'sport' => optional($this->rental->tournament)->sport,
+                            'email_content' => 'A new booking has been placed. View it in the admin panel: ' . route('rental-management.index'),
+                            'itemNames' => [],
+                            'bundleNames' => [],
+                            'title' => 'New Booking Notification',
+                        ];
 
-                    $log = EmailLog::create([
-                        'to_email' => $adminEmail,
-                        'subject' => $subject,
-                        'body_preview' => (string) $adminData['email_content'],
-                        'status' => 'queued',
-                        'meta' => ['context' => 'admin_booking_notification', 'rental_id' => $this->rental->id],
-                    ]);
-
-                    $smtpReady = (bool) (config('mail.mailers.smtp.host') && config('mail.mailers.smtp.username') && config('mail.mailers.smtp.password') && config('mail.from.address'));
-                    if ($smtpReady) {
-                        // Generate PDF invoice for admin notification
-                        $invoiceService = new InvoiceService();
-                        $invoicePath = $invoiceService->generateInvoice($this->rental);
-                        
-                        Mail::send('emails.rental-booking', $adminData, function ($message) use ($adminEmail, $subject, $invoicePath) {
-                            $message->to($adminEmail)
-                                    ->subject($subject)
-                                    ->attach($invoicePath, [
-                                        'as' => 'Invoice-GDV-' . str_pad($this->rental->id, 6, '0', STR_PAD_LEFT) . '.pdf',
-                                        'mime' => 'application/pdf',
-                                    ]);
-                        });
-                        $log->update(['status' => 'sent', 'sent_at' => now()]);
-                        Log::info('Admin booking email sent', [
-                            'rental_id' => $this->rental->id,
+                        $log = EmailLog::create([
                             'to_email' => $adminEmail,
-                            'email_log_id' => $log->id,
+                            'subject' => $subject,
+                            'body_preview' => (string) $adminData['email_content'],
+                            'status' => 'queued',
+                            'meta' => ['context' => 'admin_booking_notification', 'rental_id' => $this->rental->id],
                         ]);
+
+                        $smtpReady = (bool) (config('mail.mailers.smtp.host') && config('mail.mailers.smtp.username') && config('mail.mailers.smtp.password') && config('mail.from.address'));
+                        if ($smtpReady) {
+                            // Generate PDF invoice for admin notification
+                            $invoiceService = new InvoiceService();
+                            $invoicePath = $invoiceService->generateInvoice($this->rental);
+                            
+                            Mail::send('emails.rental-booking', $adminData, function ($message) use ($adminEmail, $subject, $invoicePath) {
+                                $message->to($adminEmail)
+                                        ->subject($subject)
+                                        ->attach($invoicePath, [
+                                            'as' => 'Invoice-GDV-' . str_pad($this->rental->id, 6, '0', STR_PAD_LEFT) . '.pdf',
+                                            'mime' => 'application/pdf',
+                                        ]);
+                            });
+                            $log->update(['status' => 'sent', 'sent_at' => now()]);
+                            Log::info('Admin booking email sent', [
+                                'rental_id' => $this->rental->id,
+                                'to_email' => $adminEmail,
+                                'email_log_id' => $log->id,
+                            ]);
+                        } else {
+                            $log->update(['status' => 'failed', 'error_reason' => 'SMTP configuration incomplete']);
+                            Log::warning('Admin booking email failed: SMTP configuration incomplete', [
+                                'rental_id' => $this->rental->id,
+                                'to_email' => $adminEmail,
+                                'email_log_id' => $log->id,
+                            ]);
+                        }
                     } else {
-                        $log->update(['status' => 'failed', 'error_reason' => 'SMTP configuration incomplete']);
-                        Log::warning('Admin booking email failed: SMTP configuration incomplete', [
+                        Log::warning('Admin booking email skipped: admin recipient email missing', [
                             'rental_id' => $this->rental->id,
-                            'to_email' => $adminEmail,
-                            'email_log_id' => $log->id,
                         ]);
                     }
-                } else {
-                    Log::warning('Admin booking email skipped: admin recipient email missing', [
-                        'rental_id' => $this->rental->id,
-                    ]);
                 }
             } else {
                 Log::warning('Admin booking email skipped: global email notifications disabled', [
