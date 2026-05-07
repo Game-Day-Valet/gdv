@@ -1933,27 +1933,20 @@
                             <div class="field">
                                 <div class="input-wrap">
                                     <i class="fas fa-users"></i>
-                                    <input type="text" name="team_name" placeholder="Team Name"
-                                        value="{{ old('team_name') }}">
+                                    <input type="text" name="team_name_with_age_group" placeholder="Team Name With Age Group"
+                                        value="{{ old('team_name_with_age_group') }}" required>
                                 </div>
                             </div>
                             <div class="field">
                                 <div class="input-wrap">
-                                    <i class="fas fa-layer-group"></i>
-                                    <input type="text" name="age_group" placeholder="Age Group"
-                                        value="{{ old('age_group') }}">
+                                    <i class="fas fa-user-tie"></i>
+                                    <input type="text" name="coach_name" placeholder="Coach Name"
+                                        value="{{ old('coach_name') }}" required>
                                 </div>
                             </div>
                         </div>
 
                         <div class="field-row">
-                            <div class="field">
-                                <div class="input-wrap">
-                                    <i class="fas fa-user-tie"></i>
-                                    <input type="text" name="coach_name" placeholder="Coach Name"
-                                        value="{{ old('coach_name') }}">
-                                </div>
-                            </div>
                             <div class="field">
                                 <div class="input-wrap">
                                     <i class="fas fa-envelope"></i>

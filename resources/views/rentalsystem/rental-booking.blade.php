@@ -13,26 +13,28 @@
 
     <!-- Facebook Pixel Global Init -->
     <script>
-    !function(f,b,e,v,n,t,s)
-    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-    n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t,s)}(window, document,'script',
-    'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '1364397922375498');
-    fbq('track', 'PageView');
-    fbq('track', 'ViewContent', {
-        content_name: '{{ addslashes($tournament->name ?? "Tournament Booking") }}',
-        content_ids: ['{{ $tournament->id ?? "" }}'],
-        content_type: 'product',
-        currency: 'USD'
-    });
+        !function (f, b, e, v, n, t, s) {
+            if (f.fbq) return; n = f.fbq = function () {
+                n.callMethod ?
+                    n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+            };
+            if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+            n.queue = []; t = b.createElement(e); t.async = !0;
+            t.src = v; s = b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t, s)
+        }(window, document, 'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '1364397922375498');
+        fbq('track', 'PageView');
+        fbq('track', 'ViewContent', {
+            content_name: '{{ addslashes($tournament->name ?? "Tournament Booking") }}',
+            content_ids: ['{{ $tournament->id ?? "" }}'],
+            content_type: 'product',
+            currency: 'USD'
+        });
     </script>
     <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=1364397922375498&ev=PageView&noscript=1"
-    /></noscript>
+            src="https://www.facebook.com/tr?id=1364397922375498&ev=PageView&noscript=1" /></noscript>
     <!-- End Facebook Pixel Global Init -->
     <style>
         :root {
@@ -604,14 +606,9 @@
                                 <input class="input" type="text" name="full_name" placeholder="Full name" required>
                             </div>
                             <div>
-                                <label class="label">TEAM NAME <span class="text-danger">*</span></label>
-                                <input class="input" type="text" name="team_name"
-                                    placeholder="Team Name" required>
-                            </div>
-                            <div>
-                                <label class="label">AGE GROUP <span class="text-danger">*</span></label>
-                                <input class="input" type="text" name="age_group"
-                                    placeholder="e.g. 12U" required>
+                                <label class="label">TEAM NAME WITH AGE GROUP <span class="text-danger">*</span></label>
+                                <input class="input" type="text" name="team_name_with_age_group"
+                                    placeholder="Team Name With Age Group" required>
                             </div>
                             <div>
                                 <label class="label">COACH NAME <span class="text-danger">*</span></label>
@@ -1336,7 +1333,7 @@
         // Facebook Pixel: InitiateCheckout — fires only after form validation passes
         const confirmBtn = document.getElementById('confirmBookingBtn');
         if (confirmBtn) {
-            confirmBtn.addEventListener('click', function() {
+            confirmBtn.addEventListener('click', function () {
                 if (!validateForm()) return;
                 if (typeof fbq === 'function') {
                     const total = parseFloat(document.getElementById('total_amount_input')?.value || 0);
