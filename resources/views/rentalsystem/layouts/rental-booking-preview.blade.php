@@ -1929,13 +1929,37 @@
                             </div>
                         </div>
 
-                        {{-- Team name removed per request --}}
+                        <div class="field-row">
+                            <div class="field">
+                                <div class="input-wrap">
+                                    <i class="fas fa-users"></i>
+                                    <input type="text" name="team_name" placeholder="Team Name"
+                                        value="{{ old('team_name') }}">
+                                </div>
+                            </div>
+                            <div class="field">
+                                <div class="input-wrap">
+                                    <i class="fas fa-layer-group"></i>
+                                    <input type="text" name="age_group" placeholder="Age Group"
+                                        value="{{ old('age_group') }}">
+                                </div>
+                            </div>
+                        </div>
 
-                        <div class="field">
-                            <div class="input-wrap">
-                                <i class="fas fa-envelope"></i>
-                                <input type="email" name="email" placeholder="Email (optional)"
-                                    value="{{ old('email') }}">
+                        <div class="field-row">
+                            <div class="field">
+                                <div class="input-wrap">
+                                    <i class="fas fa-user-tie"></i>
+                                    <input type="text" name="coach_name" placeholder="Coach Name"
+                                        value="{{ old('coach_name') }}">
+                                </div>
+                            </div>
+                            <div class="field">
+                                <div class="input-wrap">
+                                    <i class="fas fa-envelope"></i>
+                                    <input type="email" name="email" placeholder="Email (optional)"
+                                        value="{{ old('email') }}">
+                                </div>
                             </div>
                         </div>
 

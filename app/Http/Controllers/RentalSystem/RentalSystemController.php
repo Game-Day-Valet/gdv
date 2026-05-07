@@ -691,11 +691,11 @@ class RentalSystemController extends Controller
 
         $validator = Validator::make($request->all(), [
             'tournament_id' => 'required|integer',
-            'full_name' => 'nullable|string|max:255',
+            'full_name' => 'required|string|max:255',
             'team_name' => 'nullable|string|max:255',
             'age_group' => 'nullable|string|max:255',
             'coach_name' => 'nullable|string|max:255',
-            'phone_number' => 'nullable|string|max:30',
+            'phone_number' => 'required|string|max:30',
             'email' => 'nullable|email',
             'booking_days' => 'nullable|integer|min:1|max:7',
             'items' => 'nullable|array',
@@ -879,7 +879,7 @@ class RentalSystemController extends Controller
             'tournament_id' => (int) $request->input('tournament_id'),
             'team_name' => $request->input('team_name') ?: null,
             'age_group' => $request->input('age_group') ?: null,
-            'team_name_with_age_group' => ($request->input('team_name') . ' ' . $request->input('age_group')) ?: null,
+            'team_name_with_age_group' => trim(($request->input('team_name') ?? '') . ' ' . ($request->input('age_group') ?? '')) ?: null,
             'coach_name' => $request->input('coach_name') ?: null,
             'phone_number' => $request->input('phone_number') ?: ($user->contact_number ?? null),
             'email' => $request->input('email') ?: ($user->email ?? null),
