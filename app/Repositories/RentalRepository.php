@@ -31,7 +31,7 @@ class RentalRepository implements RentalRepositoryInterface
     {
         $query = Rental::with(['user', 'tournament'])
             ->whereNull('archived_at')
-            ->whereIn('payment_status', ['paid', 'completed']);
+            ->whereIn('payment_status', ['paid', 'completed', 'pending']);
 
         $this->applyFilters($query, $filters);
 
