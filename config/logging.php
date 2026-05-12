@@ -139,6 +139,12 @@ return [
             'level' => 'error',
         ],
 
+        'queue_run' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/queue-run.log'),
+            'level' => 'info',
+        ],
+
     ],
 
 ];

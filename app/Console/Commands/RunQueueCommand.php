@@ -30,7 +30,10 @@ class RunQueueCommand extends Command
      */
     public function handle()
     {
-        $this->info('Running queue:work --stop-when-empty...');
+        $startTime = now()->format('Y-m-d H:i:s');
+        Log::channel('queue_run')->info("Command queue:run started at: {$startTime}");
+        
+        $this->info("Running queue:work --stop-when-empty (Started at: {$startTime})...");
 
         // We use Artisan::call to run the work in the same process.
         // The listeners in AppServiceProvider will capture the events.

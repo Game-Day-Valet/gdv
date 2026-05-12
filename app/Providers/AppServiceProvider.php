@@ -59,7 +59,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Queue::after(function (JobProcessed $event) {
-            Log::channel('queue_success')->info('Job Processed Successfully', [
+            Log::channel('queue_run')->info('Job Processed Successfully', [
                 'job' => $event->job->resolveName(),
                 'id' => $event->job->getJobId(),
                 'connection' => $event->connectionName,
@@ -68,7 +68,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Queue::failing(function (JobFailed $event) {
-            Log::channel('queue_fail')->error('Job Failed', [
+            Log::channel('queue_run')->error('Job Failed', [
                 'job' => $event->job->resolveName(),
                 'id' => $event->job->getJobId(),
                 'connection' => $event->connectionName,
