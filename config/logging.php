@@ -127,21 +127,15 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
-        'queue_success' => [
-            'driver' => 'single',
-            'path' => storage_path('logs/queue-success.log'),
-            'level' => 'info',
-        ],
-
-        'queue_fail' => [
-            'driver' => 'single',
-            'path' => storage_path('logs/queue-fail.log'),
-            'level' => 'error',
-        ],
-
         'queue_run' => [
             'driver' => 'single',
             'path' => storage_path('logs/queue-run.log'),
+            'level' => 'info',
+        ],
+
+        'queue_retry' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/queue-retry.log'),
             'level' => 'info',
         ],
 
