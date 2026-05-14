@@ -14,6 +14,7 @@ class Tournament extends Model
     protected $fillable = [
         'sport_id',
         'name',
+        'slug',
         'image',
         'start_date',
         'description',
@@ -25,6 +26,36 @@ class Tournament extends Model
         'tax_rate',
         'sort_order',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($tournament) {
+            if (empty($tournament->slug)) {
+                $tournament->slug = static::generateUniqueSlug($tournament->name);
+            }
+        });
+
+        static::updating(function ($tournament) {
+            if ($tournament->isDirty('name') && !$tournament->isDirty('slug')) {
+                $tournament->slug = static::generateUniqueSlug($tournament->name);
+            }
+        });
+    }
+
+    public static function generateUniqueSlug($name)
+    {
+        $slug = \Illuminate\Support\Str::slug($name);
+        $originalSlug = $slug;
+        $count = 1;
+
+        while (static::where('slug', $slug)->exists()) {
+            $slug = $originalSlug . '-' . $count++;
+        }
+
+        return $slug;
+    }
 
     protected $casts = [
         'status' => TournamentStatus::class,

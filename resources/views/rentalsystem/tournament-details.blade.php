@@ -479,11 +479,11 @@
                     
                     <div class="action-buttons">
                         @if(Auth::check())
-                            <a href="{{ route('rentalsystem.rental-booking', $tournament->id) }}" class="btn-primary-custom" onclick="if(typeof fbq === 'function') { fbq('track', 'InitiateCheckout', { content_name: '{{ addslashes($tournament->name) }}', content_ids: ['{{ $tournament->id }}'], content_type: 'product', currency: 'USD' }); }">
+                            <a href="{{ route('rentalsystem.rental-booking', $tournament->slug) }}" class="btn-primary-custom" onclick="if(typeof fbq === 'function') { fbq('track', 'InitiateCheckout', { content_name: '{{ addslashes($tournament->name) }}', content_ids: ['{{ $tournament->id }}'], content_type: 'product', currency: 'USD' }); }">
                                 <i class="fas fa-shopping-cart"></i> Book Equipment Now
                             </a>
                         @else
-                            <a href="{{ route('rentalsystem.rental-booking', $tournament->id) }}" class="btn-primary-custom" onclick="if(typeof fbq === 'function') { fbq('track', 'InitiateCheckout', { content_name: '{{ addslashes($tournament->name) }}', content_ids: ['{{ $tournament->id }}'], content_type: 'product', currency: 'USD' }); }">
+                            <a href="{{ route('rentalsystem.rental-booking', $tournament->slug) }}" class="btn-primary-custom" onclick="if(typeof fbq === 'function') { fbq('track', 'InitiateCheckout', { content_name: '{{ addslashes($tournament->name) }}', content_ids: ['{{ $tournament->id }}'], content_type: 'product', currency: 'USD' }); }">
                                 <i class="fas fa-shopping-cart"></i> Book Equipment Now
                             </a>
                         @endif

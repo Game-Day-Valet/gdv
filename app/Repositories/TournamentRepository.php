@@ -119,6 +119,16 @@ class TournamentRepository implements TournamentRepositoryInterface
         return Tournament::with(['sport', 'items', 'bundles'])->findOrFail($id);
     }
 
+    public function findBySlug($slug)
+    {
+        return Tournament::withTrashed()->with(['sport', 'items', 'bundles'])
+            ->where(function ($query) use ($slug) {
+                $query->where('slug', $slug)
+                    ->orWhere('id', $slug);
+            })
+            ->firstOrFail();
+    }
+
     public function create(array $data)
     {
         return DB::transaction(function () use ($data) {

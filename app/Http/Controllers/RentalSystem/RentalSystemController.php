@@ -396,10 +396,10 @@ class RentalSystemController extends Controller
         return view('rentalsystem.tournaments', compact('tournaments', 'sportId', 'search'));
     }
 
-    public function showTournamentDetails($tournamentId)
+    public function showTournamentDetails($slug)
     {
         // Get tournament details
-        $tournament = $this->tournaments->find($tournamentId);
+        $tournament = $this->tournaments->findBySlug($slug);
 
         if (!$tournament || $tournament->status->value !== \App\Enums\TournamentStatus::ACTIVE->value) {
             abort(404, 'Tournament not found or is currently inactive');
@@ -411,10 +411,10 @@ class RentalSystemController extends Controller
         return view('rentalsystem.tournament-details', compact('tournament', 'sport'));
     }
 
-    public function showRentalBooking($tournamentId)
+    public function showRentalBooking($slug)
     {
         // Fetch tournament with associated items/bundles and apply per-tournament override pricing
-        $tournament = $this->tournaments->find($tournamentId);
+        $tournament = $this->tournaments->findBySlug($slug);
 
         if (!$tournament || $tournament->status->value !== \App\Enums\TournamentStatus::ACTIVE->value) {
             abort(404, 'Tournament booking is currently closed or inactive');
@@ -445,7 +445,7 @@ class RentalSystemController extends Controller
 
         return view('rentalsystem.layouts.rental-booking-preview', [
             'tournament' => $tournament,
-            'tournamentId' => $tournamentId,
+            'tournamentId' => $tournament->id,
             'availableItems' => $availableItems,
             'availableBundles' => $availableBundles,
             'testimonialQuote' => $testimonialQuote,
@@ -454,9 +454,9 @@ class RentalSystemController extends Controller
         ]);
     }
 
-    public function showRentalBookingPreview($tournamentId)
+    public function showRentalBookingPreview($slug)
     {
-        $tournament = $this->tournaments->find($tournamentId);
+        $tournament = $this->tournaments->findBySlug($slug);
 
         if (!$tournament || $tournament->status->value !== \App\Enums\TournamentStatus::ACTIVE->value) {
             abort(404, 'Tournament preview is not available for inactive tournaments');
@@ -488,7 +488,7 @@ class RentalSystemController extends Controller
 
         return view('rentalsystem.layouts.rental-booking-preview', [
             'tournament' => $tournament,
-            'tournamentId' => $tournamentId,
+            'tournamentId' => $tournament->id,
             'availableItems' => $availableItems,
             'availableBundles' => $availableBundles,
             'testimonialQuote' => $testimonialQuote,

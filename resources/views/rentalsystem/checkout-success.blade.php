@@ -236,7 +236,7 @@
 
             <div class="actions">
                 <a class="btn btn-primary" href="{{ route('rentalsystem.sports') }}"><i class="fa-solid fa-arrow-left"></i> Back to Sports</a>
-                <a class="btn btn-outline" href="{{ route('rentalsystem.tournament.details', optional($rental->tournament)->id ?? 1) }}">View Tournament</a>
+                <a class="btn btn-outline" href="{{ route('rentalsystem.tournament.details', optional($rental->tournament)->slug ?? optional($rental->tournament)->id ?? 1) }}">View Tournament</a>
             </div>
         </section>
     </main>

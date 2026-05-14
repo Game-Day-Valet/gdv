@@ -168,6 +168,7 @@
                 @php
                     $isArr = is_array($t);
                     $id = $isArr ? ($t['id'] ?? null) : ($t->id ?? null);
+                    $slug = $isArr ? ($t['slug'] ?? $id) : ($t->slug ?? $id);
                     $name = $isArr ? ($t['name'] ?? '') : ($t->name ?? '');
                     $location = $isArr ? ($t['location'] ?? '') : ($t->location ?? '');
                     $img = $isArr ? ($t['image'] ?? null) : ($t->image ?? null);
@@ -187,7 +188,7 @@
                             width: auto; 
                             padding: 0 10px;
                         ">
-                            <a href="{{ route('rentalsystem.tournament.details', $id) }}" class="btn btn-outline-light" style="
+                            <a href="{{ route('rentalsystem.tournament.details', $slug) }}" class="btn btn-outline-light" style="
                                 padding: 8px 16px; 
                                 border-radius: 8px; 
                                 border: 2px solid white; 
@@ -205,7 +206,7 @@
                                onmouseout="this.style.background='rgba(0,0,0,0.4)'; this.style.borderColor='white';">
                                 <i class="fas fa-info-circle"></i> Details
                             </a>
-                            <button class="book" onclick="handleBooking({{ $id }}, '{{ addslashes($name) }}')" style="
+                            <button class="book" onclick="handleBooking({{ $id }}, '{{ addslashes($name) }}', '{{ $slug }}')" style="
                                 padding: 8px 16px; 
                                 border-radius: 8px; 
                                 border: none; 
@@ -285,7 +286,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function handleBooking(tournamentId, tournamentName) {
+        function handleBooking(tournamentId, tournamentName, slug) {
             if (typeof fbq === 'function') {
                 fbq('track', 'InitiateCheckout', {
                     content_name: tournamentName,
@@ -294,7 +295,7 @@
                     currency: 'USD'
                 });
             }
-            window.location.href = "{{ route('rentalsystem.rental-booking', ':id') }}".replace(':id', tournamentId);
+            window.location.href = "{{ route('rentalsystem.rental-booking', ':slug') }}".replace(':slug', slug);
         }
     </script>
 </body>
