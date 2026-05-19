@@ -133,7 +133,7 @@
 
                     <div class="mb-4 p-3 border rounded bg-light">
                         <form action="{{ request()->url() }}" method="GET" class="row g-3">
-                            <div class="col-md-2">
+                            <div class="col-md-3">
                                 <label class="form-label">Sport</label>
                                 <select name="sport_id" class="form-select form-select-sm">
                                     <option value="">All Sports</option>
@@ -142,7 +142,16 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-3">
+                                <label class="form-label">Tournament</label>
+                                <select name="tournament_id" class="form-select form-select-sm">
+                                    <option value="">All Tournaments</option>
+                                    @foreach($tournaments as $t)
+                                        <option value="{{ $t->id }}" {{ request('tournament_id') == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3">
                                 <label class="form-label">Location</label>
                                 <select name="location" class="form-select form-select-sm">
                                     <option value="">All Locations</option>
@@ -151,7 +160,7 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-3">
                                 <label class="form-label">Status</label>
                                 <select name="status" class="form-select form-select-sm">
                                     <option value="">All Statuses</option>
@@ -162,7 +171,7 @@
                                     <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-3">
                                 <label class="form-label">Payment Status</label>
                                 <select name="payment_status" class="form-select form-select-sm">
                                     <option value="">All Payments</option>
@@ -171,15 +180,15 @@
                                     <option value="paid" {{ request('payment_status') == 'paid' ? 'selected' : '' }}>Paid</option>
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-3">
                                 <label class="form-label">Coach</label>
                                 <input type="text" name="coach_name" class="form-control form-control-sm" value="{{ request('coach_name') }}" placeholder="Coach name...">
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-3">
                                 <label class="form-label">Team</label>
                                 <input type="text" name="team_name" class="form-control form-control-sm" value="{{ request('team_name') }}" placeholder="Team name...">
                             </div>
-                            <div class="col-md-2 d-flex align-items-end gap-2">
+                            <div class="col-md-3 d-flex align-items-end gap-2">
                                 <button type="submit" class="btn btn-sm btn-primary">Filter</button>
                                 <a href="{{ request()->url() }}" class="btn btn-sm btn-outline-secondary">Clear</a>
                             </div>

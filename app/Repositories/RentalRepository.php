@@ -320,6 +320,10 @@ class RentalRepository implements RentalRepositoryInterface
             });
         }
 
+        if (!empty($filters['tournament_id'])) {
+            $query->where('tournament_id', $filters['tournament_id']);
+        }
+
         if (!empty($filters['location'])) {
             $query->whereHas('tournament', function ($q) use ($filters) {
                 $q->withTrashed()->where('location', $filters['location']);

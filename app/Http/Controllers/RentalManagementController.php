@@ -35,7 +35,7 @@ class RentalManagementController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $filters = $request->only(['sport_id', 'location', 'status', 'payment_status', 'coach_name', 'team_name']);
+        $filters = $request->only(['sport_id', 'tournament_id', 'location', 'status', 'payment_status', 'coach_name', 'team_name']);
 
         // Default index shows only PAID/COMPLETED rentals
         if ($user->hasRole(Role::MANAGER)) {
@@ -47,9 +47,10 @@ class RentalManagementController extends Controller
         // Get all managers for the dropdown
         $managers = User::role(Role::MANAGER)->get();
         $sports = \App\Models\Sport::all();
+        $tournaments = \App\Models\Tournament::withTrashed()->withoutGlobalScopes()->orderBy('name')->get();
         $locations = \App\Models\Tournament::withoutGlobalScopes()->whereNotNull('location')->distinct()->pluck('location');
 
-        return view('rental_management.index', compact('rentals', 'managers', 'sports', 'locations'));
+        return view('rental_management.index', compact('rentals', 'managers', 'sports', 'tournaments', 'locations'));
     }
 
     /**
@@ -58,7 +59,7 @@ class RentalManagementController extends Controller
     public function pending(Request $request)
     {
         $user = Auth::user();
-        $filters = $request->only(['sport_id', 'location', 'status', 'payment_status', 'coach_name', 'team_name']);
+        $filters = $request->only(['sport_id', 'tournament_id', 'location', 'status', 'payment_status', 'coach_name', 'team_name']);
 
         if ($user->hasRole(Role::MANAGER)) {
             $rentals = $this->rentalRepository->getByManagerPending($user->id, 15, $filters);
@@ -68,9 +69,10 @@ class RentalManagementController extends Controller
 
         $managers = User::role(Role::MANAGER)->get();
         $sports = \App\Models\Sport::all();
+        $tournaments = \App\Models\Tournament::withTrashed()->withoutGlobalScopes()->orderBy('name')->get();
         $locations = \App\Models\Tournament::withoutGlobalScopes()->whereNotNull('location')->distinct()->pluck('location');
 
-        return view('rental_management.index', compact('rentals', 'managers', 'sports', 'locations'));
+        return view('rental_management.index', compact('rentals', 'managers', 'sports', 'tournaments', 'locations'));
     }
 
     /**
